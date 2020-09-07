@@ -5,6 +5,13 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/includes_data.h"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/includes_data.h"
+
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
+
+namespace apache {
+namespace thrift {
 
 
+} // namespace thrift
+} // namespace apache

@@ -4,464 +4,603 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/service_with_special_names.h"
-#include "src/gen-cpp2/service_with_special_names.tcc"
-
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+#include "thrift/compiler/test/fixtures/fatal/gen-cpp2/service_with_special_names.h"
+#include "thrift/compiler/test/fixtures/fatal/gen-cpp2/service_with_special_names.tcc"
+#include "thrift/compiler/test/fixtures/fatal/gen-cpp2/module_metadata.h"
+#include <thrift/lib/cpp2/gen/service_cpp.h>
 
 namespace test_cpp2 { namespace cpp_reflection {
 std::unique_ptr<apache::thrift::AsyncProcessor> service_with_special_namesSvIf::getProcessor() {
   return std::make_unique<service_with_special_namesAsyncProcessor>(this);
 }
 
+
 int32_t service_with_special_namesSvIf::get() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("get");
+}
+
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_get() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return get();
+  });
 }
 
 folly::Future<int32_t> service_with_special_namesSvIf::future_get() {
   return apache::thrift::detail::si::future(semifuture_get(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_get() {
-  return apache::thrift::detail::si::semifuture([&] { return get(); });
-}
 
 void service_with_special_namesSvIf::async_tm_get(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_get(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_get();
+  });
 }
 
 int32_t service_with_special_namesSvIf::getter() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("getter");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_getter() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return getter();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_getter() {
   return apache::thrift::detail::si::future(semifuture_getter(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_getter() {
-  return apache::thrift::detail::si::semifuture([&] { return getter(); });
-}
 
 void service_with_special_namesSvIf::async_tm_getter(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_getter(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_getter();
+  });
 }
 
 int32_t service_with_special_namesSvIf::lists() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("lists");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_lists() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return lists();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_lists() {
   return apache::thrift::detail::si::future(semifuture_lists(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_lists() {
-  return apache::thrift::detail::si::semifuture([&] { return lists(); });
-}
 
 void service_with_special_namesSvIf::async_tm_lists(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_lists(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_lists();
+  });
 }
 
 int32_t service_with_special_namesSvIf::maps() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("maps");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_maps() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return maps();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_maps() {
   return apache::thrift::detail::si::future(semifuture_maps(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_maps() {
-  return apache::thrift::detail::si::semifuture([&] { return maps(); });
-}
 
 void service_with_special_namesSvIf::async_tm_maps(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_maps(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_maps();
+  });
 }
 
 int32_t service_with_special_namesSvIf::name() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("name");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_name() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return name();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_name() {
   return apache::thrift::detail::si::future(semifuture_name(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_name() {
-  return apache::thrift::detail::si::semifuture([&] { return name(); });
-}
 
 void service_with_special_namesSvIf::async_tm_name(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_name(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_name();
+  });
 }
 
 int32_t service_with_special_namesSvIf::name_to_value() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("name_to_value");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_name_to_value() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return name_to_value();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_name_to_value() {
   return apache::thrift::detail::si::future(semifuture_name_to_value(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_name_to_value() {
-  return apache::thrift::detail::si::semifuture([&] { return name_to_value(); });
-}
 
 void service_with_special_namesSvIf::async_tm_name_to_value(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_name_to_value(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_name_to_value();
+  });
 }
 
 int32_t service_with_special_namesSvIf::names() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("names");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_names() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return names();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_names() {
   return apache::thrift::detail::si::future(semifuture_names(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_names() {
-  return apache::thrift::detail::si::semifuture([&] { return names(); });
-}
 
 void service_with_special_namesSvIf::async_tm_names(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_names(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_names();
+  });
 }
 
 int32_t service_with_special_namesSvIf::prefix_tree() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("prefix_tree");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_prefix_tree() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return prefix_tree();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_prefix_tree() {
   return apache::thrift::detail::si::future(semifuture_prefix_tree(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_prefix_tree() {
-  return apache::thrift::detail::si::semifuture([&] { return prefix_tree(); });
-}
 
 void service_with_special_namesSvIf::async_tm_prefix_tree(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_prefix_tree(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_prefix_tree();
+  });
 }
 
 int32_t service_with_special_namesSvIf::sets() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("sets");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_sets() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return sets();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_sets() {
   return apache::thrift::detail::si::future(semifuture_sets(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_sets() {
-  return apache::thrift::detail::si::semifuture([&] { return sets(); });
-}
 
 void service_with_special_namesSvIf::async_tm_sets(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_sets(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_sets();
+  });
 }
 
 int32_t service_with_special_namesSvIf::setter() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("setter");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_setter() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return setter();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_setter() {
   return apache::thrift::detail::si::future(semifuture_setter(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_setter() {
-  return apache::thrift::detail::si::semifuture([&] { return setter(); });
-}
 
 void service_with_special_namesSvIf::async_tm_setter(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_setter(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_setter();
+  });
 }
 
 int32_t service_with_special_namesSvIf::str() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("str");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_str() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return str();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_str() {
   return apache::thrift::detail::si::future(semifuture_str(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_str() {
-  return apache::thrift::detail::si::semifuture([&] { return str(); });
-}
 
 void service_with_special_namesSvIf::async_tm_str(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_str(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_str();
+  });
 }
 
 int32_t service_with_special_namesSvIf::strings() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("strings");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_strings() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return strings();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_strings() {
   return apache::thrift::detail::si::future(semifuture_strings(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_strings() {
-  return apache::thrift::detail::si::semifuture([&] { return strings(); });
-}
 
 void service_with_special_namesSvIf::async_tm_strings(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_strings(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_strings();
+  });
 }
 
 int32_t service_with_special_namesSvIf::type() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("type");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_type() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return type();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_type() {
   return apache::thrift::detail::si::future(semifuture_type(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_type() {
-  return apache::thrift::detail::si::semifuture([&] { return type(); });
-}
 
 void service_with_special_namesSvIf::async_tm_type(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_type(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_type();
+  });
 }
 
 int32_t service_with_special_namesSvIf::value() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("value");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_value() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return value();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_value() {
   return apache::thrift::detail::si::future(semifuture_value(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_value() {
-  return apache::thrift::detail::si::semifuture([&] { return value(); });
-}
 
 void service_with_special_namesSvIf::async_tm_value(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_value(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_value();
+  });
 }
 
 int32_t service_with_special_namesSvIf::value_to_name() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("value_to_name");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_value_to_name() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return value_to_name();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_value_to_name() {
   return apache::thrift::detail::si::future(semifuture_value_to_name(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_value_to_name() {
-  return apache::thrift::detail::si::semifuture([&] { return value_to_name(); });
-}
 
 void service_with_special_namesSvIf::async_tm_value_to_name(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_value_to_name(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_value_to_name();
+  });
 }
 
 int32_t service_with_special_namesSvIf::values() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("values");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_values() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return values();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_values() {
   return apache::thrift::detail::si::future(semifuture_values(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_values() {
-  return apache::thrift::detail::si::semifuture([&] { return values(); });
-}
 
 void service_with_special_namesSvIf::async_tm_values(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_values(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_values();
+  });
 }
 
 int32_t service_with_special_namesSvIf::id() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("id");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_id() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return id();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_id() {
   return apache::thrift::detail::si::future(semifuture_id(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_id() {
-  return apache::thrift::detail::si::semifuture([&] { return id(); });
-}
 
 void service_with_special_namesSvIf::async_tm_id(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_id(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_id();
+  });
 }
 
 int32_t service_with_special_namesSvIf::ids() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("ids");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_ids() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return ids();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_ids() {
   return apache::thrift::detail::si::future(semifuture_ids(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_ids() {
-  return apache::thrift::detail::si::semifuture([&] { return ids(); });
-}
 
 void service_with_special_namesSvIf::async_tm_ids(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_ids(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_ids();
+  });
 }
 
 int32_t service_with_special_namesSvIf::descriptor() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("descriptor");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_descriptor() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return descriptor();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_descriptor() {
   return apache::thrift::detail::si::future(semifuture_descriptor(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_descriptor() {
-  return apache::thrift::detail::si::semifuture([&] { return descriptor(); });
-}
 
 void service_with_special_namesSvIf::async_tm_descriptor(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_descriptor(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_descriptor();
+  });
 }
 
 int32_t service_with_special_namesSvIf::descriptors() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("descriptors");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_descriptors() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return descriptors();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_descriptors() {
   return apache::thrift::detail::si::future(semifuture_descriptors(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_descriptors() {
-  return apache::thrift::detail::si::semifuture([&] { return descriptors(); });
-}
 
 void service_with_special_namesSvIf::async_tm_descriptors(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_descriptors(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_descriptors();
+  });
 }
 
 int32_t service_with_special_namesSvIf::key() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("key");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_key() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return key();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_key() {
   return apache::thrift::detail::si::future(semifuture_key(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_key() {
-  return apache::thrift::detail::si::semifuture([&] { return key(); });
-}
 
 void service_with_special_namesSvIf::async_tm_key(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_key(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_key();
+  });
 }
 
 int32_t service_with_special_namesSvIf::keys() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("keys");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_keys() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return keys();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_keys() {
   return apache::thrift::detail::si::future(semifuture_keys(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_keys() {
-  return apache::thrift::detail::si::semifuture([&] { return keys(); });
-}
 
 void service_with_special_namesSvIf::async_tm_keys(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_keys(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_keys();
+  });
 }
 
 int32_t service_with_special_namesSvIf::annotation() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("annotation");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_annotation() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return annotation();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_annotation() {
   return apache::thrift::detail::si::future(semifuture_annotation(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_annotation() {
-  return apache::thrift::detail::si::semifuture([&] { return annotation(); });
-}
 
 void service_with_special_namesSvIf::async_tm_annotation(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_annotation(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_annotation();
+  });
 }
 
 int32_t service_with_special_namesSvIf::annotations() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("annotations");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_annotations() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return annotations();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_annotations() {
   return apache::thrift::detail::si::future(semifuture_annotations(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_annotations() {
-  return apache::thrift::detail::si::semifuture([&] { return annotations(); });
-}
 
 void service_with_special_namesSvIf::async_tm_annotations(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_annotations(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_annotations();
+  });
 }
 
 int32_t service_with_special_namesSvIf::member() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("member");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_member() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return member();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_member() {
   return apache::thrift::detail::si::future(semifuture_member(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_member() {
-  return apache::thrift::detail::si::semifuture([&] { return member(); });
-}
 
 void service_with_special_namesSvIf::async_tm_member(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_member(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_member();
+  });
 }
 
 int32_t service_with_special_namesSvIf::members() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("members");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_members() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return members();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_members() {
   return apache::thrift::detail::si::future(semifuture_members(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_members() {
-  return apache::thrift::detail::si::semifuture([&] { return members(); });
-}
 
 void service_with_special_namesSvIf::async_tm_members(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_members(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_members();
+  });
 }
 
 int32_t service_with_special_namesSvIf::field() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("field");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_field() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return field();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_field() {
   return apache::thrift::detail::si::future(semifuture_field(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_field() {
-  return apache::thrift::detail::si::semifuture([&] { return field(); });
-}
 
 void service_with_special_namesSvIf::async_tm_field(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_field(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_field();
+  });
 }
 
 int32_t service_with_special_namesSvIf::fields() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("fields");
 }
 
+folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_fields() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return fields();
+  });
+}
+
 folly::Future<int32_t> service_with_special_namesSvIf::future_fields() {
   return apache::thrift::detail::si::future(semifuture_fields(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> service_with_special_namesSvIf::semifuture_fields() {
-  return apache::thrift::detail::si::semifuture([&] { return fields(); });
-}
 
 void service_with_special_namesSvIf::async_tm_fields(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_fields(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_fields();
+  });
 }
 
 int32_t service_with_special_namesSvNull::get() {
@@ -580,25 +719,23 @@ const char* service_with_special_namesAsyncProcessor::getServiceName() {
   return "service_with_special_names";
 }
 
-folly::Optional<std::string> service_with_special_namesAsyncProcessor::getCacheKey(folly::IOBuf* buf, apache::thrift::protocol::PROTOCOL_TYPES protType) {
-  return apache::thrift::detail::ap::get_cache_key(buf, protType, cacheKeyMap_);
+void service_with_special_namesAsyncProcessor::getServiceMetadata(apache::thrift::metadata::ThriftServiceMetadataResponse& response) {
+  ::apache::thrift::detail::md::ServiceMetadata<service_with_special_namesSvIf>::gen(*response.metadata_ref(), *response.context_ref());
 }
 
-void service_with_special_namesAsyncProcessor::process(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
-  apache::thrift::detail::ap::process(this, std::move(req), std::move(buf), protType, context, eb, tm);
+void service_with_special_namesAsyncProcessor::processSerializedRequest(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
+  apache::thrift::detail::ap::process(this, std::move(req), std::move(serializedRequest), protType, context, eb, tm);
 }
 
-bool service_with_special_namesAsyncProcessor::isOnewayMethod(const folly::IOBuf* buf, const apache::thrift::transport::THeader* header) {
-  return apache::thrift::detail::ap::is_oneway_method(buf, header, onewayMethods_);
+std::shared_ptr<folly::RequestContext> service_with_special_namesAsyncProcessor::getBaseContextForRequest() {
+  return iface_->getBaseContextForRequest();
 }
 
-std::unordered_set<std::string> service_with_special_namesAsyncProcessor::onewayMethods_ {};
-std::unordered_map<std::string, int16_t> service_with_special_namesAsyncProcessor::cacheKeyMap_ {};
-const service_with_special_namesAsyncProcessor::BinaryProtocolProcessMap& service_with_special_namesAsyncProcessor::getBinaryProtocolProcessMap() {
+const service_with_special_namesAsyncProcessor::ProcessMap& service_with_special_namesAsyncProcessor::getBinaryProtocolProcessMap() {
   return binaryProcessMap_;
 }
 
-const service_with_special_namesAsyncProcessor::BinaryProtocolProcessMap service_with_special_namesAsyncProcessor::binaryProcessMap_ {
+const service_with_special_namesAsyncProcessor::ProcessMap service_with_special_namesAsyncProcessor::binaryProcessMap_ {
   {"get", &service_with_special_namesAsyncProcessor::_processInThread_get<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
   {"getter", &service_with_special_namesAsyncProcessor::_processInThread_getter<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
   {"lists", &service_with_special_namesAsyncProcessor::_processInThread_lists<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
@@ -629,11 +766,11 @@ const service_with_special_namesAsyncProcessor::BinaryProtocolProcessMap service
   {"fields", &service_with_special_namesAsyncProcessor::_processInThread_fields<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
 };
 
-const service_with_special_namesAsyncProcessor::CompactProtocolProcessMap& service_with_special_namesAsyncProcessor::getCompactProtocolProcessMap() {
+const service_with_special_namesAsyncProcessor::ProcessMap& service_with_special_namesAsyncProcessor::getCompactProtocolProcessMap() {
   return compactProcessMap_;
 }
 
-const service_with_special_namesAsyncProcessor::CompactProtocolProcessMap service_with_special_namesAsyncProcessor::compactProcessMap_ {
+const service_with_special_namesAsyncProcessor::ProcessMap service_with_special_namesAsyncProcessor::compactProcessMap_ {
   {"get", &service_with_special_namesAsyncProcessor::_processInThread_get<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
   {"getter", &service_with_special_namesAsyncProcessor::_processInThread_getter<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
   {"lists", &service_with_special_namesAsyncProcessor::_processInThread_lists<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
@@ -665,6 +802,3 @@ const service_with_special_namesAsyncProcessor::CompactProtocolProcessMap servic
 };
 
 }} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
-
-}} // apache::thrift

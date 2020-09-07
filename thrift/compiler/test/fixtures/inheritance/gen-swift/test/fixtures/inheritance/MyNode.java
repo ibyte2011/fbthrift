@@ -14,18 +14,18 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.*;
 import java.util.*;
 
+@SwiftGenerated
 @ThriftService("MyNode")
-public interface MyNode extends test.fixtures.inheritance.MyRoot
-{
+public interface MyNode extends java.io.Closeable, test.fixtures.inheritance.MyRoot {
     @ThriftService("MyNode")
-    public interface Async extends test.fixtures.inheritance.MyRoot.Async
-    {
-        @ThriftMethod(value = "do_mid")
-        ListenableFuture<Void> doMid(
-        );
-    }
-    @ThriftMethod(value = "do_mid")
-    void doMid(
-    );
+    public interface Async extends java.io.Closeable, test.fixtures.inheritance.MyRoot.Async {
+        @Override void close();
 
+        @ThriftMethod(value = "do_mid")
+        ListenableFuture<Void> doMid();
+    }
+    @Override void close();
+
+    @ThriftMethod(value = "do_mid")
+    void doMid() throws org.apache.thrift.TException;
 }

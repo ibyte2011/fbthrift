@@ -5,16 +5,23 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/basic/gen-cpp2/module_data.h"
 
-namespace cpp2 {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _MyEnumEnumDataStorage::size;
-constexpr const std::array<MyEnum, 2> _MyEnumEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 2> _MyEnumEnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-} // cpp2
-namespace apache { namespace thrift {
 
-}} // apache::thrift
+constexpr const std::size_t TEnumDataStorage<::cpp2::MyEnum>::size;
+constexpr const std::array<::cpp2::MyEnum, 2> TEnumDataStorage<::cpp2::MyEnum>::values;
+constexpr const std::array<folly::StringPiece, 2> TEnumDataStorage<::cpp2::MyEnum>::names;
 
+
+constexpr const std::size_t TEnumDataStorage<::cpp2::MyUnion::Type>::size;
+constexpr const std::array<::cpp2::MyUnion::Type, 3> TEnumDataStorage<::cpp2::MyUnion::Type>::values;
+constexpr const std::array<folly::StringPiece, 3> TEnumDataStorage<::cpp2::MyUnion::Type>::names;
+
+
+} // namespace thrift
+} // namespace apache

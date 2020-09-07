@@ -1,22 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef THRIFT_ASYNC_MESSAGECHANNEL_H_
@@ -25,22 +20,16 @@
 #include <memory>
 
 #include <folly/ExceptionWrapper.h>
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/DelayedDestruction.h>
 #include <thrift/lib/cpp/Thrift.h>
 #include <thrift/lib/cpp/server/TServerObserver.h>
 #include <thrift/lib/cpp/transport/THeader.h>
+#include <thrift/lib/cpp/transport/TTransportException.h>
 
 namespace folly {
 class IOBuf;
 }
-
-namespace apache {
-namespace thrift {
-namespace async {
-class TAsyncTransport;
-}
-} // namespace thrift
-} // namespace apache
 
 using SamplingStatus = apache::thrift::server::TServerObserver::SamplingStatus;
 
@@ -63,31 +52,26 @@ class MessageChannel : virtual public folly::DelayedDestruction {
     virtual void messageSendError(folly::exception_wrapper&&) = 0;
   };
 
+  struct SendCallbackDeleter {
+    void operator()(apache::thrift::MessageChannel::SendCallback* callback) {
+      callback->messageSendError(
+          folly::make_exception_wrapper<transport::TTransportException>(
+              transport::TTransportException::TTransportExceptionType::
+                  INTERNAL_ERROR,
+              "internal error"));
+    }
+  };
+
+  using SendCallbackPtr = std::unique_ptr<
+      apache::thrift::MessageChannel::SendCallback,
+      SendCallbackDeleter>;
+
   class RecvCallback {
    public:
-    struct sample {
-     public:
-      uint64_t readBegin;
-      uint64_t readEnd;
-
-      sample(SamplingStatus status) : status_(status) {}
-      SamplingStatus getStatus() const {
-        return status_;
-      }
-
-     private:
-      SamplingStatus status_;
-    };
-
     virtual ~RecvCallback() {}
-    virtual SamplingStatus shouldSample(
-        const apache::thrift::transport::THeader* /*header*/) const {
-      return SamplingStatus();
-    }
     virtual void messageReceived(
         std::unique_ptr<folly::IOBuf>&&,
-        std::unique_ptr<apache::thrift::transport::THeader>&&,
-        std::unique_ptr<sample>) = 0;
+        std::unique_ptr<apache::thrift::transport::THeader>&&) = 0;
     virtual void messageChannelEOF() = 0;
     virtual void messageReceiveErrorWrapped(folly::exception_wrapper&&) = 0;
   };
@@ -105,7 +89,7 @@ class MessageChannel : virtual public folly::DelayedDestruction {
    */
   virtual void setReceiveCallback(RecvCallback*) = 0;
 
-  apache::thrift::async::TAsyncTransport* getTransport() {
+  folly::AsyncTransport* getTransport() {
     return nullptr;
   }
 };

@@ -7,23 +7,25 @@
 #pragma once
 
 #include <thrift/lib/cpp2/frozen/Frozen.h>
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/module_types.h"
 #include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/include1_layouts.h"
 #include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/include2_layouts.h"
 namespace apache { namespace thrift { namespace frozen {
 
-FROZEN_TYPE( ::some::ns::ModuleA,
+
+
+FROZEN_TYPE(::some::ns::ModuleA,
   FROZEN_FIELD(i32Field, 1, int32_t)
-  FROZEN_FIELD(strField, 2, std::string)
-  FROZEN_FIELD(listField, 3, std::vector<int16_t>)
-  FROZEN_FIELD(mapField, 4, std::map<std::string, int32_t>)
+  FROZEN_FIELD(strField, 2, ::std::string)
+  FROZEN_FIELD(listField, 3, ::std::vector<int16_t>)
+  FROZEN_FIELD(mapField, 4, ::std::map<::std::string, int32_t>)
   FROZEN_FIELD(inclAField, 5,  ::some::ns::IncludedA)
   FROZEN_FIELD(inclBField, 6,  ::some::ns::IncludedB)
   FROZEN_VIEW(
     FROZEN_VIEW_FIELD(i32Field, int32_t)
-    FROZEN_VIEW_FIELD(strField, std::string)
-    FROZEN_VIEW_FIELD(listField, std::vector<int16_t>)
-    FROZEN_VIEW_FIELD(mapField, std::map<std::string, int32_t>)
+    FROZEN_VIEW_FIELD(strField, ::std::string)
+    FROZEN_VIEW_FIELD(listField, ::std::vector<int16_t>)
+    FROZEN_VIEW_FIELD(mapField, ::std::map<::std::string, int32_t>)
     FROZEN_VIEW_FIELD(inclAField,  ::some::ns::IncludedA)
     FROZEN_VIEW_FIELD(inclBField,  ::some::ns::IncludedB))
   FROZEN_SAVE_INLINE(
@@ -40,7 +42,10 @@ FROZEN_TYPE( ::some::ns::ModuleA,
     FROZEN_LOAD_FIELD(mapField, 4)
     FROZEN_LOAD_FIELD(inclAField, 5)
     FROZEN_LOAD_FIELD(inclBField, 6)));
-FROZEN_TYPE( ::some::ns::ModuleB,
+
+
+
+FROZEN_TYPE(::some::ns::ModuleB,
   FROZEN_FIELD(i32Field, 1, int32_t)
   FROZEN_FIELD(inclEnumB, 2,  ::some::ns::EnumB)
   FROZEN_VIEW(
@@ -52,5 +57,7 @@ FROZEN_TYPE( ::some::ns::ModuleB,
   FROZEN_LOAD_INLINE(
     FROZEN_LOAD_FIELD(i32Field, 1)
     FROZEN_LOAD_FIELD(inclEnumB, 2)));
+
+
 
 }}} // apache::thrift::frozen

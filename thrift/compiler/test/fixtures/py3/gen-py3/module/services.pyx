@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,6 +46,8 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport module.types as _module_types
 import module.types as _module_types
+
+cimport module.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -49,155 +61,50 @@ from module.services_wrapper cimport cRederivedServiceInterface
 
 
 cdef extern from "<utility>" namespace "std":
-    cdef cFollyPromise[int32_t] move_promise_int32_t "std::move"(
-        cFollyPromise[int32_t])
-    cdef cFollyPromise[cFollyUnit] move_promise_cFollyUnit "std::move"(
-        cFollyPromise[cFollyUnit])
-    cdef cFollyPromise[unique_ptr[string]] move_promise_string "std::move"(
+    cdef cFollyPromise[_module_types.cAnEnum] move_promise__module_types_cAnEnum "std::move"(
+        cFollyPromise[_module_types.cAnEnum])
+    cdef cFollyPromise[unique_ptr[_module_types.cBinaryUnionStruct]] move_promise__module_types_cBinaryUnionStruct "std::move"(
+        cFollyPromise[unique_ptr[_module_types.cBinaryUnionStruct]])
+    cdef cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]] move_promise_vector___module_types_cAnEnum "std::move"(
+        cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]])
+    cdef cFollyPromise[unique_ptr[vector[vector[cint32_t]]]] move_promise_vector__vector__cint32_t "std::move"(
+        cFollyPromise[unique_ptr[vector[vector[cint32_t]]]])
+    cdef cFollyPromise[unique_ptr[vector[cset[string]]]] move_promise_vector__cset__string "std::move"(
+        cFollyPromise[unique_ptr[vector[cset[string]]]])
+    cdef cFollyPromise[unique_ptr[vector[cint32_t]]] move_promise_vector__cint32_t "std::move"(
+        cFollyPromise[unique_ptr[vector[cint32_t]]])
+    cdef cFollyPromise[unique_ptr[cmap[string,cmap[string,cint32_t]]]] move_promise_cmap__string_cmap__string_cint32_t "std::move"(
+        cFollyPromise[unique_ptr[cmap[string,cmap[string,cint32_t]]]])
+    cdef cFollyPromise[unique_ptr[cmap[string,cint16_t]]] move_promise_cmap__string_cint16_t "std::move"(
+        cFollyPromise[unique_ptr[cmap[string,cint16_t]]])
+    cdef cFollyPromise[unique_ptr[cset[string]]] move_promise_cset__binary "std::move"(
+        cFollyPromise[unique_ptr[cset[string]]])
+    cdef cFollyPromise[unique_ptr[cset[cint32_t]]] move_promise_cset__cint32_t "std::move"(
+        cFollyPromise[unique_ptr[cset[cint32_t]]])
+    cdef cFollyPromise[unique_ptr[cset[string]]] move_promise_cset__string "std::move"(
+        cFollyPromise[unique_ptr[cset[string]]])
+    cdef cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] move_promise__module_types_cSimpleStruct "std::move"(
+        cFollyPromise[unique_ptr[_module_types.cSimpleStruct]])
+    cdef cFollyPromise[unique_ptr[string]] move_promise_binary "std::move"(
         cFollyPromise[unique_ptr[string]])
     cdef cFollyPromise[cbool] move_promise_cbool "std::move"(
         cFollyPromise[cbool])
-    cdef cFollyPromise[int8_t] move_promise_int8_t "std::move"(
-        cFollyPromise[int8_t])
-    cdef cFollyPromise[int16_t] move_promise_int16_t "std::move"(
-        cFollyPromise[int16_t])
-    cdef cFollyPromise[int64_t] move_promise_int64_t "std::move"(
-        cFollyPromise[int64_t])
+    cdef cFollyPromise[cint8_t] move_promise_cint8_t "std::move"(
+        cFollyPromise[cint8_t])
     cdef cFollyPromise[double] move_promise_double "std::move"(
         cFollyPromise[double])
-    cdef cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] move_promise__module_types_cSimpleStruct "std::move"(
-        cFollyPromise[unique_ptr[_module_types.cSimpleStruct]])
-    cdef cFollyPromise[unique_ptr[vector[int32_t]]] move_promise_vector__int32_t "std::move"(
-        cFollyPromise[unique_ptr[vector[int32_t]]])
-    cdef cFollyPromise[unique_ptr[cset[string]]] move_promise_cset__string "std::move"(
-        cFollyPromise[unique_ptr[cset[string]]])
-    cdef cFollyPromise[unique_ptr[cmap[string,int16_t]]] move_promise_cmap__string_int16_t "std::move"(
-        cFollyPromise[unique_ptr[cmap[string,int16_t]]])
-    cdef cFollyPromise[_module_types.cAnEnum] move_promise__module_types_cAnEnum "std::move"(
-        cFollyPromise[_module_types.cAnEnum])
-    cdef cFollyPromise[unique_ptr[vector[vector[int32_t]]]] move_promise_vector__vector__int32_t "std::move"(
-        cFollyPromise[unique_ptr[vector[vector[int32_t]]]])
-    cdef cFollyPromise[unique_ptr[cmap[string,cmap[string,int32_t]]]] move_promise_cmap__string_cmap__string_int32_t "std::move"(
-        cFollyPromise[unique_ptr[cmap[string,cmap[string,int32_t]]]])
-    cdef cFollyPromise[unique_ptr[vector[cset[string]]]] move_promise_vector__cset__string "std::move"(
-        cFollyPromise[unique_ptr[vector[cset[string]]]])
-    cdef cFollyPromise[unique_ptr[cset[int32_t]]] move_promise_cset__int32_t "std::move"(
-        cFollyPromise[unique_ptr[cset[int32_t]]])
-    cdef cFollyPromise[unique_ptr[string]] move_promise_binary "std::move"(
+    cdef cFollyPromise[cint16_t] move_promise_cint16_t "std::move"(
+        cFollyPromise[cint16_t])
+    cdef cFollyPromise[cint32_t] move_promise_cint32_t "std::move"(
+        cFollyPromise[cint32_t])
+    cdef cFollyPromise[cint64_t] move_promise_cint64_t "std::move"(
+        cFollyPromise[cint64_t])
+    cdef cFollyPromise[unique_ptr[string]] move_promise_string "std::move"(
         cFollyPromise[unique_ptr[string]])
-    cdef cFollyPromise[unique_ptr[cset[string]]] move_promise_cset__binary "std::move"(
-        cFollyPromise[unique_ptr[cset[string]]])
-    cdef cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]] move_promise_vector___module_types_cAnEnum "std::move"(
-        cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]])
+    cdef cFollyPromise[cFollyUnit] move_promise_cFollyUnit "std::move"(
+        cFollyPromise[cFollyUnit])
 
-cdef class Promise_int32_t:
-    cdef cFollyPromise[int32_t] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[int32_t] cPromise):
-        inst = <Promise_int32_t>Promise_int32_t.__new__(Promise_int32_t)
-        inst.cPromise = move_promise_int32_t(cPromise)
-        return inst
-
-cdef class Promise_cFollyUnit:
-    cdef cFollyPromise[cFollyUnit] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[cFollyUnit] cPromise):
-        inst = <Promise_cFollyUnit>Promise_cFollyUnit.__new__(Promise_cFollyUnit)
-        inst.cPromise = move_promise_cFollyUnit(cPromise)
-        return inst
-
-cdef class Promise_string:
-    cdef cFollyPromise[unique_ptr[string]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[string]] cPromise):
-        inst = <Promise_string>Promise_string.__new__(Promise_string)
-        inst.cPromise = move_promise_string(cPromise)
-        return inst
-
-cdef class Promise_cbool:
-    cdef cFollyPromise[cbool] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[cbool] cPromise):
-        inst = <Promise_cbool>Promise_cbool.__new__(Promise_cbool)
-        inst.cPromise = move_promise_cbool(cPromise)
-        return inst
-
-cdef class Promise_int8_t:
-    cdef cFollyPromise[int8_t] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[int8_t] cPromise):
-        inst = <Promise_int8_t>Promise_int8_t.__new__(Promise_int8_t)
-        inst.cPromise = move_promise_int8_t(cPromise)
-        return inst
-
-cdef class Promise_int16_t:
-    cdef cFollyPromise[int16_t] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[int16_t] cPromise):
-        inst = <Promise_int16_t>Promise_int16_t.__new__(Promise_int16_t)
-        inst.cPromise = move_promise_int16_t(cPromise)
-        return inst
-
-cdef class Promise_int64_t:
-    cdef cFollyPromise[int64_t] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[int64_t] cPromise):
-        inst = <Promise_int64_t>Promise_int64_t.__new__(Promise_int64_t)
-        inst.cPromise = move_promise_int64_t(cPromise)
-        return inst
-
-cdef class Promise_double:
-    cdef cFollyPromise[double] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[double] cPromise):
-        inst = <Promise_double>Promise_double.__new__(Promise_double)
-        inst.cPromise = move_promise_double(cPromise)
-        return inst
-
-cdef class Promise__module_types_cSimpleStruct:
-    cdef cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] cPromise):
-        inst = <Promise__module_types_cSimpleStruct>Promise__module_types_cSimpleStruct.__new__(Promise__module_types_cSimpleStruct)
-        inst.cPromise = move_promise__module_types_cSimpleStruct(cPromise)
-        return inst
-
-cdef class Promise_vector__int32_t:
-    cdef cFollyPromise[unique_ptr[vector[int32_t]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[vector[int32_t]]] cPromise):
-        inst = <Promise_vector__int32_t>Promise_vector__int32_t.__new__(Promise_vector__int32_t)
-        inst.cPromise = move_promise_vector__int32_t(cPromise)
-        return inst
-
-cdef class Promise_cset__string:
-    cdef cFollyPromise[unique_ptr[cset[string]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[cset[string]]] cPromise):
-        inst = <Promise_cset__string>Promise_cset__string.__new__(Promise_cset__string)
-        inst.cPromise = move_promise_cset__string(cPromise)
-        return inst
-
-cdef class Promise_cmap__string_int16_t:
-    cdef cFollyPromise[unique_ptr[cmap[string,int16_t]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[cmap[string,int16_t]]] cPromise):
-        inst = <Promise_cmap__string_int16_t>Promise_cmap__string_int16_t.__new__(Promise_cmap__string_int16_t)
-        inst.cPromise = move_promise_cmap__string_int16_t(cPromise)
-        return inst
-
+@cython.auto_pickle(False)
 cdef class Promise__module_types_cAnEnum:
     cdef cFollyPromise[_module_types.cAnEnum] cPromise
 
@@ -207,60 +114,17 @@ cdef class Promise__module_types_cAnEnum:
         inst.cPromise = move_promise__module_types_cAnEnum(cPromise)
         return inst
 
-cdef class Promise_vector__vector__int32_t:
-    cdef cFollyPromise[unique_ptr[vector[vector[int32_t]]]] cPromise
+@cython.auto_pickle(False)
+cdef class Promise__module_types_cBinaryUnionStruct:
+    cdef cFollyPromise[unique_ptr[_module_types.cBinaryUnionStruct]] cPromise
 
     @staticmethod
-    cdef create(cFollyPromise[unique_ptr[vector[vector[int32_t]]]] cPromise):
-        inst = <Promise_vector__vector__int32_t>Promise_vector__vector__int32_t.__new__(Promise_vector__vector__int32_t)
-        inst.cPromise = move_promise_vector__vector__int32_t(cPromise)
+    cdef create(cFollyPromise[unique_ptr[_module_types.cBinaryUnionStruct]] cPromise):
+        inst = <Promise__module_types_cBinaryUnionStruct>Promise__module_types_cBinaryUnionStruct.__new__(Promise__module_types_cBinaryUnionStruct)
+        inst.cPromise = move_promise__module_types_cBinaryUnionStruct(cPromise)
         return inst
 
-cdef class Promise_cmap__string_cmap__string_int32_t:
-    cdef cFollyPromise[unique_ptr[cmap[string,cmap[string,int32_t]]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[cmap[string,cmap[string,int32_t]]]] cPromise):
-        inst = <Promise_cmap__string_cmap__string_int32_t>Promise_cmap__string_cmap__string_int32_t.__new__(Promise_cmap__string_cmap__string_int32_t)
-        inst.cPromise = move_promise_cmap__string_cmap__string_int32_t(cPromise)
-        return inst
-
-cdef class Promise_vector__cset__string:
-    cdef cFollyPromise[unique_ptr[vector[cset[string]]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[vector[cset[string]]]] cPromise):
-        inst = <Promise_vector__cset__string>Promise_vector__cset__string.__new__(Promise_vector__cset__string)
-        inst.cPromise = move_promise_vector__cset__string(cPromise)
-        return inst
-
-cdef class Promise_cset__int32_t:
-    cdef cFollyPromise[unique_ptr[cset[int32_t]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[cset[int32_t]]] cPromise):
-        inst = <Promise_cset__int32_t>Promise_cset__int32_t.__new__(Promise_cset__int32_t)
-        inst.cPromise = move_promise_cset__int32_t(cPromise)
-        return inst
-
-cdef class Promise_binary:
-    cdef cFollyPromise[unique_ptr[string]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[string]] cPromise):
-        inst = <Promise_binary>Promise_binary.__new__(Promise_binary)
-        inst.cPromise = move_promise_binary(cPromise)
-        return inst
-
-cdef class Promise_cset__binary:
-    cdef cFollyPromise[unique_ptr[cset[string]]] cPromise
-
-    @staticmethod
-    cdef create(cFollyPromise[unique_ptr[cset[string]]] cPromise):
-        inst = <Promise_cset__binary>Promise_cset__binary.__new__(Promise_cset__binary)
-        inst.cPromise = move_promise_cset__binary(cPromise)
-        return inst
-
+@cython.auto_pickle(False)
 cdef class Promise_vector___module_types_cAnEnum:
     cdef cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]] cPromise
 
@@ -270,10 +134,191 @@ cdef class Promise_vector___module_types_cAnEnum:
         inst.cPromise = move_promise_vector___module_types_cAnEnum(cPromise)
         return inst
 
+@cython.auto_pickle(False)
+cdef class Promise_vector__vector__cint32_t:
+    cdef cFollyPromise[unique_ptr[vector[vector[cint32_t]]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[vector[vector[cint32_t]]]] cPromise):
+        inst = <Promise_vector__vector__cint32_t>Promise_vector__vector__cint32_t.__new__(Promise_vector__vector__cint32_t)
+        inst.cPromise = move_promise_vector__vector__cint32_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_vector__cset__string:
+    cdef cFollyPromise[unique_ptr[vector[cset[string]]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[vector[cset[string]]]] cPromise):
+        inst = <Promise_vector__cset__string>Promise_vector__cset__string.__new__(Promise_vector__cset__string)
+        inst.cPromise = move_promise_vector__cset__string(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_vector__cint32_t:
+    cdef cFollyPromise[unique_ptr[vector[cint32_t]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[vector[cint32_t]]] cPromise):
+        inst = <Promise_vector__cint32_t>Promise_vector__cint32_t.__new__(Promise_vector__cint32_t)
+        inst.cPromise = move_promise_vector__cint32_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cmap__string_cmap__string_cint32_t:
+    cdef cFollyPromise[unique_ptr[cmap[string,cmap[string,cint32_t]]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[cmap[string,cmap[string,cint32_t]]]] cPromise):
+        inst = <Promise_cmap__string_cmap__string_cint32_t>Promise_cmap__string_cmap__string_cint32_t.__new__(Promise_cmap__string_cmap__string_cint32_t)
+        inst.cPromise = move_promise_cmap__string_cmap__string_cint32_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cmap__string_cint16_t:
+    cdef cFollyPromise[unique_ptr[cmap[string,cint16_t]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[cmap[string,cint16_t]]] cPromise):
+        inst = <Promise_cmap__string_cint16_t>Promise_cmap__string_cint16_t.__new__(Promise_cmap__string_cint16_t)
+        inst.cPromise = move_promise_cmap__string_cint16_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cset__binary:
+    cdef cFollyPromise[unique_ptr[cset[string]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[cset[string]]] cPromise):
+        inst = <Promise_cset__binary>Promise_cset__binary.__new__(Promise_cset__binary)
+        inst.cPromise = move_promise_cset__binary(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cset__cint32_t:
+    cdef cFollyPromise[unique_ptr[cset[cint32_t]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[cset[cint32_t]]] cPromise):
+        inst = <Promise_cset__cint32_t>Promise_cset__cint32_t.__new__(Promise_cset__cint32_t)
+        inst.cPromise = move_promise_cset__cint32_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cset__string:
+    cdef cFollyPromise[unique_ptr[cset[string]]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[cset[string]]] cPromise):
+        inst = <Promise_cset__string>Promise_cset__string.__new__(Promise_cset__string)
+        inst.cPromise = move_promise_cset__string(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise__module_types_cSimpleStruct:
+    cdef cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] cPromise):
+        inst = <Promise__module_types_cSimpleStruct>Promise__module_types_cSimpleStruct.__new__(Promise__module_types_cSimpleStruct)
+        inst.cPromise = move_promise__module_types_cSimpleStruct(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_binary:
+    cdef cFollyPromise[unique_ptr[string]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[string]] cPromise):
+        inst = <Promise_binary>Promise_binary.__new__(Promise_binary)
+        inst.cPromise = move_promise_binary(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cbool:
+    cdef cFollyPromise[cbool] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cbool] cPromise):
+        inst = <Promise_cbool>Promise_cbool.__new__(Promise_cbool)
+        inst.cPromise = move_promise_cbool(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cint8_t:
+    cdef cFollyPromise[cint8_t] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cint8_t] cPromise):
+        inst = <Promise_cint8_t>Promise_cint8_t.__new__(Promise_cint8_t)
+        inst.cPromise = move_promise_cint8_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_double:
+    cdef cFollyPromise[double] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[double] cPromise):
+        inst = <Promise_double>Promise_double.__new__(Promise_double)
+        inst.cPromise = move_promise_double(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cint16_t:
+    cdef cFollyPromise[cint16_t] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cint16_t] cPromise):
+        inst = <Promise_cint16_t>Promise_cint16_t.__new__(Promise_cint16_t)
+        inst.cPromise = move_promise_cint16_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cint32_t:
+    cdef cFollyPromise[cint32_t] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cint32_t] cPromise):
+        inst = <Promise_cint32_t>Promise_cint32_t.__new__(Promise_cint32_t)
+        inst.cPromise = move_promise_cint32_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cint64_t:
+    cdef cFollyPromise[cint64_t] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cint64_t] cPromise):
+        inst = <Promise_cint64_t>Promise_cint64_t.__new__(Promise_cint64_t)
+        inst.cPromise = move_promise_cint64_t(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_string:
+    cdef cFollyPromise[unique_ptr[string]] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[unique_ptr[string]] cPromise):
+        inst = <Promise_string>Promise_string.__new__(Promise_string)
+        inst.cPromise = move_promise_string(cPromise)
+        return inst
+
+@cython.auto_pickle(False)
+cdef class Promise_cFollyUnit:
+    cdef cFollyPromise[cFollyUnit] cPromise
+
+    @staticmethod
+    cdef create(cFollyPromise[cFollyUnit] cPromise):
+        inst = <Promise_cFollyUnit>Promise_cFollyUnit.__new__(Promise_cFollyUnit)
+        inst.cPromise = move_promise_cFollyUnit(cPromise)
+        return inst
+
 cdef object _SimpleService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class SimpleServiceInterface(
     ServiceInterface
 ):
@@ -643,10 +688,26 @@ cdef class SimpleServiceInterface(
             self,
             the_enum):
         raise NotImplementedError("async def contain_enum is not implemented")
+
+    @staticmethod
+    def pass_context_get_binary_union_struct(fn):
+        return pass_context(fn)
+
+    async def get_binary_union_struct(
+            self,
+            u):
+        raise NotImplementedError("async def get_binary_union_struct is not implemented")
+
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__SimpleService(for_clients=False)
+
 cdef object _DerivedService_annotations = _py_types.MappingProxyType({
+    """bar""": """1""",    """foo""": """\"\"\"""",
 })
 
 
+@cython.auto_pickle(False)
 cdef class DerivedServiceInterface(
 SimpleServiceInterface
 ):
@@ -665,10 +726,16 @@ SimpleServiceInterface
     async def get_six(
             self):
         raise NotImplementedError("async def get_six is not implemented")
+
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__DerivedService(for_clients=False)
+
 cdef object _RederivedService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class RederivedServiceInterface(
 DerivedServiceInterface
 ):
@@ -688,18 +755,22 @@ DerivedServiceInterface
             self):
         raise NotImplementedError("async def get_seven is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__RederivedService(for_clients=False)
+
+
 
 cdef api void call_cy_SimpleService_get_five(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise
+    cFollyPromise[cint32_t] cPromise
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    __context = None
-    if __iface._pass_context_get_five:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_five_coro(
             self,
@@ -707,14 +778,16 @@ cdef api void call_cy_SimpleService_get_five(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_five_coro(
     object self,
     object ctx,
-    Promise_int32_t promise
+    Promise_cint32_t promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_five, "pass_context", False):
             result = await self.get_five(ctx,)
         else:
             result = await self.get_five()
@@ -732,21 +805,20 @@ async def SimpleService_get_five_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_add_five(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
-    int32_t num
+    cFollyPromise[cint32_t] cPromise,
+    cint32_t num
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
     arg_num = num
-    __context = None
-    if __iface._pass_context_add_five:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_add_five_coro(
             self,
@@ -755,15 +827,17 @@ cdef api void call_cy_SimpleService_add_five(
             arg_num
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_add_five_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     num
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.add_five, "pass_context", False):
             result = await self.add_five(ctx,
                       num)
         else:
@@ -783,19 +857,18 @@ async def SimpleService_add_five_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_do_nothing(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    __context = None
-    if __iface._pass_context_do_nothing:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_do_nothing_coro(
             self,
@@ -803,6 +876,8 @@ cdef api void call_cy_SimpleService_do_nothing(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_do_nothing_coro(
     object self,
@@ -810,7 +885,7 @@ async def SimpleService_do_nothing_coro(
     Promise_cFollyUnit promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.do_nothing, "pass_context", False):
             result = await self.do_nothing(ctx,)
         else:
             result = await self.do_nothing()
@@ -837,14 +912,13 @@ cdef api void call_cy_SimpleService_concat(
     unique_ptr[string] first,
     unique_ptr[string] second
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_string.create(move_promise_string(cPromise))
-    arg_first = (deref(first)).decode('UTF-8')
-    arg_second = (deref(second)).decode('UTF-8')
-    __context = None
-    if __iface._pass_context_concat:
-        __context = RequestContext.create(ctx)
+    arg_first = (deref(first)).data().decode('UTF-8')
+    arg_second = (deref(second)).data().decode('UTF-8')
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_concat_coro(
             self,
@@ -854,6 +928,8 @@ cdef api void call_cy_SimpleService_concat(
             arg_second
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_concat_coro(
     object self,
@@ -863,7 +939,7 @@ async def SimpleService_concat_coro(
     second
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.concat, "pass_context", False):
             result = await self.concat(ctx,
                       first,
                       second)
@@ -890,16 +966,15 @@ async def SimpleService_concat_coro(
 cdef api void call_cy_SimpleService_get_value(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
+    cFollyPromise[cint32_t] cPromise,
     unique_ptr[_module_types.cSimpleStruct] simple_struct
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
     arg_simple_struct = _module_types.SimpleStruct.create(shared_ptr[_module_types.cSimpleStruct](simple_struct.release()))
-    __context = None
-    if __iface._pass_context_get_value:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_value_coro(
             self,
@@ -908,15 +983,17 @@ cdef api void call_cy_SimpleService_get_value(
             arg_simple_struct
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_value_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     simple_struct
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_value, "pass_context", False):
             result = await self.get_value(ctx,
                       simple_struct)
         else:
@@ -936,7 +1013,7 @@ async def SimpleService_get_value_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_negate(
     object self,
@@ -944,13 +1021,12 @@ cdef api void call_cy_SimpleService_negate(
     cFollyPromise[cbool] cPromise,
     cbool input
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cbool.create(move_promise_cbool(cPromise))
     arg_input = input
-    __context = None
-    if __iface._pass_context_negate:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_negate_coro(
             self,
@@ -959,6 +1035,8 @@ cdef api void call_cy_SimpleService_negate(
             arg_input
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_negate_coro(
     object self,
@@ -967,7 +1045,7 @@ async def SimpleService_negate_coro(
     input
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.negate, "pass_context", False):
             result = await self.negate(ctx,
                       input)
         else:
@@ -992,16 +1070,15 @@ async def SimpleService_negate_coro(
 cdef api void call_cy_SimpleService_tiny(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int8_t] cPromise,
-    int8_t input
+    cFollyPromise[cint8_t] cPromise,
+    cint8_t input
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int8_t.create(move_promise_int8_t(cPromise))
+    __promise = Promise_cint8_t.create(move_promise_cint8_t(cPromise))
     arg_input = input
-    __context = None
-    if __iface._pass_context_tiny:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_tiny_coro(
             self,
@@ -1010,15 +1087,17 @@ cdef api void call_cy_SimpleService_tiny(
             arg_input
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_tiny_coro(
     object self,
     object ctx,
-    Promise_int8_t promise,
+    Promise_cint8_t promise,
     input
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.tiny, "pass_context", False):
             result = await self.tiny(ctx,
                       input)
         else:
@@ -1038,21 +1117,20 @@ async def SimpleService_tiny_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int8_t> result)
+        promise.cPromise.setValue(<cint8_t> result)
 
 cdef api void call_cy_SimpleService_small(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int16_t] cPromise,
-    int16_t input
+    cFollyPromise[cint16_t] cPromise,
+    cint16_t input
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int16_t.create(move_promise_int16_t(cPromise))
+    __promise = Promise_cint16_t.create(move_promise_cint16_t(cPromise))
     arg_input = input
-    __context = None
-    if __iface._pass_context_small:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_small_coro(
             self,
@@ -1061,15 +1139,17 @@ cdef api void call_cy_SimpleService_small(
             arg_input
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_small_coro(
     object self,
     object ctx,
-    Promise_int16_t promise,
+    Promise_cint16_t promise,
     input
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.small, "pass_context", False):
             result = await self.small(ctx,
                       input)
         else:
@@ -1089,21 +1169,20 @@ async def SimpleService_small_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int16_t> result)
+        promise.cPromise.setValue(<cint16_t> result)
 
 cdef api void call_cy_SimpleService_big(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int64_t] cPromise,
-    int64_t input
+    cFollyPromise[cint64_t] cPromise,
+    cint64_t input
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int64_t.create(move_promise_int64_t(cPromise))
+    __promise = Promise_cint64_t.create(move_promise_cint64_t(cPromise))
     arg_input = input
-    __context = None
-    if __iface._pass_context_big:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_big_coro(
             self,
@@ -1112,15 +1191,17 @@ cdef api void call_cy_SimpleService_big(
             arg_input
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_big_coro(
     object self,
     object ctx,
-    Promise_int64_t promise,
+    Promise_cint64_t promise,
     input
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.big, "pass_context", False):
             result = await self.big(ctx,
                       input)
         else:
@@ -1140,7 +1221,7 @@ async def SimpleService_big_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int64_t> result)
+        promise.cPromise.setValue(<cint64_t> result)
 
 cdef api void call_cy_SimpleService_two(
     object self,
@@ -1148,13 +1229,12 @@ cdef api void call_cy_SimpleService_two(
     cFollyPromise[double] cPromise,
     double input
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_double.create(move_promise_double(cPromise))
     arg_input = input
-    __context = None
-    if __iface._pass_context_two:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_two_coro(
             self,
@@ -1163,6 +1243,8 @@ cdef api void call_cy_SimpleService_two(
             arg_input
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_two_coro(
     object self,
@@ -1171,7 +1253,7 @@ async def SimpleService_two_coro(
     input
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.two, "pass_context", False):
             result = await self.two(ctx,
                       input)
         else:
@@ -1198,12 +1280,11 @@ cdef api void call_cy_SimpleService_expected_exception(
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    __context = None
-    if __iface._pass_context_expected_exception:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_expected_exception_coro(
             self,
@@ -1211,6 +1292,8 @@ cdef api void call_cy_SimpleService_expected_exception(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_expected_exception_coro(
     object self,
@@ -1218,7 +1301,7 @@ async def SimpleService_expected_exception_coro(
     Promise_cFollyUnit promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.expected_exception, "pass_context", False):
             result = await self.expected_exception(ctx,)
         else:
             result = await self.expected_exception()
@@ -1243,14 +1326,13 @@ async def SimpleService_expected_exception_coro(
 cdef api void call_cy_SimpleService_unexpected_exception(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise
+    cFollyPromise[cint32_t] cPromise
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    __context = None
-    if __iface._pass_context_unexpected_exception:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_unexpected_exception_coro(
             self,
@@ -1258,14 +1340,16 @@ cdef api void call_cy_SimpleService_unexpected_exception(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_unexpected_exception_coro(
     object self,
     object ctx,
-    Promise_int32_t promise
+    Promise_cint32_t promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.unexpected_exception, "pass_context", False):
             result = await self.unexpected_exception(ctx,)
         else:
             result = await self.unexpected_exception()
@@ -1283,21 +1367,20 @@ async def SimpleService_unexpected_exception_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_sum_i16_list(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
-    unique_ptr[vector[int16_t]] numbers
+    cFollyPromise[cint32_t] cPromise,
+    unique_ptr[vector[cint16_t]] numbers
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_numbers = _module_types.List__i16.create(_module_types.move(numbers))
-    __context = None
-    if __iface._pass_context_sum_i16_list:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_numbers = _module_types.List__i16.create(_module_types.__fbthrift_move(numbers))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_sum_i16_list_coro(
             self,
@@ -1306,15 +1389,17 @@ cdef api void call_cy_SimpleService_sum_i16_list(
             arg_numbers
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_sum_i16_list_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     numbers
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.sum_i16_list, "pass_context", False):
             result = await self.sum_i16_list(ctx,
                       numbers)
         else:
@@ -1334,21 +1419,20 @@ async def SimpleService_sum_i16_list_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_sum_i32_list(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
-    unique_ptr[vector[int32_t]] numbers
+    cFollyPromise[cint32_t] cPromise,
+    unique_ptr[vector[cint32_t]] numbers
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_numbers = _module_types.List__i32.create(_module_types.move(numbers))
-    __context = None
-    if __iface._pass_context_sum_i32_list:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_numbers = _module_types.List__i32.create(_module_types.__fbthrift_move(numbers))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_sum_i32_list_coro(
             self,
@@ -1357,15 +1441,17 @@ cdef api void call_cy_SimpleService_sum_i32_list(
             arg_numbers
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_sum_i32_list_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     numbers
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.sum_i32_list, "pass_context", False):
             result = await self.sum_i32_list(ctx,
                       numbers)
         else:
@@ -1385,21 +1471,20 @@ async def SimpleService_sum_i32_list_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_sum_i64_list(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
-    unique_ptr[vector[int64_t]] numbers
+    cFollyPromise[cint32_t] cPromise,
+    unique_ptr[vector[cint64_t]] numbers
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_numbers = _module_types.List__i64.create(_module_types.move(numbers))
-    __context = None
-    if __iface._pass_context_sum_i64_list:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_numbers = _module_types.List__i64.create(_module_types.__fbthrift_move(numbers))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_sum_i64_list_coro(
             self,
@@ -1408,15 +1493,17 @@ cdef api void call_cy_SimpleService_sum_i64_list(
             arg_numbers
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_sum_i64_list_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     numbers
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.sum_i64_list, "pass_context", False):
             result = await self.sum_i64_list(ctx,
                       numbers)
         else:
@@ -1436,7 +1523,7 @@ async def SimpleService_sum_i64_list_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_concat_many(
     object self,
@@ -1444,13 +1531,12 @@ cdef api void call_cy_SimpleService_concat_many(
     cFollyPromise[unique_ptr[string]] cPromise,
     unique_ptr[vector[string]] words
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_string.create(move_promise_string(cPromise))
-    arg_words = _module_types.List__string.create(_module_types.move(words))
-    __context = None
-    if __iface._pass_context_concat_many:
-        __context = RequestContext.create(ctx)
+    arg_words = _module_types.List__string.create(_module_types.__fbthrift_move(words))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_concat_many_coro(
             self,
@@ -1459,6 +1545,8 @@ cdef api void call_cy_SimpleService_concat_many(
             arg_words
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_concat_many_coro(
     object self,
@@ -1467,7 +1555,7 @@ async def SimpleService_concat_many_coro(
     words
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.concat_many, "pass_context", False):
             result = await self.concat_many(ctx,
                       words)
         else:
@@ -1492,16 +1580,15 @@ async def SimpleService_concat_many_coro(
 cdef api void call_cy_SimpleService_count_structs(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
+    cFollyPromise[cint32_t] cPromise,
     unique_ptr[vector[_module_types.cSimpleStruct]] items
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_items = _module_types.List__SimpleStruct.create(_module_types.move(items))
-    __context = None
-    if __iface._pass_context_count_structs:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_items = _module_types.List__SimpleStruct.create(_module_types.__fbthrift_move(items))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_count_structs_coro(
             self,
@@ -1510,15 +1597,17 @@ cdef api void call_cy_SimpleService_count_structs(
             arg_items
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_count_structs_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     items
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.count_structs, "pass_context", False):
             result = await self.count_structs(ctx,
                       items)
         else:
@@ -1538,21 +1627,20 @@ async def SimpleService_count_structs_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_sum_set(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
-    unique_ptr[cset[int32_t]] numbers
+    cFollyPromise[cint32_t] cPromise,
+    unique_ptr[cset[cint32_t]] numbers
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_numbers = _module_types.Set__i32.create(_module_types.move(numbers))
-    __context = None
-    if __iface._pass_context_sum_set:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_numbers = _module_types.Set__i32.create(_module_types.__fbthrift_move(numbers))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_sum_set_coro(
             self,
@@ -1561,15 +1649,17 @@ cdef api void call_cy_SimpleService_sum_set(
             arg_numbers
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_sum_set_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     numbers
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.sum_set, "pass_context", False):
             result = await self.sum_set(ctx,
                       numbers)
         else:
@@ -1589,7 +1679,7 @@ async def SimpleService_sum_set_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_contains_word(
     object self,
@@ -1598,14 +1688,13 @@ cdef api void call_cy_SimpleService_contains_word(
     unique_ptr[cset[string]] words,
     unique_ptr[string] word
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cbool.create(move_promise_cbool(cPromise))
-    arg_words = _module_types.Set__string.create(_module_types.move(words))
-    arg_word = (deref(word)).decode('UTF-8')
-    __context = None
-    if __iface._pass_context_contains_word:
-        __context = RequestContext.create(ctx)
+    arg_words = _module_types.Set__string.create(_module_types.__fbthrift_move(words))
+    arg_word = (deref(word)).data().decode('UTF-8')
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_contains_word_coro(
             self,
@@ -1615,6 +1704,8 @@ cdef api void call_cy_SimpleService_contains_word(
             arg_word
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_contains_word_coro(
     object self,
@@ -1624,7 +1715,7 @@ async def SimpleService_contains_word_coro(
     word
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.contains_word, "pass_context", False):
             result = await self.contains_word(ctx,
                       words,
                       word)
@@ -1655,14 +1746,13 @@ cdef api void call_cy_SimpleService_get_map_value(
     unique_ptr[cmap[string,string]] words,
     unique_ptr[string] key
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_string.create(move_promise_string(cPromise))
-    arg_words = _module_types.Map__string_string.create(_module_types.move(words))
-    arg_key = (deref(key)).decode('UTF-8')
-    __context = None
-    if __iface._pass_context_get_map_value:
-        __context = RequestContext.create(ctx)
+    arg_words = _module_types.Map__string_string.create(_module_types.__fbthrift_move(words))
+    arg_key = (deref(key)).data().decode('UTF-8')
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_map_value_coro(
             self,
@@ -1672,6 +1762,8 @@ cdef api void call_cy_SimpleService_get_map_value(
             arg_key
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_map_value_coro(
     object self,
@@ -1681,7 +1773,7 @@ async def SimpleService_get_map_value_coro(
     key
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_map_value, "pass_context", False):
             result = await self.get_map_value(ctx,
                       words,
                       key)
@@ -1708,16 +1800,15 @@ async def SimpleService_get_map_value_coro(
 cdef api void call_cy_SimpleService_map_length(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int16_t] cPromise,
+    cFollyPromise[cint16_t] cPromise,
     unique_ptr[cmap[string,_module_types.cSimpleStruct]] items
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int16_t.create(move_promise_int16_t(cPromise))
-    arg_items = _module_types.Map__string_SimpleStruct.create(_module_types.move(items))
-    __context = None
-    if __iface._pass_context_map_length:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint16_t.create(move_promise_cint16_t(cPromise))
+    arg_items = _module_types.Map__string_SimpleStruct.create(_module_types.__fbthrift_move(items))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_map_length_coro(
             self,
@@ -1726,15 +1817,17 @@ cdef api void call_cy_SimpleService_map_length(
             arg_items
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_map_length_coro(
     object self,
     object ctx,
-    Promise_int16_t promise,
+    Promise_cint16_t promise,
     items
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.map_length, "pass_context", False):
             result = await self.map_length(ctx,
                       items)
         else:
@@ -1754,21 +1847,20 @@ async def SimpleService_map_length_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int16_t> result)
+        promise.cPromise.setValue(<cint16_t> result)
 
 cdef api void call_cy_SimpleService_sum_map_values(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int16_t] cPromise,
-    unique_ptr[cmap[string,int16_t]] items
+    cFollyPromise[cint16_t] cPromise,
+    unique_ptr[cmap[string,cint16_t]] items
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int16_t.create(move_promise_int16_t(cPromise))
-    arg_items = _module_types.Map__string_i16.create(_module_types.move(items))
-    __context = None
-    if __iface._pass_context_sum_map_values:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint16_t.create(move_promise_cint16_t(cPromise))
+    arg_items = _module_types.Map__string_i16.create(_module_types.__fbthrift_move(items))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_sum_map_values_coro(
             self,
@@ -1777,15 +1869,17 @@ cdef api void call_cy_SimpleService_sum_map_values(
             arg_items
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_sum_map_values_coro(
     object self,
     object ctx,
-    Promise_int16_t promise,
+    Promise_cint16_t promise,
     items
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.sum_map_values, "pass_context", False):
             result = await self.sum_map_values(ctx,
                       items)
         else:
@@ -1805,21 +1899,20 @@ async def SimpleService_sum_map_values_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int16_t> result)
+        promise.cPromise.setValue(<cint16_t> result)
 
 cdef api void call_cy_SimpleService_complex_sum_i32(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
+    cFollyPromise[cint32_t] cPromise,
     unique_ptr[_module_types.cComplexStruct] counter
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
     arg_counter = _module_types.ComplexStruct.create(shared_ptr[_module_types.cComplexStruct](counter.release()))
-    __context = None
-    if __iface._pass_context_complex_sum_i32:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_complex_sum_i32_coro(
             self,
@@ -1828,15 +1921,17 @@ cdef api void call_cy_SimpleService_complex_sum_i32(
             arg_counter
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_complex_sum_i32_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     counter
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.complex_sum_i32, "pass_context", False):
             result = await self.complex_sum_i32(ctx,
                       counter)
         else:
@@ -1856,7 +1951,7 @@ async def SimpleService_complex_sum_i32_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_repeat_name(
     object self,
@@ -1864,13 +1959,12 @@ cdef api void call_cy_SimpleService_repeat_name(
     cFollyPromise[unique_ptr[string]] cPromise,
     unique_ptr[_module_types.cComplexStruct] counter
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_string.create(move_promise_string(cPromise))
     arg_counter = _module_types.ComplexStruct.create(shared_ptr[_module_types.cComplexStruct](counter.release()))
-    __context = None
-    if __iface._pass_context_repeat_name:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_repeat_name_coro(
             self,
@@ -1879,6 +1973,8 @@ cdef api void call_cy_SimpleService_repeat_name(
             arg_counter
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_repeat_name_coro(
     object self,
@@ -1887,7 +1983,7 @@ async def SimpleService_repeat_name_coro(
     counter
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.repeat_name, "pass_context", False):
             result = await self.repeat_name(ctx,
                       counter)
         else:
@@ -1914,12 +2010,11 @@ cdef api void call_cy_SimpleService_get_struct(
     Cpp2RequestContext* ctx,
     cFollyPromise[unique_ptr[_module_types.cSimpleStruct]] cPromise
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise__module_types_cSimpleStruct.create(move_promise__module_types_cSimpleStruct(cPromise))
-    __context = None
-    if __iface._pass_context_get_struct:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_struct_coro(
             self,
@@ -1927,6 +2022,8 @@ cdef api void call_cy_SimpleService_get_struct(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_struct_coro(
     object self,
@@ -1934,7 +2031,7 @@ async def SimpleService_get_struct_coro(
     Promise__module_types_cSimpleStruct promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_struct, "pass_context", False):
             result = await self.get_struct(ctx,)
         else:
             result = await self.get_struct()
@@ -1957,16 +2054,15 @@ async def SimpleService_get_struct_coro(
 cdef api void call_cy_SimpleService_fib(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[unique_ptr[vector[int32_t]]] cPromise,
-    int16_t n
+    cFollyPromise[unique_ptr[vector[cint32_t]]] cPromise,
+    cint16_t n
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_vector__int32_t.create(move_promise_vector__int32_t(cPromise))
+    __promise = Promise_vector__cint32_t.create(move_promise_vector__cint32_t(cPromise))
     arg_n = n
-    __context = None
-    if __iface._pass_context_fib:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_fib_coro(
             self,
@@ -1975,15 +2071,17 @@ cdef api void call_cy_SimpleService_fib(
             arg_n
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_fib_coro(
     object self,
     object ctx,
-    Promise_vector__int32_t promise,
+    Promise_vector__cint32_t promise,
     n
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.fib, "pass_context", False):
             result = await self.fib(ctx,
                       n)
         else:
@@ -2004,7 +2102,7 @@ async def SimpleService_fib_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(make_unique[vector[int32_t]](deref((<_module_types.List__i32?> result)._cpp_obj)))
+        promise.cPromise.setValue(make_unique[vector[cint32_t]](deref((<_module_types.List__i32?> result)._cpp_obj)))
 
 cdef api void call_cy_SimpleService_unique_words(
     object self,
@@ -2012,13 +2110,12 @@ cdef api void call_cy_SimpleService_unique_words(
     cFollyPromise[unique_ptr[cset[string]]] cPromise,
     unique_ptr[vector[string]] words
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cset__string.create(move_promise_cset__string(cPromise))
-    arg_words = _module_types.List__string.create(_module_types.move(words))
-    __context = None
-    if __iface._pass_context_unique_words:
-        __context = RequestContext.create(ctx)
+    arg_words = _module_types.List__string.create(_module_types.__fbthrift_move(words))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_unique_words_coro(
             self,
@@ -2027,6 +2124,8 @@ cdef api void call_cy_SimpleService_unique_words(
             arg_words
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_unique_words_coro(
     object self,
@@ -2035,7 +2134,7 @@ async def SimpleService_unique_words_coro(
     words
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.unique_words, "pass_context", False):
             result = await self.unique_words(ctx,
                       words)
         else:
@@ -2061,16 +2160,15 @@ async def SimpleService_unique_words_coro(
 cdef api void call_cy_SimpleService_words_count(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[unique_ptr[cmap[string,int16_t]]] cPromise,
+    cFollyPromise[unique_ptr[cmap[string,cint16_t]]] cPromise,
     unique_ptr[vector[string]] words
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_cmap__string_int16_t.create(move_promise_cmap__string_int16_t(cPromise))
-    arg_words = _module_types.List__string.create(_module_types.move(words))
-    __context = None
-    if __iface._pass_context_words_count:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cmap__string_cint16_t.create(move_promise_cmap__string_cint16_t(cPromise))
+    arg_words = _module_types.List__string.create(_module_types.__fbthrift_move(words))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_words_count_coro(
             self,
@@ -2079,15 +2177,17 @@ cdef api void call_cy_SimpleService_words_count(
             arg_words
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_words_count_coro(
     object self,
     object ctx,
-    Promise_cmap__string_int16_t promise,
+    Promise_cmap__string_cint16_t promise,
     words
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.words_count, "pass_context", False):
             result = await self.words_count(ctx,
                       words)
         else:
@@ -2108,7 +2208,7 @@ async def SimpleService_words_count_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(make_unique[cmap[string,int16_t]](deref((<_module_types.Map__string_i16?> result)._cpp_obj)))
+        promise.cPromise.setValue(make_unique[cmap[string,cint16_t]](deref((<_module_types.Map__string_i16?> result)._cpp_obj)))
 
 cdef api void call_cy_SimpleService_set_enum(
     object self,
@@ -2116,13 +2216,12 @@ cdef api void call_cy_SimpleService_set_enum(
     cFollyPromise[_module_types.cAnEnum] cPromise,
     _module_types.cAnEnum in_enum
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise__module_types_cAnEnum.create(move_promise__module_types_cAnEnum(cPromise))
     arg_in_enum = _module_types.AnEnum(<int> in_enum)
-    __context = None
-    if __iface._pass_context_set_enum:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_set_enum_coro(
             self,
@@ -2131,6 +2230,8 @@ cdef api void call_cy_SimpleService_set_enum(
             arg_in_enum
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_set_enum_coro(
     object self,
@@ -2139,7 +2240,7 @@ async def SimpleService_set_enum_coro(
     in_enum
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.set_enum, "pass_context", False):
             result = await self.set_enum(ctx,
                       in_enum)
         else:
@@ -2159,23 +2260,22 @@ async def SimpleService_set_enum_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(_module_types.AnEnum_to_cpp(result))
+        promise.cPromise.setValue(<_module_types.cAnEnum><int>result)
 
 cdef api void call_cy_SimpleService_list_of_lists(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[unique_ptr[vector[vector[int32_t]]]] cPromise,
-    int16_t num_lists,
-    int16_t num_items
+    cFollyPromise[unique_ptr[vector[vector[cint32_t]]]] cPromise,
+    cint16_t num_lists,
+    cint16_t num_items
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_vector__vector__int32_t.create(move_promise_vector__vector__int32_t(cPromise))
+    __promise = Promise_vector__vector__cint32_t.create(move_promise_vector__vector__cint32_t(cPromise))
     arg_num_lists = num_lists
     arg_num_items = num_items
-    __context = None
-    if __iface._pass_context_list_of_lists:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_list_of_lists_coro(
             self,
@@ -2185,16 +2285,18 @@ cdef api void call_cy_SimpleService_list_of_lists(
             arg_num_items
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_list_of_lists_coro(
     object self,
     object ctx,
-    Promise_vector__vector__int32_t promise,
+    Promise_vector__vector__cint32_t promise,
     num_lists,
     num_items
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.list_of_lists, "pass_context", False):
             result = await self.list_of_lists(ctx,
                       num_lists,
                       num_items)
@@ -2217,21 +2319,20 @@ async def SimpleService_list_of_lists_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(make_unique[vector[vector[int32_t]]](deref((<_module_types.List__List__i32?> result)._cpp_obj)))
+        promise.cPromise.setValue(make_unique[vector[vector[cint32_t]]](deref((<_module_types.List__List__i32?> result)._cpp_obj)))
 
 cdef api void call_cy_SimpleService_word_character_frequency(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[unique_ptr[cmap[string,cmap[string,int32_t]]]] cPromise,
+    cFollyPromise[unique_ptr[cmap[string,cmap[string,cint32_t]]]] cPromise,
     unique_ptr[string] sentence
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_cmap__string_cmap__string_int32_t.create(move_promise_cmap__string_cmap__string_int32_t(cPromise))
-    arg_sentence = (deref(sentence)).decode('UTF-8')
-    __context = None
-    if __iface._pass_context_word_character_frequency:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cmap__string_cmap__string_cint32_t.create(move_promise_cmap__string_cmap__string_cint32_t(cPromise))
+    arg_sentence = (deref(sentence)).data().decode('UTF-8')
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_word_character_frequency_coro(
             self,
@@ -2240,15 +2341,17 @@ cdef api void call_cy_SimpleService_word_character_frequency(
             arg_sentence
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_word_character_frequency_coro(
     object self,
     object ctx,
-    Promise_cmap__string_cmap__string_int32_t promise,
+    Promise_cmap__string_cmap__string_cint32_t promise,
     sentence
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.word_character_frequency, "pass_context", False):
             result = await self.word_character_frequency(ctx,
                       sentence)
         else:
@@ -2269,7 +2372,7 @@ async def SimpleService_word_character_frequency_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(make_unique[cmap[string,cmap[string,int32_t]]](deref((<_module_types.Map__string_Map__string_i32?> result)._cpp_obj)))
+        promise.cPromise.setValue(make_unique[cmap[string,cmap[string,cint32_t]]](deref((<_module_types.Map__string_Map__string_i32?> result)._cpp_obj)))
 
 cdef api void call_cy_SimpleService_list_of_sets(
     object self,
@@ -2277,13 +2380,12 @@ cdef api void call_cy_SimpleService_list_of_sets(
     cFollyPromise[unique_ptr[vector[cset[string]]]] cPromise,
     unique_ptr[string] some_words
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_vector__cset__string.create(move_promise_vector__cset__string(cPromise))
-    arg_some_words = (deref(some_words)).decode('UTF-8')
-    __context = None
-    if __iface._pass_context_list_of_sets:
-        __context = RequestContext.create(ctx)
+    arg_some_words = (deref(some_words)).data().decode('UTF-8')
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_list_of_sets_coro(
             self,
@@ -2292,6 +2394,8 @@ cdef api void call_cy_SimpleService_list_of_sets(
             arg_some_words
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_list_of_sets_coro(
     object self,
@@ -2300,7 +2404,7 @@ async def SimpleService_list_of_sets_coro(
     some_words
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.list_of_sets, "pass_context", False):
             result = await self.list_of_sets(ctx,
                       some_words)
         else:
@@ -2326,16 +2430,15 @@ async def SimpleService_list_of_sets_coro(
 cdef api void call_cy_SimpleService_nested_map_argument(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise,
+    cFollyPromise[cint32_t] cPromise,
     unique_ptr[cmap[string,vector[_module_types.cSimpleStruct]]] struct_map
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    arg_struct_map = _module_types.Map__string_List__SimpleStruct.create(_module_types.move(struct_map))
-    __context = None
-    if __iface._pass_context_nested_map_argument:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    arg_struct_map = _module_types.Map__string_List__SimpleStruct.create(_module_types.__fbthrift_move(struct_map))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_nested_map_argument_coro(
             self,
@@ -2344,15 +2447,17 @@ cdef api void call_cy_SimpleService_nested_map_argument(
             arg_struct_map
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_nested_map_argument_coro(
     object self,
     object ctx,
-    Promise_int32_t promise,
+    Promise_cint32_t promise,
     struct_map
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.nested_map_argument, "pass_context", False):
             result = await self.nested_map_argument(ctx,
                       struct_map)
         else:
@@ -2372,7 +2477,7 @@ async def SimpleService_nested_map_argument_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_SimpleService_make_sentence(
     object self,
@@ -2380,13 +2485,12 @@ cdef api void call_cy_SimpleService_make_sentence(
     cFollyPromise[unique_ptr[string]] cPromise,
     unique_ptr[vector[vector[string]]] word_chars
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_string.create(move_promise_string(cPromise))
-    arg_word_chars = _module_types.List__List__string.create(_module_types.move(word_chars))
-    __context = None
-    if __iface._pass_context_make_sentence:
-        __context = RequestContext.create(ctx)
+    arg_word_chars = _module_types.List__List__string.create(_module_types.__fbthrift_move(word_chars))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_make_sentence_coro(
             self,
@@ -2395,6 +2499,8 @@ cdef api void call_cy_SimpleService_make_sentence(
             arg_word_chars
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_make_sentence_coro(
     object self,
@@ -2403,7 +2509,7 @@ async def SimpleService_make_sentence_coro(
     word_chars
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.make_sentence, "pass_context", False):
             result = await self.make_sentence(ctx,
                       word_chars)
         else:
@@ -2428,16 +2534,15 @@ async def SimpleService_make_sentence_coro(
 cdef api void call_cy_SimpleService_get_union(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[unique_ptr[cset[int32_t]]] cPromise,
-    unique_ptr[vector[cset[int32_t]]] sets
+    cFollyPromise[unique_ptr[cset[cint32_t]]] cPromise,
+    unique_ptr[vector[cset[cint32_t]]] sets
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
-    __promise = Promise_cset__int32_t.create(move_promise_cset__int32_t(cPromise))
-    arg_sets = _module_types.List__Set__i32.create(_module_types.move(sets))
-    __context = None
-    if __iface._pass_context_get_union:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cset__cint32_t.create(move_promise_cset__cint32_t(cPromise))
+    arg_sets = _module_types.List__Set__i32.create(_module_types.__fbthrift_move(sets))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_union_coro(
             self,
@@ -2446,15 +2551,17 @@ cdef api void call_cy_SimpleService_get_union(
             arg_sets
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_union_coro(
     object self,
     object ctx,
-    Promise_cset__int32_t promise,
+    Promise_cset__cint32_t promise,
     sets
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_union, "pass_context", False):
             result = await self.get_union(ctx,
                       sets)
         else:
@@ -2475,7 +2582,7 @@ async def SimpleService_get_union_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(make_unique[cset[int32_t]](deref((<_module_types.Set__i32?> result)._cpp_obj)))
+        promise.cPromise.setValue(make_unique[cset[cint32_t]](deref((<_module_types.Set__i32?> result)._cpp_obj)))
 
 cdef api void call_cy_SimpleService_get_keys(
     object self,
@@ -2483,13 +2590,12 @@ cdef api void call_cy_SimpleService_get_keys(
     cFollyPromise[unique_ptr[cset[string]]] cPromise,
     unique_ptr[vector[cmap[string,string]]] string_map
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cset__string.create(move_promise_cset__string(cPromise))
-    arg_string_map = _module_types.List__Map__string_string.create(_module_types.move(string_map))
-    __context = None
-    if __iface._pass_context_get_keys:
-        __context = RequestContext.create(ctx)
+    arg_string_map = _module_types.List__Map__string_string.create(_module_types.__fbthrift_move(string_map))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_get_keys_coro(
             self,
@@ -2498,6 +2604,8 @@ cdef api void call_cy_SimpleService_get_keys(
             arg_string_map
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_get_keys_coro(
     object self,
@@ -2506,7 +2614,7 @@ async def SimpleService_get_keys_coro(
     string_map
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_keys, "pass_context", False):
             result = await self.get_keys(ctx,
                       string_map)
         else:
@@ -2533,15 +2641,14 @@ cdef api void call_cy_SimpleService_lookup_double(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[double] cPromise,
-    int32_t key
+    cint32_t key
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_double.create(move_promise_double(cPromise))
     arg_key = key
-    __context = None
-    if __iface._pass_context_lookup_double:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_lookup_double_coro(
             self,
@@ -2550,6 +2657,8 @@ cdef api void call_cy_SimpleService_lookup_double(
             arg_key
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_lookup_double_coro(
     object self,
@@ -2558,7 +2667,7 @@ async def SimpleService_lookup_double_coro(
     key
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.lookup_double, "pass_context", False):
             result = await self.lookup_double(ctx,
                       key)
         else:
@@ -2586,13 +2695,12 @@ cdef api void call_cy_SimpleService_retrieve_binary(
     cFollyPromise[unique_ptr[string]] cPromise,
     unique_ptr[string] something
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_binary.create(move_promise_binary(cPromise))
     arg_something = (deref(something))
-    __context = None
-    if __iface._pass_context_retrieve_binary:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_retrieve_binary_coro(
             self,
@@ -2601,6 +2709,8 @@ cdef api void call_cy_SimpleService_retrieve_binary(
             arg_something
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_retrieve_binary_coro(
     object self,
@@ -2609,7 +2719,7 @@ async def SimpleService_retrieve_binary_coro(
     something
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.retrieve_binary, "pass_context", False):
             result = await self.retrieve_binary(ctx,
                       something)
         else:
@@ -2637,13 +2747,12 @@ cdef api void call_cy_SimpleService_contain_binary(
     cFollyPromise[unique_ptr[cset[string]]] cPromise,
     unique_ptr[vector[string]] binaries
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_cset__binary.create(move_promise_cset__binary(cPromise))
-    arg_binaries = _module_types.List__binary.create(_module_types.move(binaries))
-    __context = None
-    if __iface._pass_context_contain_binary:
-        __context = RequestContext.create(ctx)
+    arg_binaries = _module_types.List__binary.create(_module_types.__fbthrift_move(binaries))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_contain_binary_coro(
             self,
@@ -2652,6 +2761,8 @@ cdef api void call_cy_SimpleService_contain_binary(
             arg_binaries
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_contain_binary_coro(
     object self,
@@ -2660,7 +2771,7 @@ async def SimpleService_contain_binary_coro(
     binaries
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.contain_binary, "pass_context", False):
             result = await self.contain_binary(ctx,
                       binaries)
         else:
@@ -2689,13 +2800,12 @@ cdef api void call_cy_SimpleService_contain_enum(
     cFollyPromise[unique_ptr[vector[_module_types.cAnEnum]]] cPromise,
     unique_ptr[vector[_module_types.cAnEnum]] the_enum
 ):
-    cdef SimpleServiceInterface __iface
-    __iface = self
     __promise = Promise_vector___module_types_cAnEnum.create(move_promise_vector___module_types_cAnEnum(cPromise))
-    arg_the_enum = _module_types.List__AnEnum.create(_module_types.move(the_enum))
-    __context = None
-    if __iface._pass_context_contain_enum:
-        __context = RequestContext.create(ctx)
+    arg_the_enum = _module_types.List__AnEnum.create(_module_types.__fbthrift_move(the_enum))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         SimpleService_contain_enum_coro(
             self,
@@ -2704,6 +2814,8 @@ cdef api void call_cy_SimpleService_contain_enum(
             arg_the_enum
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def SimpleService_contain_enum_coro(
     object self,
@@ -2712,7 +2824,7 @@ async def SimpleService_contain_enum_coro(
     the_enum
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.contain_enum, "pass_context", False):
             result = await self.contain_enum(ctx,
                       the_enum)
         else:
@@ -2735,17 +2847,68 @@ async def SimpleService_contain_enum_coro(
     else:
         promise.cPromise.setValue(make_unique[vector[_module_types.cAnEnum]](deref((<_module_types.List__AnEnum?> result)._cpp_obj)))
 
+cdef api void call_cy_SimpleService_get_binary_union_struct(
+    object self,
+    Cpp2RequestContext* ctx,
+    cFollyPromise[unique_ptr[_module_types.cBinaryUnionStruct]] cPromise,
+    unique_ptr[_module_types.cBinaryUnion] u
+):
+    __promise = Promise__module_types_cBinaryUnionStruct.create(move_promise__module_types_cBinaryUnionStruct(cPromise))
+    arg_u = _module_types.BinaryUnion.create(shared_ptr[_module_types.cBinaryUnion](u.release()))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
+    asyncio.get_event_loop().create_task(
+        SimpleService_get_binary_union_struct_coro(
+            self,
+            __context,
+            __promise,
+            arg_u
+        )
+    )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
+
+async def SimpleService_get_binary_union_struct_coro(
+    object self,
+    object ctx,
+    Promise__module_types_cBinaryUnionStruct promise,
+    u
+):
+    try:
+        if ctx and getattr(self.get_binary_union_struct, "pass_context", False):
+            result = await self.get_binary_union_struct(ctx,
+                      u)
+        else:
+            result = await self.get_binary_union_struct(
+                      u)
+    except __ApplicationError as ex:
+        # If the handler raised an ApplicationError convert it to a C++ one
+        promise.cPromise.setException(cTApplicationException(
+            ex.type.value, ex.message.encode('UTF-8')
+        ))
+    except Exception as ex:
+        print(
+            "Unexpected error in service handler get_binary_union_struct:",
+            file=sys.stderr)
+        traceback.print_exc()
+        promise.cPromise.setException(cTApplicationException(
+            cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
+        ))
+    else:
+        promise.cPromise.setValue(make_unique[_module_types.cBinaryUnionStruct](deref((<_module_types.BinaryUnionStruct?> result)._cpp_obj)))
+
 cdef api void call_cy_DerivedService_get_six(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise
+    cFollyPromise[cint32_t] cPromise
 ):
-    cdef DerivedServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    __context = None
-    if __iface._pass_context_get_six:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         DerivedService_get_six_coro(
             self,
@@ -2753,14 +2916,16 @@ cdef api void call_cy_DerivedService_get_six(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def DerivedService_get_six_coro(
     object self,
     object ctx,
-    Promise_int32_t promise
+    Promise_cint32_t promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_six, "pass_context", False):
             result = await self.get_six(ctx,)
         else:
             result = await self.get_six()
@@ -2778,19 +2943,18 @@ async def DerivedService_get_six_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 
 cdef api void call_cy_RederivedService_get_seven(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int32_t] cPromise
+    cFollyPromise[cint32_t] cPromise
 ):
-    cdef RederivedServiceInterface __iface
-    __iface = self
-    __promise = Promise_int32_t.create(move_promise_int32_t(cPromise))
-    __context = None
-    if __iface._pass_context_get_seven:
-        __context = RequestContext.create(ctx)
+    __promise = Promise_cint32_t.create(move_promise_cint32_t(cPromise))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         RederivedService_get_seven_coro(
             self,
@@ -2798,14 +2962,16 @@ cdef api void call_cy_RederivedService_get_seven(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def RederivedService_get_seven_coro(
     object self,
     object ctx,
-    Promise_int32_t promise
+    Promise_cint32_t promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.get_seven, "pass_context", False):
             result = await self.get_seven(ctx,)
         else:
             result = await self.get_seven()
@@ -2823,5 +2989,5 @@ async def RederivedService_get_seven_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int32_t> result)
+        promise.cPromise.setValue(<cint32_t> result)
 

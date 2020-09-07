@@ -1,26 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 #include <folly/io/Cursor.h>
 
-namespace apache { namespace thrift {
+namespace apache {
+namespace thrift {
 
 namespace util {
 
@@ -75,6 +72,7 @@ void readVarintMediumSlow(CursorT& c, T& value, const uint8_t* p, size_t len) {
     const uint8_t* start = p;
     do {
       uint64_t byte; // byte is uint64_t so that all shifts are 64-bit
+      // clang-format off
       byte = *p++; result  = (byte & 0x7f);       if (!(byte & 0x80)) break;
       byte = *p++; result |= (byte & 0x7f) <<  7; if (!(byte & 0x80)) break;
       if (sizeof(T) <= 1) throwInvalidVarint();
@@ -88,6 +86,7 @@ void readVarintMediumSlow(CursorT& c, T& value, const uint8_t* p, size_t len) {
       byte = *p++; result |= (byte & 0x7f) << 49; if (!(byte & 0x80)) break;
       byte = *p++; result |= (byte & 0x7f) << 56; if (!(byte & 0x80)) break;
       byte = *p++; result |= (byte & 0x7f) << 63; if (!(byte & 0x80)) break;
+      // clang-format on
       throwInvalidVarint();
     } while (false);
     value = static_cast<T>(result);
@@ -116,10 +115,12 @@ void readVarint(CursorT& c, T& value) {
   }
 }
 
-template <class T, class CursorT,
-          typename std::enable_if<
-            std::is_constructible<folly::io::Cursor, const CursorT&>::value,
-            bool>::type = false>
+template <
+    class T,
+    class CursorT,
+    typename std::enable_if<
+        std::is_constructible<folly::io::Cursor, const CursorT&>::value,
+        bool>::type = false>
 T readVarint(CursorT& c) {
   T value;
   readVarint<T, CursorT>(c, value);
@@ -130,10 +131,13 @@ namespace detail {
 
 template <typename T>
 class has_ensure_and_append {
-  template <typename U> static char f(decltype(&U::ensure), decltype(&U::append));
-  template <typename U> static long f(...);
-public:
-  enum {value = sizeof(f<T>(nullptr, nullptr)) == sizeof(char)};
+  template <typename U>
+  static char f(decltype(&U::ensure), decltype(&U::append));
+  template <typename U>
+  static long f(...);
+
+ public:
+  enum { value = sizeof(f<T>(nullptr, nullptr)) == sizeof(char) };
 };
 
 // Slow path if cursor class does not have ensure() and append() (e.g. RWCursor)
@@ -171,6 +175,7 @@ writeVarintSlow(Cursor& c, T value) {
   uint8_t* orig_p = p;
   // precondition: (value & ~0x7f) != 0
   do {
+    // clang-format off
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7; if ((unval & ~0x7f) == 0) break;
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7; if ((unval & ~0x7f) == 0) break;
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7; if ((unval & ~0x7f) == 0) break;
@@ -180,11 +185,12 @@ writeVarintSlow(Cursor& c, T value) {
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7; if ((unval & ~0x7f) == 0) break;
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7; if ((unval & ~0x7f) == 0) break;
     *p++ = ((unval & 0x7f) | 0x80); unval = unval >> 7;
+    // clang-format on
   } while (false);
 
-  *p++ = unval;
+  *p++ = static_cast<uint8_t>(unval);
   c.append(p - orig_p);
-  return p - orig_p;
+  return static_cast<uint8_t>(p - orig_p);
 }
 
 } // namespace detail
@@ -200,11 +206,11 @@ uint8_t writeVarint(Cursor& c, T value) {
 }
 
 inline int32_t zigzagToI32(uint32_t n) {
-  return (n >> 1) ^ -(n & 1);
+  return (n & 1) ? ~(n >> 1) : (n >> 1);
 }
 
 inline int64_t zigzagToI64(uint64_t n) {
-  return (n >> 1) ^ -(n & 1);
+  return (n & 1) ? ~(n >> 1) : (n >> 1);
 }
 
 constexpr inline uint32_t i32ToZigzag(const int32_t n) {
@@ -215,4 +221,6 @@ constexpr inline uint64_t i64ToZigzag(const int64_t l) {
   return (static_cast<uint64_t>(l) << 1) ^ static_cast<uint64_t>(l >> 63);
 }
 
-}}} // apache::thrift::util
+} // namespace util
+} // namespace thrift
+} // namespace apache

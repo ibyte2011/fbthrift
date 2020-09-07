@@ -5,66 +5,58 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/MyNodeAsyncClient.h"
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/MyNodeAsyncClient.h"
 
-#include <folly/io/IOBuf.h>
-#include <folly/io/IOBufQueue.h>
-#include <thrift/lib/cpp/TApplicationException.h>
-#include <thrift/lib/cpp/transport/THeader.h>
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/server/Cpp2ConnContext.h>
-#include <thrift/lib/cpp2/GeneratedCodeHelper.h>
-#include <thrift/lib/cpp2/GeneratedSerializationCodeHelper.h>
+#include <thrift/lib/cpp2/gen/client_cpp.h>
 
 namespace cpp2 {
 typedef apache::thrift::ThriftPresult<false> MyNode_do_mid_pargs;
 typedef apache::thrift::ThriftPresult<true> MyNode_do_mid_presult;
 
 template <typename Protocol_>
-void MyNodeAsyncClient::do_midT(Protocol_* prot, bool useSync, apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback) {
-  struct HeaderAndConnContext {
-    HeaderAndConnContext() : header(apache::thrift::transport::THeader::ALLOW_BIG_FRAMES) {}
-
-    apache::thrift::transport::THeader header;
-    apache::thrift::Cpp2ConnContext connContext;
-  };
-  auto headerAndConnContext = std::make_shared<HeaderAndConnContext>();
-  std::shared_ptr<apache::thrift::transport::THeader> header(headerAndConnContext, &headerAndConnContext->header);
-  header->setProtocolId(getChannel()->getProtocolId());
-  header->setHeaders(rpcOptions.releaseWriteHeaders());
-  headerAndConnContext->connContext.setRequestHeader(header.get());
-  std::unique_ptr<apache::thrift::ContextStack> ctx = this->getContextStack(this->getServiceName(), "MyNode.do_mid", &headerAndConnContext->connContext);
+void MyNodeAsyncClient::do_midT(Protocol_* prot, apache::thrift::RpcOptions& rpcOptions, std::shared_ptr<apache::thrift::detail::ac::ClientRequestContext> ctx, apache::thrift::RequestClientCallback::Ptr callback) {
+  std::shared_ptr<apache::thrift::transport::THeader> header(ctx, &ctx->header);
   MyNode_do_mid_pargs args;
   auto sizer = [&](Protocol_* p) { return args.serializedSizeZC(p); };
   auto writer = [&](Protocol_* p) { args.write(p); };
-  apache::thrift::clientSendT<Protocol_>(prot, rpcOptions, std::move(callback), std::move(ctx), header, channel_.get(), "do_mid", writer, sizer, apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE, useSync);
-  headerAndConnContext->connContext.setRequestHeader(nullptr);
+  apache::thrift::clientSendT<apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE, Protocol_>(prot, rpcOptions, std::move(callback), ctx->ctx, std::move(header), channel_.get(), "do_mid", writer, sizer);
+  ctx->reqContext.setRequestHeader(nullptr);
 }
 
 
 
 void MyNodeAsyncClient::do_mid(std::unique_ptr<apache::thrift::RequestCallback> callback) {
   ::apache::thrift::RpcOptions rpcOptions;
-  do_midImpl(false, rpcOptions, std::move(callback));
+  do_mid(rpcOptions, std::move(callback));
 }
 
 void MyNodeAsyncClient::do_mid(apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback) {
-  do_midImpl(false, rpcOptions, std::move(callback));
+  auto ctx = std::make_shared<apache::thrift::detail::ac::ClientRequestContext>(
+      apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId(),
+      rpcOptions.releaseWriteHeaders(),
+      this->handlers_,
+      this->getServiceName(),
+      "MyNode.do_mid");
+  apache::thrift::RequestCallback::Context callbackContext;
+  callbackContext.protocolId =
+      apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId();
+  callbackContext.ctx = std::shared_ptr<apache::thrift::ContextStack>(ctx, &ctx->ctx);
+  auto wrappedCallback = apache::thrift::toRequestClientCallbackPtr(std::move(callback), std::move(callbackContext));
+  do_midImpl(rpcOptions, std::move(ctx), std::move(wrappedCallback));
 }
 
-void MyNodeAsyncClient::do_midImpl(bool useSync, apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback) {
-  switch(getChannel()->getProtocolId()) {
+void MyNodeAsyncClient::do_midImpl(apache::thrift::RpcOptions& rpcOptions, std::shared_ptr<apache::thrift::detail::ac::ClientRequestContext> ctx, apache::thrift::RequestClientCallback::Ptr callback) {
+  switch (apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId()) {
     case apache::thrift::protocol::T_BINARY_PROTOCOL:
     {
       apache::thrift::BinaryProtocolWriter writer;
-      do_midT(&writer, useSync, rpcOptions, std::move(callback));
+      do_midT(&writer, rpcOptions, std::move(ctx), std::move(callback));
       break;
     }
     case apache::thrift::protocol::T_COMPACT_PROTOCOL:
     {
       apache::thrift::CompactProtocolWriter writer;
-      do_midT(&writer, useSync, rpcOptions, std::move(callback));
+      do_midT(&writer, rpcOptions, std::move(ctx), std::move(callback));
       break;
     }
     default:
@@ -81,9 +73,20 @@ void MyNodeAsyncClient::sync_do_mid() {
 
 void MyNodeAsyncClient::sync_do_mid(apache::thrift::RpcOptions& rpcOptions) {
   apache::thrift::ClientReceiveState _returnState;
-  auto callback = std::make_unique<apache::thrift::ClientSyncCallback>(
-      &_returnState, apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE);
-  do_midImpl(true, rpcOptions, std::move(callback));
+  apache::thrift::ClientSyncCallback<false> callback(&_returnState);
+  auto protocolId = apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId();
+  auto evb = apache::thrift::GeneratedAsyncClient::getChannel()->getEventBase();
+  auto ctx = std::make_shared<apache::thrift::detail::ac::ClientRequestContext>(
+      protocolId,
+      rpcOptions.releaseWriteHeaders(),
+      this->handlers_,
+      this->getServiceName(),
+      "MyNode.do_mid");
+  auto wrappedCallback = apache::thrift::RequestClientCallback::Ptr(&callback);
+  do_midImpl(rpcOptions, ctx, std::move(wrappedCallback));
+  callback.waitUntilDone(evb);
+  _returnState.resetProtocolId(protocolId);
+  _returnState.resetCtx(std::shared_ptr<apache::thrift::ContextStack>(ctx, &ctx->ctx));
   SCOPE_EXIT {
     if (_returnState.header() && !_returnState.header()->getHeaders().empty()) {
       rpcOptions.setReadHeaders(_returnState.header()->releaseHeaders());
@@ -93,8 +96,12 @@ void MyNodeAsyncClient::sync_do_mid(apache::thrift::RpcOptions& rpcOptions) {
     assert(!!_returnState.exception());
     _returnState.exception().throw_exception();
   }
-  recv_do_mid(_returnState);
+  return folly::fibers::runInMainContext([&] {
+      recv_do_mid(_returnState);
+  });
 }
+
+
 
 folly::Future<folly::Unit> MyNodeAsyncClient::future_do_mid() {
   ::apache::thrift::RpcOptions rpcOptions;
@@ -135,11 +142,12 @@ folly::SemiFuture<std::pair<folly::Unit, std::unique_ptr<apache::thrift::transpo
   do_mid(rpcOptions, std::move(callback));
   return std::move(callbackAndFuture.second);
 }
-
 void MyNodeAsyncClient::do_mid(folly::Function<void (::apache::thrift::ClientReceiveState&&)> callback) {
   do_mid(std::make_unique<apache::thrift::FunctionReplyCallback>(std::move(callback)));
 }
 
+#if FOLLY_HAS_COROUTINES
+#endif // FOLLY_HAS_COROUTINES
 folly::exception_wrapper MyNodeAsyncClient::recv_wrapped_do_mid(::apache::thrift::ClientReceiveState& state) {
   if (state.isException()) {
     return std::move(state.exception());
@@ -186,6 +194,3 @@ folly::exception_wrapper MyNodeAsyncClient::recv_instance_wrapped_do_mid(::apach
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-}} // apache::thrift

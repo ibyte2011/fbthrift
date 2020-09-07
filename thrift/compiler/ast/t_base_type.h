@@ -1,20 +1,17 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef T_BASE_TYPE_H
@@ -49,10 +46,10 @@ class t_base_type : public t_type {
     TYPE_I64 = int(TypeValue::TYPE_I64),
     TYPE_DOUBLE = int(TypeValue::TYPE_DOUBLE),
     TYPE_FLOAT = int(TypeValue::TYPE_FLOAT),
+    TYPE_BINARY = int(TypeValue::TYPE_BINARY),
   };
 
-  t_base_type(std::string name, t_base base)
-      : t_type(name), base_(base), string_list_(false), binary_(false) {}
+  t_base_type(std::string name, t_base base) : t_type(name), base_(base) {}
 
   t_base get_base() const {
     return base_;
@@ -102,20 +99,12 @@ class t_base_type : public t_type {
     return base_ == TYPE_DOUBLE || base_ == TYPE_FLOAT;
   }
 
-  void set_string_list(bool val) {
-    string_list_ = val;
-  }
-
-  bool is_string_list() const {
-    return (base_ == TYPE_STRING) && string_list_;
-  }
-
-  void set_binary(bool val) {
-    binary_ = val;
-  }
-
   bool is_binary() const override {
-    return (base_ == TYPE_STRING) && binary_;
+    return base_ == TYPE_BINARY;
+  }
+
+  bool is_string_or_binary() const override {
+    return base_ == TYPE_STRING || base_ == TYPE_BINARY;
   }
 
   bool is_base_type() const override {
@@ -142,6 +131,8 @@ class t_base_type : public t_type {
         return "double";
       case TYPE_FLOAT:
         return "float";
+      case TYPE_BINARY:
+        return "binary";
       default:
         return "(unknown)";
     }
@@ -165,9 +156,6 @@ class t_base_type : public t_type {
 
  private:
   t_base base_;
-
-  bool string_list_;
-  bool binary_;
 };
 
 } // namespace compiler

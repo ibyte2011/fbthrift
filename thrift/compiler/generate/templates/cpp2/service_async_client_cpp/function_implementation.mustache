@@ -1,12 +1,12 @@
 <%!
 
-  Copyright 2016 Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,37 +14,50 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 
-%>void <%service:name%>AsyncClient::<%function:name%>(std::unique_ptr<apache::thrift::RequestCallback> callback<%function:comma%><% > service_common/function_param_list_const%>) {
+%><%^function:returns_sink?%>void <%service:name%>AsyncClient::<%function:cpp_name%>(std::unique_ptr<apache::thrift::RequestCallback> callback<%function:comma%><% > service_common/function_param_list_const%>) {
   ::apache::thrift::RpcOptions rpcOptions;
-  <%function:name%>Impl(false, rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
+  <%function:cpp_name%>(rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
 }
 
-void <%service:name%>AsyncClient::<%function:name%>(apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback<%function:comma%><% > service_common/function_param_list_const%>) {
-  <%function:name%>Impl(false, rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
+void <%service:name%>AsyncClient::<%function:cpp_name%>(apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback<%function:comma%><% > service_common/function_param_list_const%>) {
+  auto ctx = std::make_shared<apache::thrift::detail::ac::ClientRequestContext>(
+      apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId(),
+      rpcOptions.releaseWriteHeaders(),
+      this->handlers_,
+      this->getServiceName(),
+      "<%service:name%>.<%function:name%>");
+  apache::thrift::RequestCallback::Context callbackContext;
+  <%#function:oneway?%>
+  callbackContext.oneWay = true;
+  <%/function:oneway?%>
+  callbackContext.protocolId =
+      apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId();
+  callbackContext.ctx = std::shared_ptr<apache::thrift::ContextStack>(ctx, &ctx->ctx);
+<%^function:returns_stream?%>
+  auto wrappedCallback = apache::thrift::toRequestClientCallbackPtr(std::move(callback), std::move(callbackContext));
+<%/function:returns_stream?%><%#function:returns_stream?%>
+  auto wrappedCallback = apache::thrift::createStreamClientCallback(
+    apache::thrift::toRequestClientCallbackPtr(std::move(callback), std::move(callbackContext)),
+    rpcOptions.getChunkBufferSize());
+<%/function:returns_stream?%>
+  <%function:cpp_name%>Impl(rpcOptions, std::move(ctx), std::move(wrappedCallback)<%function:comma%><% > service_common/param_list%>);
 }
 
-void <%service:name%>AsyncClient::<%function:name%>Impl(bool useSync, apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback<%function:comma%><% > service_common/function_param_list_const%>) {
-  switch(getChannel()->getProtocolId()) {
+<%/function:returns_sink?%>
+void <%service:name%>AsyncClient::<%function:cpp_name%>Impl(apache::thrift::RpcOptions& rpcOptions, std::shared_ptr<apache::thrift::detail::ac::ClientRequestContext> ctx, <% > types/callback_type%> callback<%function:comma%><% > service_common/function_param_list_const%>) {
+  switch (apache::thrift::GeneratedAsyncClient::getChannel()->getProtocolId()) {
     case apache::thrift::protocol::T_BINARY_PROTOCOL:
     {
       apache::thrift::BinaryProtocolWriter writer;
-      <%function:name%>T(&writer, useSync, rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
+      <%function:cpp_name%>T(&writer, rpcOptions, std::move(ctx), std::move(callback)<%function:comma%><% > service_common/param_list%>);
       break;
     }
     case apache::thrift::protocol::T_COMPACT_PROTOCOL:
     {
       apache::thrift::CompactProtocolWriter writer;
-      <%function:name%>T(&writer, useSync, rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
+      <%function:cpp_name%>T(&writer, rpcOptions, std::move(ctx), std::move(callback)<%function:comma%><% > service_common/param_list%>);
       break;
     }
-<%#service:frozen2?%>
-    case apache::thrift::protocol::T_FROZEN2_PROTOCOL:
-    {
-      apache::thrift::Frozen2ProtocolWriter writer;
-      <%function:name%>T(&writer, useSync, rpcOptions, std::move(callback)<%function:comma%><% > service_common/param_list%>);
-      break;
-    }
-<%/service:frozen2?%>
     default:
     {
       apache::thrift::detail::ac::throw_app_exn("Could not find Protocol");

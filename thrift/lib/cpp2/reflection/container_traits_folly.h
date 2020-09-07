@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_FATAL_CONTAINER_TRAITS_FOLLY_H_
 #define THRIFT_FATAL_CONTAINER_TRAITS_FOLLY_H_ 1
 
@@ -34,13 +35,19 @@ template <class T, std::size_t M, class A, class B, class C>
 struct thrift_list_traits<folly::small_vector<T, M, A, B, C>>
     : thrift_list_traits_std<folly::small_vector<T, M, A, B, C>> {};
 
-template <typename T, typename C, typename A, typename G>
-struct thrift_set_traits<folly::sorted_vector_set<T, C, A, G>>
-    : thrift_set_traits_std<folly::sorted_vector_set<T, C, A, G>> {};
+template <typename T, typename C, typename A, typename G, typename CT>
+struct thrift_set_traits<folly::sorted_vector_set<T, C, A, G, CT>>
+    : thrift_set_traits_std<folly::sorted_vector_set<T, C, A, G, CT>> {};
 
-template <typename K, typename V, typename C, typename A, typename G>
-struct thrift_map_traits<folly::sorted_vector_map<K, V, C, A, G>>
-    : thrift_map_traits_std<folly::sorted_vector_map<K, V, C, A, G>> {};
+template <
+    typename K,
+    typename V,
+    typename C,
+    typename A,
+    typename G,
+    typename CT>
+struct thrift_map_traits<folly::sorted_vector_map<K, V, C, A, G, CT>>
+    : thrift_map_traits_std<folly::sorted_vector_map<K, V, C, A, G, CT>> {};
 
 template <class K, class H, class E, class A>
 struct thrift_set_traits<folly::F14ValueSet<K, H, E, A>>

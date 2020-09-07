@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -136,11 +136,6 @@
 /* Define to 1 if you have the `rt' library (-lrt). */
 #ifndef THRIFT_HAVE_LIBRT
 #define THRIFT_HAVE_LIBRT 1
-#endif
-
-/* Define to 1 if you have the `sasl2' library (-lsasl2). */
-#ifndef THRIFT_HAVE_LIBSASL2
-#define THRIFT_HAVE_LIBSASL2 1
 #endif
 
 /* Define to 1 if you have the `snappy' library (-lsnappy). */
@@ -314,7 +309,7 @@
 #endif
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+ */
 #ifndef THRIFT_LT_OBJDIR
 #define THRIFT_LT_OBJDIR ".libs/"
 #endif
@@ -369,12 +364,12 @@
 
 /* Define to the type of args 2, 3 and 4 for `select'. */
 #ifndef THRIFT_SELECT_TYPE_ARG234
-#define THRIFT_SELECT_TYPE_ARG234 (fd_set *)
+#define THRIFT_SELECT_TYPE_ARG234 (fd_set*)
 #endif
 
 /* Define to the type of arg 5 for `select'. */
 #ifndef THRIFT_SELECT_TYPE_ARG5
-#define THRIFT_SELECT_TYPE_ARG5 (struct timeval *)
+#define THRIFT_SELECT_TYPE_ARG5 (struct timeval*)
 #endif
 
 /* Indicates the effect of the right shift operator on negative signed

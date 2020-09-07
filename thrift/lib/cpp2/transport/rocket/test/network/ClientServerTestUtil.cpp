@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,29 +18,45 @@
 
 #include <algorithm>
 #include <chrono>
+#include <future>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
+
+#include <gtest/gtest.h>
 
 #include <folly/Conv.h>
+#include <folly/Function.h>
 #include <folly/Optional.h>
 #include <folly/SocketAddress.h>
+#include <folly/executors/InlineExecutor.h>
+#include <folly/fibers/Baton.h>
 #include <folly/fibers/FiberManager.h>
 #include <folly/fibers/FiberManagerMap.h>
+#include <folly/futures/Future.h>
 #include <folly/io/IOBuf.h>
 #include <folly/io/async/AsyncSocket.h>
 #include <folly/io/async/EventBase.h>
+#include <folly/io/async/ScopedEventBaseThread.h>
 
-#include <rsocket/RSocket.h>
-#include <rsocket/transports/tcp/TcpConnectionAcceptor.h>
-#include <yarpl/Flowable.h>
-#include <yarpl/Single.h>
+#include <wangle/acceptor/Acceptor.h>
+#include <wangle/acceptor/ServerSocketConfig.h>
 
+#include <thrift/lib/cpp2/async/ServerSinkBridge.h>
+#include <thrift/lib/cpp2/async/StreamCallbacks.h>
+#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
+#include <thrift/lib/cpp2/protocol/Serializer.h>
+#include <thrift/lib/cpp2/transport/core/TryUtil.h>
 #include <thrift/lib/cpp2/transport/rocket/Types.h>
 #include <thrift/lib/cpp2/transport/rocket/client/RocketClient.h>
-
-using namespace rsocket;
-using namespace yarpl::flowable;
-using namespace yarpl::single;
+#include <thrift/lib/cpp2/transport/rocket/framing/test/Util.h>
+#include <thrift/lib/cpp2/transport/rocket/server/RocketServerConnection.h>
+#include <thrift/lib/cpp2/transport/rocket/server/RocketServerFrameContext.h>
+#include <thrift/lib/cpp2/transport/rocket/server/RocketServerHandler.h>
+#include <thrift/lib/cpp2/transport/rocket/server/RocketSinkClientCallback.h>
+#include <thrift/lib/cpp2/transport/rocket/server/RocketStreamClientCallback.h>
+#include <thrift/lib/thrift/gen-cpp2/RpcMetadata_types.h>
 
 namespace apache {
 namespace thrift {
@@ -48,32 +64,17 @@ namespace rocket {
 namespace test {
 
 namespace {
-class RsocketTestServerResponder : public rsocket::RSocketResponder {
- public:
-  std::shared_ptr<Single<rsocket::Payload>> handleRequestResponse(
-      rsocket::Payload request,
-      uint32_t) final;
-};
+std::pair<std::unique_ptr<folly::IOBuf>, std::unique_ptr<folly::IOBuf>>
+makeTestResponse(
+    std::unique_ptr<folly::IOBuf> requestMetadata,
+    std::unique_ptr<folly::IOBuf> requestData) {
+  std::pair<std::unique_ptr<folly::IOBuf>, std::unique_ptr<folly::IOBuf>>
+      response;
 
-std::shared_ptr<Single<rsocket::Payload>>
-RsocketTestServerResponder::handleRequestResponse(
-    rsocket::Payload request,
-    uint32_t /* streamId */) {
-  DCHECK(request.data);
-  auto data = folly::StringPiece(request.data->coalesce());
-
-  if (data.removePrefix("error:application")) {
-    return Single<rsocket::Payload>::create([](auto&& subscriber) mutable {
-      subscriber->onSubscribe(SingleSubscriptions::empty());
-      subscriber->onError(folly::make_exception_wrapper<std::runtime_error>(
-          "Application error occurred"));
-    });
-  }
-
+  folly::StringPiece data(requestData->coalesce());
   constexpr folly::StringPiece kMetadataEchoPrefix{"metadata_echo:"};
   constexpr folly::StringPiece kDataEchoPrefix{"data_echo:"};
 
-  folly::Optional<rsocket::Payload> responsePayload;
   if (data.removePrefix("sleep_ms:")) {
     // Sleep, then echo back request.
     std::chrono::milliseconds sleepFor(folly::to<uint32_t>(data));
@@ -82,87 +83,82 @@ RsocketTestServerResponder::handleRequestResponse(
     // Reply with a specific kind of error.
   } else if (data.startsWith(kMetadataEchoPrefix)) {
     // Reply with echoed metadata in the response payload.
-    auto responseMetadata = request.data->clone();
+    auto responseMetadata = requestData->clone();
     responseMetadata->trimStart(kMetadataEchoPrefix.size());
-    responsePayload.emplace(
-        rsocket::Payload(std::move(request.data), std::move(responseMetadata)));
+    response =
+        std::make_pair(std::move(responseMetadata), std::move(requestData));
   } else if (data.startsWith(kDataEchoPrefix)) {
     // Reply with echoed data in the response payload.
-    auto responseData = request.data->clone();
+    auto responseData = requestData->clone();
     responseData->trimStart(kDataEchoPrefix.size());
-    responsePayload.emplace(
-        rsocket::Payload(std::move(responseData), std::move(request.metadata)));
+    response =
+        std::make_pair(std::move(requestMetadata), std::move(responseData));
   }
 
   // If response payload is not set at this point, simply echo back what client
   // sent.
-  if (!responsePayload) {
-    responsePayload.emplace(std::move(request));
+  if (!response.first && !response.second) {
+    response =
+        std::make_pair(std::move(requestMetadata), std::move(requestData));
   }
 
-  return Single<rsocket::Payload>::create(
-      [responsePayload =
-           std::move(*responsePayload)](auto&& subscriber) mutable {
-        subscriber->onSubscribe(SingleSubscriptions::empty());
-        subscriber->onSuccess(std::move(responsePayload));
-      });
+  return response;
 }
 } // namespace
 
-RsocketTestServer::RsocketTestServer() {
-  TcpConnectionAcceptor::Options opts;
-  opts.address = folly::SocketAddress("::1", 0 /* bind to any port */);
-  opts.threads = 2;
+rocket::SetupFrame RocketTestClient::makeTestSetupFrame(
+    MetadataOpaqueMap<std::string, std::string> md) {
+  RequestSetupMetadata meta;
+  meta.opaque_ref() = {};
+  *meta.opaque_ref() = std::move(md);
+  CompactProtocolWriter compactProtocolWriter;
+  folly::IOBufQueue paramQueue;
+  compactProtocolWriter.setOutput(&paramQueue);
+  meta.write(&compactProtocolWriter);
 
-  rsocketServer_ = RSocket::createServer(
-      std::make_unique<TcpConnectionAcceptor>(std::move(opts)));
-  // Start accepting connections
-  rsocketServer_->start([](const rsocket::SetupParameters&) {
-    return std::make_shared<RsocketTestServerResponder>();
-  });
-}
-
-RsocketTestServer::~RsocketTestServer() {
-  shutdown();
-}
-
-uint16_t RsocketTestServer::getListeningPort() const {
-  auto oport = rsocketServer_->listeningPort();
-  DCHECK(oport);
-  return *oport;
-}
-
-void RsocketTestServer::shutdown() {
-  rsocketServer_.reset();
+  // Serialize RocketClient's major/minor version (which is separate from the
+  // rsocket protocol major/minor version) into setup metadata.
+  auto buf = folly::IOBuf::createCombined(
+      sizeof(int32_t) + meta.serializedSize(&compactProtocolWriter));
+  folly::IOBufQueue queue;
+  queue.append(std::move(buf));
+  folly::io::QueueAppender appender(&queue, /* do not grow */ 0);
+  // Serialize RocketClient's major/minor version (which is separate from the
+  // rsocket protocol major/minor version) into setup metadata.
+  appender.writeBE<uint16_t>(0); // Thrift RocketClient major version
+  appender.writeBE<uint16_t>(1); // Thrift RocketClient minor version
+  // Append serialized setup parameters to setup frame metadata
+  appender.insert(paramQueue.move());
+  return rocket::SetupFrame(
+      rocket::Payload::makeFromMetadataAndData(queue.move(), {}));
 }
 
 RocketTestClient::RocketTestClient(const folly::SocketAddress& serverAddr)
     : evb_(*evbThread_.getEventBase()),
-      fm_(folly::fibers::getFiberManager(evb_)) {
-  evb_.runInEventBaseThread([this, serverAddr] {
-    folly::AsyncSocket::UniquePtr socket(
-        new folly::AsyncSocket(&evb_, serverAddr));
-    client_ = RocketClient::create(evb_, std::move(socket));
-  });
+      fm_(folly::fibers::getFiberManager(evb_)),
+      serverAddr_(serverAddr) {
+  connect();
 }
 
 RocketTestClient::~RocketTestClient() {
-  evb_.runInEventBaseThreadAndWait([this] { client_.reset(); });
+  disconnect();
 }
 
 folly::Try<Payload> RocketTestClient::sendRequestResponseSync(
     Payload request,
-    std::chrono::milliseconds timeout) {
+    std::chrono::milliseconds timeout,
+    RocketClient::WriteSuccessCallback* writeSuccessCallback) {
   folly::Try<Payload> response;
   folly::fibers::Baton baton;
 
   evb_.runInEventBaseThread([&] {
     fm_.addTaskFinally(
         [&] {
-          return client_->sendRequestResponseSync(std::move(request), timeout);
+          return client_->sendRequestResponseSync(
+              std::move(request), timeout, writeSuccessCallback);
         },
-        [&](folly::Try<Payload>&& r) {
-          response = std::move(r);
+        [&](folly::Try<folly::Try<Payload>>&& r) {
+          response = collapseTry(std::move(r));
           baton.post();
         });
   });
@@ -178,14 +174,440 @@ folly::Try<void> RocketTestClient::sendRequestFnfSync(Payload request) {
   evb_.runInEventBaseThread([&] {
     fm_.addTaskFinally(
         [&] { return client_->sendRequestFnfSync(std::move(request)); },
-        [&](folly::Try<void>&& r) {
-          response = std::move(r);
+        [&](folly::Try<folly::Try<void>>&& r) {
+          response = collapseTry(std::move(r));
           baton.post();
         });
   });
 
   baton.wait();
   return response;
+}
+
+folly::Try<ClientBufferedStream<Payload>>
+RocketTestClient::sendRequestStreamSync(Payload request) {
+  constexpr std::chrono::milliseconds kFirstResponseTimeout{500};
+  constexpr std::chrono::milliseconds kChunkTimeout{500};
+
+  class TestStreamCallback final
+      : public ::apache::thrift::detail::ClientStreamBridge::
+            FirstResponseCallback {
+   public:
+    TestStreamCallback(
+        std::chrono::milliseconds chunkTimeout,
+        folly::Promise<ClientBufferedStream<Payload>> p)
+        : chunkTimeout_(chunkTimeout), p_(std::move(p)) {}
+
+    // ClientCallback interface
+    void onFirstResponse(
+        FirstResponsePayload&& firstPayload,
+        ::apache::thrift::detail::ClientStreamBridge::ClientPtr
+            clientStreamBridge) override {
+      if (getRange(*firstPayload.payload) == "error:application") {
+        p_.setException(
+            folly::make_exception_wrapper<thrift::detail::EncodedError>(
+                std::move(firstPayload.payload)));
+      } else {
+        p_.setValue(ClientBufferedStream<Payload>(
+            std::move(clientStreamBridge),
+            [](folly::Try<StreamPayload>&& v) {
+              if (v.hasValue()) {
+                return folly::Try<Payload>(
+                    Payload::makeFromData(std::move(v->payload)));
+              } else if (v.hasException()) {
+                return folly::Try<Payload>(std::move(v.exception()));
+              } else {
+                return folly::Try<Payload>();
+              }
+            },
+            100));
+      }
+      delete this;
+    }
+
+    void onFirstResponseError(folly::exception_wrapper ew) override {
+      p_.setException(std::move(ew));
+      delete this;
+    }
+
+   private:
+    std::chrono::milliseconds chunkTimeout_;
+    folly::Promise<ClientBufferedStream<Payload>> p_;
+  };
+
+  folly::Promise<ClientBufferedStream<Payload>> p;
+  auto sf = p.getSemiFuture();
+
+  auto clientCallback = new TestStreamCallback(kChunkTimeout, std::move(p));
+
+  evb_.runInEventBaseThread([&] {
+    fm_.addTask([&] {
+      client_->sendRequestStream(
+          std::move(request),
+          kFirstResponseTimeout,
+          kChunkTimeout,
+          0,
+          ::apache::thrift::detail::ClientStreamBridge::create(clientCallback));
+    });
+  });
+
+  return folly::makeTryWith([&] {
+    return std::move(sf).via(&folly::InlineExecutor::instance()).get();
+  });
+}
+
+void RocketTestClient::sendRequestChannel(
+    ChannelClientCallback* callback,
+    Payload request) {
+  evb_.runInEventBaseThread(
+      [this, request = std::move(request), callback]() mutable {
+        fm_.addTask([this, request = std::move(request), callback]() mutable {
+          constexpr std::chrono::milliseconds kFirstResponseTimeout{500};
+          client_->sendRequestChannel(
+              std::move(request), kFirstResponseTimeout, callback);
+        });
+      });
+}
+
+void RocketTestClient::sendRequestSink(
+    SinkClientCallback* callback,
+    Payload request) {
+  evb_.runInEventBaseThread(
+      [this, request = std::move(request), callback]() mutable {
+        fm_.addTask([this, request = std::move(request), callback]() mutable {
+          constexpr std::chrono::milliseconds kFirstResponseTimeout{500};
+          client_->sendRequestSink(
+              std::move(request), kFirstResponseTimeout, callback);
+        });
+      });
+}
+
+void RocketTestClient::reconnect() {
+  disconnect();
+  connect();
+}
+
+void RocketTestClient::connect() {
+  evb_.runInEventBaseThreadAndWait([this] {
+    folly::AsyncSocket::UniquePtr socket(
+        new folly::AsyncSocket(&evb_, serverAddr_));
+    client_ = RocketClient::create(
+        evb_,
+        std::move(socket),
+        std::make_unique<rocket::SetupFrame>(makeTestSetupFrame()));
+  });
+}
+
+void RocketTestClient::disconnect() {
+  evb_.runInEventBaseThread([client = std::move(client_)] {});
+}
+
+namespace {
+class RocketTestServerAcceptor final : public wangle::Acceptor {
+ public:
+  RocketTestServerAcceptor(
+      folly::Function<std::unique_ptr<RocketServerHandler>()>
+          frameHandlerFactory,
+      std::promise<void> shutdownPromise)
+      : Acceptor(wangle::ServerSocketConfig{}),
+        frameHandlerFactory_(std::move(frameHandlerFactory)),
+        shutdownPromise_(std::move(shutdownPromise)) {}
+
+  ~RocketTestServerAcceptor() override {
+    EXPECT_EQ(0, connections_);
+  }
+
+  void onNewConnection(
+      folly::AsyncTransport::UniquePtr socket,
+      const folly::SocketAddress*,
+      const std::string&,
+      wangle::SecureTransportType,
+      const wangle::TransportInfo&) override {
+    auto* connection = new RocketServerConnection(
+        std::move(socket),
+        frameHandlerFactory_(),
+        std::chrono::milliseconds::zero());
+    getConnectionManager()->addConnection(connection);
+  }
+
+  void onConnectionsDrained() override {
+    shutdownPromise_.set_value();
+  }
+
+  void onConnectionAdded(const wangle::ManagedConnection*) override {
+    ++connections_;
+  }
+
+  void onConnectionRemoved(const wangle::ManagedConnection* conn) override {
+    if (expectedRemainingStreams_ != folly::none) {
+      if (auto rconn = dynamic_cast<const RocketServerConnection*>(conn)) {
+        EXPECT_EQ(expectedRemainingStreams_, rconn->getNumStreams());
+      }
+    }
+
+    --connections_;
+  }
+
+  void setExpectedRemainingStreams(size_t size) {
+    expectedRemainingStreams_ = size;
+  }
+
+ private:
+  folly::Function<std::unique_ptr<RocketServerHandler>()> frameHandlerFactory_;
+  std::promise<void> shutdownPromise_;
+  size_t connections_{0};
+  folly::Optional<size_t> expectedRemainingStreams_ = folly::none;
+};
+} // namespace
+
+class RocketTestServer::RocketTestServerHandler : public RocketServerHandler {
+ public:
+  explicit RocketTestServerHandler(
+      folly::EventBase& ioEvb,
+      const MetadataOpaqueMap<std::string, std::string>& expectedSetupMetadata)
+      : ioEvb_(ioEvb), expectedSetupMetadata_(expectedSetupMetadata) {}
+  void handleSetupFrame(SetupFrame&& frame, RocketServerConnection&) final {
+    folly::io::Cursor cursor(frame.payload().buffer());
+    // Validate Thrift major/minor version
+    int16_t majorVersion;
+    int16_t minorVersion;
+    const bool success = cursor.tryReadBE<int16_t>(majorVersion) &&
+        cursor.tryReadBE<int16_t>(minorVersion);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(0, majorVersion);
+    EXPECT_EQ(1, minorVersion);
+    // Validate RequestSetupMetadata
+    CompactProtocolReader reader;
+    reader.setInput(cursor);
+    RequestSetupMetadata meta;
+    meta.read(&reader);
+    EXPECT_EQ(reader.getCursorPosition(), frame.payload().metadataSize());
+    EXPECT_EQ(expectedSetupMetadata_, meta.opaque_ref().value_or({}));
+  }
+
+  void handleRequestResponseFrame(
+      RequestResponseFrame&& frame,
+      RocketServerFrameContext&& context) final {
+    auto dam = splitMetadataAndData(frame.payload());
+    auto payload = std::move(frame.payload());
+    auto dataPiece = getRange(*dam.second);
+
+    if (dataPiece.removePrefix("error:application")) {
+      return context.sendError(
+          RocketException(
+              ErrorCode::APPLICATION_ERROR, "Application error occurred"),
+          nullptr);
+    }
+
+    auto response =
+        makeTestResponse(std::move(dam.first), std::move(dam.second));
+    auto responsePayload = Payload::makeFromMetadataAndData(
+        std::move(response.first), std::move(response.second));
+    return context.sendPayload(
+        std::move(responsePayload),
+        Flags::none().next(true).complete(true),
+        nullptr);
+  }
+
+  void handleRequestFnfFrame(RequestFnfFrame&&, RocketServerFrameContext&&)
+      final {}
+
+  void handleRequestStreamFrame(
+      RequestStreamFrame&& frame,
+      RocketServerFrameContext&&,
+      RocketStreamClientCallback* clientCallback) final {
+    class TestRocketStreamServerCallback final : public StreamServerCallback {
+     public:
+      TestRocketStreamServerCallback(
+          StreamClientCallback* clientCallback,
+          size_t n,
+          size_t nEchoHeaders)
+          : clientCallback_(clientCallback),
+            n_(n),
+            nEchoHeaders_(nEchoHeaders) {}
+
+      bool onStreamRequestN(uint64_t tokens) override {
+        while (tokens-- && i_++ < n_) {
+          auto alive = clientCallback_->onStreamNext(StreamPayload{
+              folly::IOBuf::copyBuffer(folly::to<std::string>(i_)), {}});
+          DCHECK(alive);
+        }
+        if (i_ == n_ && iEchoHeaders_ == nEchoHeaders_) {
+          clientCallback_->onStreamComplete();
+          delete this;
+          return false;
+        }
+        return true;
+      }
+
+      void onStreamCancel() override {
+        delete this;
+      }
+
+      bool onSinkHeaders(HeadersPayload&& payload) override {
+        auto metadata_ref = payload.payload.otherMetadata_ref();
+        EXPECT_TRUE(metadata_ref);
+        if (metadata_ref) {
+          EXPECT_EQ(
+              folly::to<std::string>(++iEchoHeaders_),
+              (*metadata_ref)["expected_header"]);
+        }
+        auto alive = clientCallback_->onStreamHeaders(std::move(payload));
+        DCHECK(alive);
+        if (i_ == n_ && iEchoHeaders_ == nEchoHeaders_) {
+          clientCallback_->onStreamComplete();
+          delete this;
+          return false;
+        }
+        return true;
+      }
+
+      void resetClientCallback(StreamClientCallback& clientCallback) override {
+        clientCallback_ = &clientCallback;
+      }
+
+     private:
+      StreamClientCallback* clientCallback_;
+      size_t i_{0};
+      size_t iEchoHeaders_{0};
+      const size_t n_;
+      const size_t nEchoHeaders_;
+    };
+
+    folly::StringPiece data(std::move(frame.payload()).data()->coalesce());
+    if (data.removePrefix("error:application")) {
+      clientCallback->onFirstResponseError(
+          folly::make_exception_wrapper<
+              thrift::detail::EncodedFirstResponseError>(FirstResponsePayload(
+              folly::IOBuf::copyBuffer("error:application"), {})));
+      return;
+    }
+    const size_t nHeaders =
+        data.removePrefix("generateheaders:") ? folly::to<size_t>(data) : 0;
+    const size_t nEchoHeaders =
+        data.removePrefix("echoheaders:") ? folly::to<size_t>(data) : 0;
+    const size_t n = nHeaders || nEchoHeaders
+        ? 0
+        : (data.removePrefix("generate:") ? folly::to<size_t>(data) : 500);
+    auto* serverCallback =
+        new TestRocketStreamServerCallback(clientCallback, n, nEchoHeaders);
+    {
+      auto alive = clientCallback->onFirstResponse(
+          FirstResponsePayload{
+              folly::IOBuf::copyBuffer(folly::to<std::string>(0)), {}},
+          nullptr /* evb */,
+          serverCallback);
+      DCHECK(alive);
+    }
+
+    for (size_t i = 1; i <= nHeaders; ++i) {
+      HeadersPayloadContent header;
+      header.otherMetadata_ref() = {
+          {"expected_header", folly::to<std::string>(i)}};
+      auto alive = clientCallback->onStreamHeaders({std::move(header), {}});
+      DCHECK(alive);
+    }
+    if (n == 0 && nEchoHeaders == 0) {
+      std::ignore = serverCallback->onStreamRequestN(0);
+    }
+  }
+
+  void handleRequestChannelFrame(
+      RequestChannelFrame&&,
+      RocketServerFrameContext&&,
+      RocketSinkClientCallback* clientCallback) final {
+    apache::thrift::detail::SinkConsumerImpl impl{
+        [](folly::coro::AsyncGenerator<folly::Try<StreamPayload>&&> asyncGen)
+            -> folly::coro::Task<folly::Try<StreamPayload>> {
+          int current = 0;
+          while (auto item = co_await asyncGen.next()) {
+            auto payload = (*item).value();
+            auto data = folly::to<int32_t>(
+                folly::StringPiece(payload.payload->coalesce()));
+            EXPECT_EQ(current++, data);
+          }
+          co_return folly::Try<StreamPayload>(StreamPayload(
+              folly::IOBuf::copyBuffer(folly::to<std::string>(current)), {}));
+        },
+        10,
+        std::chrono::milliseconds::zero(),
+        {}};
+    auto serverCallback = apache::thrift::detail::ServerSinkBridge::create(
+        std::move(impl), ioEvb_, clientCallback);
+
+    clientCallback->onFirstResponse(
+        FirstResponsePayload{
+            folly::IOBuf::copyBuffer(folly::to<std::string>(0)), {}},
+        nullptr /* evb */,
+        serverCallback.get());
+    folly::coro::co_invoke(
+        [serverCallback =
+             std::move(serverCallback)]() mutable -> folly::coro::Task<void> {
+          co_return co_await serverCallback->start();
+        })
+        .scheduleOn(threadManagerThread_.getEventBase())
+        .start();
+  }
+
+ private:
+  folly::EventBase& ioEvb_;
+  const MetadataOpaqueMap<std::string, std::string>& expectedSetupMetadata_;
+  folly::ScopedEventBaseThread threadManagerThread_;
+};
+
+RocketTestServer::RocketTestServer()
+    : evb_(*ioThread_.getEventBase()),
+      listeningSocket_(new folly::AsyncServerSocket(&evb_)) {
+  std::promise<void> shutdownPromise;
+  shutdownFuture_ = shutdownPromise.get_future();
+
+  acceptor_ = std::make_unique<RocketTestServerAcceptor>(
+      [this] {
+        return std::make_unique<RocketTestServerHandler>(
+            evb_, expectedSetupMetadata_);
+      },
+      std::move(shutdownPromise));
+  start();
+}
+
+RocketTestServer::~RocketTestServer() {
+  stop();
+}
+
+void RocketTestServer::start() {
+  folly::via(
+      &evb_,
+      [this] {
+        acceptor_->init(listeningSocket_.get(), &evb_);
+        listeningSocket_->bind(0 /* bind to any port */);
+        listeningSocket_->listen(128 /* tcpBacklog */);
+        listeningSocket_->startAccepting();
+      })
+      .wait();
+}
+
+void RocketTestServer::stop() {
+  // Ensure socket and acceptor are destroyed in EventBase thread
+  folly::via(&evb_, [listeningSocket = std::move(listeningSocket_)] {});
+  // Wait for server to drain connections as gracefully as possible.
+  shutdownFuture_.wait();
+  folly::via(&evb_, [acceptor = std::move(acceptor_)] {});
+}
+
+uint16_t RocketTestServer::getListeningPort() const {
+  return listeningSocket_->getAddress().getPort();
+}
+
+void RocketTestServer::setExpectedRemainingStreams(size_t n) {
+  if (auto acceptor =
+          dynamic_cast<RocketTestServerAcceptor*>(acceptor_.get())) {
+    acceptor->setExpectedRemainingStreams(n);
+  }
+}
+
+void RocketTestServer::setExpectedSetupMetadata(
+    MetadataOpaqueMap<std::string, std::string> md) {
+  expectedSetupMetadata_ = std::move(md);
 }
 
 } // namespace test

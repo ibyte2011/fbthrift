@@ -6,13 +6,10 @@
  */
 #pragma once
 
-#include <folly/futures/Future.h>
-#include <thrift/lib/cpp/TApplicationException.h>
-#include <thrift/lib/cpp2/ServiceIncludes.h>
-#include <thrift/lib/cpp2/async/FutureRequest.h>
-#include <thrift/lib/cpp2/async/HeaderChannel.h>
-#include "src/gen-cpp2/MyRootAsyncClient.h"
-#include "src/gen-cpp2/module_types.h"
+#include <thrift/lib/cpp2/gen/service_h.h>
+
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/MyRootAsyncClient.h"
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/module_types.h"
 
 namespace folly {
   class IOBuf;
@@ -55,39 +52,31 @@ class MyRootSvNull : public MyRootSvIf {
 class MyRootAsyncProcessor : public ::apache::thrift::GeneratedAsyncProcessor {
  public:
   const char* getServiceName() override;
+  void getServiceMetadata(apache::thrift::metadata::ThriftServiceMetadataResponse& response) override;
   using BaseAsyncProcessor = void;
-  using HasFrozen2 = std::false_type;
  protected:
   MyRootSvIf* iface_;
-  folly::Optional<std::string> getCacheKey(folly::IOBuf* buf, apache::thrift::protocol::PROTOCOL_TYPES protType) override;
  public:
-  void process(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) override;
+  void processSerializedRequest(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) override;
  protected:
-  bool isOnewayMethod(const folly::IOBuf* buf, const apache::thrift::transport::THeader* header) override;
- private:
-  static std::unordered_set<std::string> onewayMethods_;
-  static std::unordered_map<std::string, int16_t> cacheKeyMap_;
+  std::shared_ptr<folly::RequestContext> getBaseContextForRequest() override;
  public:
-  using BinaryProtocolProcessFunc = ProcessFunc<MyRootAsyncProcessor, apache::thrift::BinaryProtocolReader>;
-  using BinaryProtocolProcessMap = ProcessMap<BinaryProtocolProcessFunc>;
-  static const MyRootAsyncProcessor::BinaryProtocolProcessMap& getBinaryProtocolProcessMap();
+  using ProcessFunc = GeneratedAsyncProcessor::ProcessFunc<MyRootAsyncProcessor>;
+  using ProcessMap = GeneratedAsyncProcessor::ProcessMap<ProcessFunc>;
+  static const MyRootAsyncProcessor::ProcessMap& getBinaryProtocolProcessMap();
+  static const MyRootAsyncProcessor::ProcessMap& getCompactProtocolProcessMap();
  private:
-  static const MyRootAsyncProcessor::BinaryProtocolProcessMap binaryProcessMap_;
- public:
-  using CompactProtocolProcessFunc = ProcessFunc<MyRootAsyncProcessor, apache::thrift::CompactProtocolReader>;
-  using CompactProtocolProcessMap = ProcessMap<CompactProtocolProcessFunc>;
-  static const MyRootAsyncProcessor::CompactProtocolProcessMap& getCompactProtocolProcessMap();
- private:
-  static const MyRootAsyncProcessor::CompactProtocolProcessMap compactProcessMap_;
+  static const MyRootAsyncProcessor::ProcessMap binaryProcessMap_;
+   static const MyRootAsyncProcessor::ProcessMap compactProcessMap_;
  private:
   template <typename ProtocolIn_, typename ProtocolOut_>
-  void _processInThread_do_root(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, std::unique_ptr<ProtocolIn_> iprot, apache::thrift::Cpp2RequestContext* ctx, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm);
+  void _processInThread_do_root(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::Cpp2RequestContext* ctx, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm);
   template <typename ProtocolIn_, typename ProtocolOut_>
-  void process_do_root(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, std::unique_ptr<ProtocolIn_> iprot,apache::thrift::Cpp2RequestContext* ctx,folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm);
+  void process_do_root(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::Cpp2RequestContext* ctx,folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm);
   template <class ProtocolIn_, class ProtocolOut_>
   static folly::IOBufQueue return_do_root(int32_t protoSeqId, apache::thrift::ContextStack* ctx);
   template <class ProtocolIn_, class ProtocolOut_>
-  static void throw_wrapped_do_root(std::unique_ptr<apache::thrift::ResponseChannelRequest> req,int32_t protoSeqId,apache::thrift::ContextStack* ctx,folly::exception_wrapper ew,apache::thrift::Cpp2RequestContext* reqCtx);
+  static void throw_wrapped_do_root(apache::thrift::ResponseChannelRequest::UniquePtr req,int32_t protoSeqId,apache::thrift::ContextStack* ctx,folly::exception_wrapper ew,apache::thrift::Cpp2RequestContext* reqCtx);
  public:
   MyRootAsyncProcessor(MyRootSvIf* iface) :
       iface_(iface) {}
@@ -96,6 +85,3 @@ class MyRootAsyncProcessor : public ::apache::thrift::GeneratedAsyncProcessor {
 };
 
 } // cpp2
-namespace apache { namespace thrift {
-
-}} // apache::thrift

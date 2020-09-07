@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -20,6 +20,9 @@ __property__ = property
 
 
 class Empty(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        pass
+
     def __init__(
         self, 
     ) -> None: ...
@@ -39,8 +42,10 @@ class Empty(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.
     def __ge__(self, other: 'Empty') -> bool: ...
 
 
-
 class Nada(thrift.py3.types.Union, _typing.Hashable):
+    class __fbthrift_IsSet:
+        pass
+
     def __init__(
         self, 
     ) -> None: ...
@@ -57,9 +62,9 @@ class Nada(thrift.py3.types.Union, _typing.Hashable):
         EMPTY: Nada.Type = ...
 
     @staticmethod
-    def fromValue(value: _typing.Union[]) -> Nada: ...
+    def fromValue(value: _typing.Union[None, ]) -> Nada: ...
     @__property__
-    def value(self) -> _typing.Union[]: ...
+    def value(self) -> _typing.Union[None, ]: ...
     @__property__
     def type(self) -> "Nada.Type": ...
     def get_type(self) -> "Nada.Type": ...

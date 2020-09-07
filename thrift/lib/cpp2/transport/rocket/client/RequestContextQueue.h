@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,28 +31,48 @@ class RequestContextQueue {
  public:
   RequestContextQueue() = default;
 
+  ~RequestContextQueue() {
+    DCHECK(writeScheduledQueue_.empty());
+    DCHECK(writeSendingQueue_.empty());
+    DCHECK(writeSentQueue_.empty());
+  }
+
   void enqueueScheduledWrite(RequestContext& req) noexcept;
 
-  RequestContext& markNextScheduledWriteAsSending() noexcept;
-  size_t scheduledWriteQueueSize() const noexcept {
-    return writeScheduledQueue_.size();
+  std::unique_ptr<folly::IOBuf> getNextScheduledWritesBatch() noexcept;
+
+  template <typename F>
+  void markNextSendingBatchAsSent(F&& foreachRequest) noexcept {
+    for (bool lastInBatch = false; !lastInBatch;) {
+      auto& req = writeSendingQueue_.front();
+      writeSendingQueue_.pop_front();
+      DCHECK(req.state() == State::WRITE_SENDING);
+
+      if (req.isDummyEndOfBatchMarker_) {
+        DCHECK(req.lastInWriteBatch_);
+        delete &req;
+        return;
+      }
+
+      lastInBatch = req.lastInWriteBatch_;
+      req.state_ = State::WRITE_SENT;
+      // Move req to the WRITE_SENT queue even if req is not a
+      // REQUEST_RESPONSE request.
+      writeSentQueue_.push_back(req);
+
+      foreachRequest(req);
+    }
   }
 
-  RequestContext& markNextSendingAsSent() noexcept;
-  RequestContext& peekNextSending() noexcept {
-    return writeSendingQueue_.front();
-  }
-
-  void abortSentRequest(RequestContext& req) noexcept;
+  void timeOutSendingRequest(RequestContext& req) noexcept;
+  void abortSentRequest(
+      RequestContext& req,
+      transport::TTransportException ex) noexcept;
 
   void markAsResponded(RequestContext& req) noexcept;
 
-  bool hasInflightRequests() const noexcept {
-    return !writeSendingQueue_.empty() || !writeSentQueue_.empty();
-  }
-
-  void failAllScheduledWrites(folly::exception_wrapper ew);
-  void failAllSentWrites(folly::exception_wrapper ew);
+  void failAllScheduledWrites(transport::TTransportException ex);
+  void failAllSentWrites(transport::TTransportException ex);
 
   RequestContext* getRequestResponseContext(StreamId streamId);
 
@@ -85,7 +105,11 @@ class RequestContextQueue {
   // writeSuccess() or writeErr() was called.
   RequestContext::Queue writeSentQueue_;
 
-  void failQueue(RequestContext::Queue& queue, folly::exception_wrapper ew);
+  void failQueue(
+      RequestContext::Queue& queue,
+      transport::TTransportException ex);
+
+  void removeFromWriteSendingQueue(RequestContext& req) noexcept;
 
   void trackIfRequestResponse(RequestContext& req) {
     if (req.isRequestResponse()) {

@@ -1,12 +1,12 @@
 {{!
 
-  Copyright 2016 Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,35 +27,36 @@ executing.
 }}
 
 cdef extern from "<utility>" namespace "std":
-{{#program:returnTypes}}
+{{#program:unique_functions_by_return_type}}
+{{#function:returnType}}
     cdef cFollyPromise[{{!
-            }}{{^program:stack_arguments?}}{{> services/CythonFieldType}}{{/program:stack_arguments?}}{{!
-            }}{{#program:stack_arguments?}}{{> types/CythonCppType}}{{/program:stack_arguments?}}{{!
+            }}{{> services/CythonReturnTypeCppType}}{{!
         }}] move_promise_{{> types/CythonCppTypeIdent}} "std::move"(
         cFollyPromise[{{!
-                }}{{^program:stack_arguments?}}{{> services/CythonFieldType}}{{/program:stack_arguments?}}{{!
-                }}{{#program:stack_arguments?}}{{> types/CythonCppType}}{{/program:stack_arguments?}}{{!
-            }}])
-{{/program:returnTypes}}
-{{^program:returnTypes}}
+            }}{{> services/CythonReturnTypeCppType}}{{!
+        }}])
+{{/function:returnType}}
+{{/program:unique_functions_by_return_type}}
+{{^program:unique_functions_by_return_type}}
     pass
-{{/program:returnTypes}}
-{{#program:returnTypes}}
+{{/program:unique_functions_by_return_type}}
+{{#program:unique_functions_by_return_type}}
+{{#function:returnType}}
 
+@cython.auto_pickle(False)
 cdef class Promise_{{> types/CythonCppTypeIdent}}:
     cdef cFollyPromise[{{!
-            }}{{^program:stack_arguments?}}{{> services/CythonFieldType}}{{/program:stack_arguments?}}{{!
-            }}{{#program:stack_arguments?}}{{> types/CythonCppType}}{{/program:stack_arguments?}}{{!
+            }}{{> services/CythonReturnTypeCppType}}{{!
         }}] cPromise
 
     @staticmethod
     cdef create(cFollyPromise[{{!
-            }}{{^program:stack_arguments?}}{{> services/CythonFieldType}}{{/program:stack_arguments?}}{{!
-            }}{{#program:stack_arguments?}}{{> types/CythonCppType}}{{/program:stack_arguments?}}{{!
+            }}{{> services/CythonReturnTypeCppType}}{{!
         }}] cPromise):
         inst = <Promise_{{> types/CythonCppTypeIdent}}>{{!
         }}Promise_{{> types/CythonCppTypeIdent}}.__new__({{!
         }}Promise_{{> types/CythonCppTypeIdent}})
         inst.cPromise = move_promise_{{> types/CythonCppTypeIdent}}(cPromise)
         return inst
-{{/program:returnTypes}}
+{{/function:returnType}}
+{{/program:unique_functions_by_return_type}}

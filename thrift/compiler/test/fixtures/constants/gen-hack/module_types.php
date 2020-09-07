@@ -10,33 +10,30 @@
  * Original thrift enum:-
  * EmptyEnum
  */
-enum EmptyEnum : int {
+enum EmptyEnum: int {
 }
-type EmptyEnumType = EmptyEnum;
 
 /**
  * Original thrift enum:-
  * City
  */
-enum City : int {
+enum City: int {
   NYC = 0;
   MPK = 1;
   SEA = 2;
   LON = 3;
 }
-type CityType = City;
 
 /**
  * Original thrift enum:-
  * Company
  */
-enum Company : int {
+enum Company: int {
   FACEBOOK = 0;
   WHATSAPP = 1;
   OCULUS = 2;
   INSTAGRAM = 3;
 }
-type CompanyType = Company;
 
 /**
  * Original thrift struct:-
@@ -45,26 +42,33 @@ type CompanyType = Company;
 class Internship implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'weeks',
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'title',
       'type' => \TType::STRING,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'employer',
       'type' => \TType::I32,
-      'enum' => 'Company',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'enum' => Company::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'weeks' => 1,
     'title' => 2,
     'employer' => 3,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'weeks' => int,
+    ?'title' => string,
+    ?'employer' => ?Company,
+  );
+
   const int STRUCTURAL_ID = 749038867953722654;
   /**
    * Original thrift field:-
@@ -82,60 +86,49 @@ class Internship implements \IThriftStruct {
    */
   public ?Company $employer;
 
+  <<__Rx>>
   public function __construct(?int $weeks = null, ?string $title = null, ?Company $employer = null  ) {
-    if ($weeks === null) {
-      $this->weeks = 0;
-    } else {
-      $this->weeks = $weeks;
-    }
-    if ($title === null) {
-      $this->title = '';
-    } else {
-      $this->title = $title;
-    }
+    $this->weeks = $weeks ?? 0;
+    $this->title = $title ?? '';
     $this->employer = $employer;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'weeks'),
+      Shapes::idx($shape, 'title'),
+      Shapes::idx($shape, 'employer'),
+    );
   }
 
   public function getName(): string {
     return 'Internship';
   }
 
-}
-
-/**
- * Original thrift struct:-
- * UnEnumStruct
- */
-class UnEnumStruct implements \IThriftStruct {
-  use \ThriftSerializationTrait;
-
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
-      'var' => 'city',
-      'type' => \TType::I32,
-      'enum' => 'City',
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'weeks' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'title' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'employer' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
       ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-    'city' => 1,
-  };
-  const int STRUCTURAL_ID = 8709689501091584749;
-  /**
-   * Original thrift field:-
-   * 1: enum module.City city
-   */
-  public ?City $city;
-
-  public function __construct(?City $city = null  ) {
-    if ($city === null) {
-      $this->city = City::coerce(-1);
-    } else {
-      $this->city = $city;
-    }
+    );
   }
 
-  public function getName(): string {
-    return 'UnEnumStruct';
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -147,20 +140,26 @@ class UnEnumStruct implements \IThriftStruct {
 class Range implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'min',
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'max',
       'type' => \TType::I32,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'min' => 1,
     'max' => 2,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'min' => int,
+    ?'max' => int,
+  );
+
   const int STRUCTURAL_ID = 6850388386457434767;
   /**
    * Original thrift field:-
@@ -173,21 +172,43 @@ class Range implements \IThriftStruct {
    */
   public int $max;
 
+  <<__Rx>>
   public function __construct(?int $min = null, ?int $max = null  ) {
-    if ($min === null) {
-      $this->min = 0;
-    } else {
-      $this->min = $min;
-    }
-    if ($max === null) {
-      $this->max = 0;
-    } else {
-      $this->max = $max;
-    }
+    $this->min = $min ?? 0;
+    $this->max = $max ?? 0;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'min'),
+      Shapes::idx($shape, 'max'),
+    );
   }
 
   public function getName(): string {
     return 'Range';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'min' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'max' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -199,20 +220,26 @@ class Range implements \IThriftStruct {
 class struct1 implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
     'b' => 2,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => int,
+    ?'b' => string,
+  );
+
   const int STRUCTURAL_ID = 7783381726179123112;
   /**
    * Original thrift field:-
@@ -225,21 +252,43 @@ class struct1 implements \IThriftStruct {
    */
   public string $b;
 
+  <<__Rx>>
   public function __construct(?int $a = null, ?string $b = null  ) {
-    if ($a === null) {
-      $this->a = 1234567;
-    } else {
-      $this->a = $a;
-    }
-    if ($b === null) {
-      $this->b = "<uninitialized>";
-    } else {
-      $this->b = $b;
-    }
+    $this->a = $a ?? 1234567;
+    $this->b = $b ?? "<uninitialized>";
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+    );
   }
 
   public function getName(): string {
     return 'struct1';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -251,36 +300,44 @@ class struct1 implements \IThriftStruct {
 class struct2 implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::STRING,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'c',
       'type' => \TType::STRUCT,
-      'class' => 'struct1',
-      ],
-    4 => dict[
+      'class' => struct1::class,
+    ),
+    4 => shape(
       'var' => 'd',
       'type' => \TType::LST,
       'etype' => \TType::I32,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      ),
+      'format' => 'collection',
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
     'b' => 2,
     'c' => 3,
     'd' => 4,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => int,
+    ?'b' => string,
+    ?'c' => ?struct1,
+    ?'d' => Vector<int>,
+  );
+
   const int STRUCTURAL_ID = 6352184485829261382;
   /**
    * Original thrift field:-
@@ -303,27 +360,55 @@ class struct2 implements \IThriftStruct {
    */
   public Vector<int> $d;
 
+  <<__Rx>>
   public function __construct(?int $a = null, ?string $b = null, ?struct1 $c = null, ?Vector<int> $d = null  ) {
-    if ($a === null) {
-      $this->a = 0;
-    } else {
-      $this->a = $a;
-    }
-    if ($b === null) {
-      $this->b = '';
-    } else {
-      $this->b = $b;
-    }
+    $this->a = $a ?? 0;
+    $this->b = $b ?? '';
     $this->c = $c;
-    if ($d === null) {
-      $this->d = Vector {};
-    } else {
-      $this->d = $d;
-    }
+    $this->d = $d ?? Vector {};
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'c'),
+      Shapes::idx($shape, 'd'),
+    );
   }
 
   public function getName(): string {
     return 'struct2';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'c' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'd' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -335,26 +420,33 @@ class struct2 implements \IThriftStruct {
 class struct3 implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::STRING,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::I32,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'c',
       'type' => \TType::STRUCT,
-      'class' => 'struct2',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'class' => struct2::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
     'b' => 2,
     'c' => 3,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => string,
+    ?'b' => int,
+    ?'c' => ?struct2,
+  );
+
   const int STRUCTURAL_ID = 8770775784736740409;
   /**
    * Original thrift field:-
@@ -372,22 +464,146 @@ class struct3 implements \IThriftStruct {
    */
   public ?struct2 $c;
 
+  <<__Rx>>
   public function __construct(?string $a = null, ?int $b = null, ?struct2 $c = null  ) {
-    if ($a === null) {
-      $this->a = '';
-    } else {
-      $this->a = $a;
-    }
-    if ($b === null) {
-      $this->b = 0;
-    } else {
-      $this->b = $b;
-    }
+    $this->a = $a ?? '';
+    $this->b = $b ?? 0;
     $this->c = $c;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'c'),
+    );
   }
 
   public function getName(): string {
     return 'struct3';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'c' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
+}
+
+/**
+ * Original thrift struct:-
+ * struct4
+ */
+class struct4 implements \IThriftStruct {
+  use \ThriftSerializationTrait;
+
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
+      'var' => 'a',
+      'type' => \TType::I32,
+    ),
+    2 => shape(
+      'var' => 'b',
+      'type' => \TType::DOUBLE,
+    ),
+    3 => shape(
+      'var' => 'c',
+      'type' => \TType::BYTE,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
+    'a' => 1,
+    'b' => 2,
+    'c' => 3,
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => int,
+    ?'b' => ?float,
+    ?'c' => ?int,
+  );
+
+  const int STRUCTURAL_ID = 3152965649269433242;
+  /**
+   * Original thrift field:-
+   * 1: i32 a
+   */
+  public int $a;
+  /**
+   * Original thrift field:-
+   * 2: double b
+   */
+  public ?float $b;
+  /**
+   * Original thrift field:-
+   * 3: byte c
+   */
+  public ?int $c;
+
+  <<__Rx>>
+  public function __construct(?int $a = null, ?float $b = null, ?int $c = null  ) {
+    $this->a = $a ?? 0;
+    $this->b = $b;
+    $this->c = $c;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'c'),
+    );
+  }
+
+  public function getName(): string {
+    return 'struct4';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'c' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -405,22 +621,28 @@ enum union1Enum: int {
 class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
   use \ThriftUnionSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'i',
       'union' => true,
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'd',
       'union' => true,
       'type' => \TType::DOUBLE,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'i' => 1,
     'd' => 2,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'i' => ?int,
+    ?'d' => ?float,
+  );
+
   const int STRUCTURAL_ID = 3529312341790331108;
   /**
    * Original thrift field:-
@@ -434,6 +656,7 @@ class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
   public ?float $d;
   protected union1Enum $_type = union1Enum::_EMPTY_;
 
+  <<__Rx>>
   public function __construct(?int $i = null, ?float $d = null  ) {
     $this->_type = union1Enum::_EMPTY_;
     if ($i !== null) {
@@ -446,6 +669,14 @@ class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
     }
   }
 
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'i'),
+      Shapes::idx($shape, 'd'),
+    );
+  }
+
   public function getName(): string {
     return 'union1';
   }
@@ -454,7 +685,22 @@ class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
     return $this->_type;
   }
 
+  public function reset(): void {
+    switch ($this->_type) {
+      case union1Enum::i:
+        $this->i = null;
+        break;
+      case union1Enum::d:
+        $this->d = null;
+        break;
+      case union1Enum::_EMPTY_:
+        break;
+    }
+    $this->_type = union1Enum::_EMPTY_;
+}
+
   public function set_i(int $i): this {
+    $this->reset();
     $this->_type = union1Enum::i;
     $this->i = $i;
     return $this;
@@ -464,12 +710,13 @@ class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
     invariant(
       $this->_type === union1Enum::i,
       'get_i called on an instance of union1 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->i);
+    return $this->i as nonnull;
   }
 
   public function set_d(float $d): this {
+    $this->reset();
     $this->_type = union1Enum::d;
     $this->d = $d;
     return $this;
@@ -479,9 +726,30 @@ class union1 implements \IThriftStruct, \IThriftUnion<union1Enum> {
     invariant(
       $this->_type === union1Enum::d,
       'get_d called on an instance of union1 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->d);
+    return $this->d as nonnull;
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'i' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'd' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -501,36 +769,44 @@ enum union2Enum: int {
 class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
   use \ThriftUnionSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'i',
       'union' => true,
       'type' => \TType::I32,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'd',
       'union' => true,
       'type' => \TType::DOUBLE,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 's',
       'union' => true,
       'type' => \TType::STRUCT,
-      'class' => 'struct1',
-      ],
-    4 => dict[
+      'class' => struct1::class,
+    ),
+    4 => shape(
       'var' => 'u',
       'union' => true,
       'type' => \TType::STRUCT,
-      'class' => 'union1',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'class' => union1::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'i' => 1,
     'd' => 2,
     's' => 3,
     'u' => 4,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'i' => ?int,
+    ?'d' => ?float,
+    ?'s' => ?struct1,
+    ?'u' => ?union1,
+  );
+
   const int STRUCTURAL_ID = 1639711719709684790;
   /**
    * Original thrift field:-
@@ -554,6 +830,7 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
   public ?union1 $u;
   protected union2Enum $_type = union2Enum::_EMPTY_;
 
+  <<__Rx>>
   public function __construct(?int $i = null, ?float $d = null, ?struct1 $s = null, ?union1 $u = null  ) {
     $this->_type = union2Enum::_EMPTY_;
     if ($i !== null) {
@@ -574,6 +851,16 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     }
   }
 
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'i'),
+      Shapes::idx($shape, 'd'),
+      Shapes::idx($shape, 's'),
+      Shapes::idx($shape, 'u'),
+    );
+  }
+
   public function getName(): string {
     return 'union2';
   }
@@ -582,7 +869,28 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     return $this->_type;
   }
 
+  public function reset(): void {
+    switch ($this->_type) {
+      case union2Enum::i:
+        $this->i = null;
+        break;
+      case union2Enum::d:
+        $this->d = null;
+        break;
+      case union2Enum::s:
+        $this->s = null;
+        break;
+      case union2Enum::u:
+        $this->u = null;
+        break;
+      case union2Enum::_EMPTY_:
+        break;
+    }
+    $this->_type = union2Enum::_EMPTY_;
+}
+
   public function set_i(int $i): this {
+    $this->reset();
     $this->_type = union2Enum::i;
     $this->i = $i;
     return $this;
@@ -592,12 +900,13 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     invariant(
       $this->_type === union2Enum::i,
       'get_i called on an instance of union2 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->i);
+    return $this->i as nonnull;
   }
 
   public function set_d(float $d): this {
+    $this->reset();
     $this->_type = union2Enum::d;
     $this->d = $d;
     return $this;
@@ -607,12 +916,13 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     invariant(
       $this->_type === union2Enum::d,
       'get_d called on an instance of union2 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->d);
+    return $this->d as nonnull;
   }
 
   public function set_s(struct1 $s): this {
+    $this->reset();
     $this->_type = union2Enum::s;
     $this->s = $s;
     return $this;
@@ -622,12 +932,13 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     invariant(
       $this->_type === union2Enum::s,
       'get_s called on an instance of union2 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->s);
+    return $this->s as nonnull;
   }
 
   public function set_u(union1 $u): this {
+    $this->reset();
     $this->_type = union2Enum::u;
     $this->u = $u;
     return $this;
@@ -637,9 +948,38 @@ class union2 implements \IThriftStruct, \IThriftUnion<union2Enum> {
     invariant(
       $this->_type === union2Enum::u,
       'get_u called on an instance of union2 whose current type is %s',
-      $this->_type,
+      (string)$this->_type,
     );
-    return \nullthrows($this->u);
+    return $this->u as nonnull;
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'i' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'd' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        's' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'u' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }

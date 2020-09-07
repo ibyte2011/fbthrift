@@ -31,20 +31,35 @@ states = [
   },
 ]
 
-x = 1
+x = 1.00000
 
 y = 1000000
 
-z = 1e+09
+z = 1.00000e+09
 
-zeroDoubleValue = 0
+zeroDoubleValue = 0.00000
 
 longDoubleValue = 2.59961e-05
+
+my_company = 0
+
+foo = "foo"
+
+bar = 42
+
+mymap = {
+  "keys" : "values",
+}
 
 instagram = Internship(**{
   "weeks" : 12,
   "title" : "Software Engineer",
   "employer" :   3,
+})
+
+partial_const = Internship(**{
+  "weeks" : 8,
+  "title" : "Some Job",
 })
 
 kRanges = [
@@ -74,12 +89,48 @@ internList = [
 pod_0 = struct1(**{
 })
 
+pod_s_0 = struct1(**{
+})
+
 pod_1 = struct1(**{
   "a" : 10,
   "b" : "foo",
 })
 
+pod_s_1 = struct1(**{
+  "a" : 10,
+  "b" : "foo",
+})
+
 pod_2 = struct2(**{
+  "a" : 98,
+  "b" : "gaz",
+  "c" : struct1(**{
+    "a" : 12,
+    "b" : "bar",
+  }),
+  "d" : [
+    11,
+    22,
+    33,
+  ],
+})
+
+pod_trailing_commas = struct2(**{
+  "a" : 98,
+  "b" : "gaz",
+  "c" : struct1(**{
+    "a" : 12,
+    "b" : "bar",
+  }),
+  "d" : [
+    11,
+    22,
+    33,
+  ],
+})
+
+pod_s_2 = struct2(**{
   "a" : 98,
   "b" : "gaz",
   "c" : struct1(**{
@@ -109,12 +160,34 @@ pod_3 = struct3(**{
   }),
 })
 
+pod_s_3 = struct3(**{
+  "a" : "abc",
+  "b" : 456,
+  "c" : struct2(**{
+    "a" : 888,
+    "c" : struct1(**{
+      "b" : "gaz",
+    }),
+    "d" : [
+      1,
+      2,
+      3,
+    ],
+  }),
+})
+
+pod_4 = struct4(**{
+  "a" : 1234,
+  "b" : 0.333000,
+  "c" : 25,
+})
+
 u_1_1 = union1(**{
   "i" : 97,
 })
 
 u_1_2 = union1(**{
-  "d" : 5.6,
+  "d" : 5.60000,
 })
 
 u_1_3 = union1(**{
@@ -125,7 +198,7 @@ u_2_1 = union2(**{
 })
 
 u_2_2 = union2(**{
-  "d" : 6.7,
+  "d" : 6.70000,
 })
 
 u_2_3 = union2(**{
@@ -143,7 +216,7 @@ u_2_4 = union2(**{
 
 u_2_5 = union2(**{
   "u" : union1(**{
-    "d" : 9.8,
+    "d" : 9.80000,
   }),
 })
 
@@ -200,7 +273,7 @@ zero32 = 0
 
 zero64 = 0
 
-zero_dot_zero = 0
+zero_dot_zero = 0.00000
 
 empty_string = ""
 

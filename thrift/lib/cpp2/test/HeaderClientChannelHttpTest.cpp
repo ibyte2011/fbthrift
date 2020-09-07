@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
 
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
+#include <folly/portability/GTest.h>
+
+#include <folly/io/async/AsyncSocket.h>
 #include <thrift/lib/cpp/protocol/TBinaryProtocol.h>
 #include <thrift/lib/cpp2/server/proxygen/ProxygenThriftServer.h>
 #include <thrift/lib/cpp2/util/ScopedServerInterfaceThread.h>
 #include <thrift/lib/cpp2/util/ScopedServerThread.h>
 
-#include <thrift/lib/cpp2/test/gen-cpp2/TestService.h>
 #include <thrift/lib/cpp2/async/HeaderClientChannel.h>
+#include <thrift/lib/cpp2/test/gen-cpp2/TestService.h>
 
 #include <boost/lexical_cast.hpp>
 
 using namespace apache::thrift;
-using namespace apache::thrift::async;
 using namespace apache::thrift::concurrency;
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::test;
@@ -41,7 +41,9 @@ class TestServiceHandler : public TestServiceSvIf {
     _return = "test" + boost::lexical_cast<std::string>(size);
   }
 
-  void noResponse(int64_t size) override { usleep(size); }
+  void noResponse(int64_t size) override {
+    usleep(size);
+  }
 
   void echoRequest(string& _return, std::unique_ptr<string> req) override {
     _return = *req + "ccccccccccccccccccccccccccccccccccccccccccccc";
@@ -51,11 +53,18 @@ class TestServiceHandler : public TestServiceSvIf {
     _return = string(4096, 'a');
   }
 
-  void eventBaseAsync(string& _return) override { _return = "hello world"; }
+  void async_eb_eventBaseAsync(
+      std::unique_ptr<
+          apache::thrift::HandlerCallback<std::unique_ptr<::std::string>>>
+          callback) override {
+    callback->result(std::make_unique<std::string>("hello world"));
+  }
 
   void notCalledBack() override {}
   void voidResponse() override {}
-  int32_t processHeader() override { return 1; }
+  int32_t processHeader() override {
+    return 1;
+  }
   void echoIOBuf(
       std::unique_ptr<folly::IOBuf>& /*_return*/,
       std::unique_ptr<folly::IOBuf> /*buf*/) override {}
@@ -63,7 +72,7 @@ class TestServiceHandler : public TestServiceSvIf {
 
 std::shared_ptr<BaseThriftServer> createHttpServer() {
   auto handler = std::make_shared<TestServiceHandler>();
-  auto tm = ThreadManager::newSimpleThreadManager(1, 5, false);
+  auto tm = ThreadManager::newSimpleThreadManager(1, false);
   tm->threadFactory(std::make_shared<PosixThreadFactory>());
   tm->start();
   auto server = std::make_shared<ProxygenThriftServer>();
@@ -80,9 +89,10 @@ TEST(HeaderClientChannelHttpTest, SimpleTest) {
   auto const addr = runner.getAddress();
 
   folly::EventBase eb;
-  std::shared_ptr<TAsyncSocket> socket = TAsyncSocket::newSocket(&eb, addr);
+  std::shared_ptr<folly::AsyncSocket> socket =
+      folly::AsyncSocket::newSocket(&eb, addr);
   auto channel = HeaderClientChannel::newChannel(socket);
-  channel->useAsHttpClient("127.0.0.1", "meh");
+  channel->useAsHttpClient("127.0.0.1", "/meh");
   channel->setProtocolId(T_BINARY_PROTOCOL);
   TestServiceAsyncClient client(std::move(channel));
   client.sendResponse(
@@ -109,9 +119,10 @@ TEST(HeaderClientChannel, LongResponse) {
   auto const addr = runner.getAddress();
 
   folly::EventBase eb;
-  std::shared_ptr<TAsyncSocket> socket = TAsyncSocket::newSocket(&eb, addr);
+  std::shared_ptr<folly::AsyncSocket> socket =
+      folly::AsyncSocket::newSocket(&eb, addr);
   auto channel = HeaderClientChannel::newChannel(socket);
-  channel->useAsHttpClient("127.0.0.1", "meh");
+  channel->useAsHttpClient("127.0.0.1", "/meh");
   channel->setProtocolId(T_BINARY_PROTOCOL);
   TestServiceAsyncClient client(std::move(channel));
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/SimpleJSONProtocol.h>
-#include <thrift/lib/cpp2/protocol/JSONProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
+#include <folly/Traits.h>
+#include <folly/portability/GTest.h>
 
-#include <gtest/gtest.h>
+#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
+#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
+#include <thrift/lib/cpp2/protocol/JSONProtocol.h>
+#include <thrift/lib/cpp2/protocol/SimpleJSONProtocol.h>
 
 namespace apache {
 namespace thrift {
@@ -31,28 +32,27 @@ template <typename Reader, typename Writer, bool Printable>
 struct RWPair {
   using reader = Reader;
   using writer = Writer;
-  using printable = std::integral_constant<bool, Printable>;
+  using printable = folly::bool_constant<Printable>;
 };
 
 using protocol_type_pairs = ::testing::Types<
-  RWPair<SimpleJSONProtocolReader, SimpleJSONProtocolWriter, true>,
-  RWPair<JSONProtocolReader, JSONProtocolWriter, true>,
-  RWPair<BinaryProtocolReader, BinaryProtocolWriter, false>,
-  RWPair<CompactProtocolReader, CompactProtocolWriter, false>
->;
+    RWPair<SimpleJSONProtocolReader, SimpleJSONProtocolWriter, true>,
+    RWPair<JSONProtocolReader, JSONProtocolWriter, true>,
+    RWPair<BinaryProtocolReader, BinaryProtocolWriter, false>,
+    RWPair<CompactProtocolReader, CompactProtocolWriter, false>>;
 
 template <bool printable>
 void print_underlying(folly::IOBuf const& buffer, int vlog_level = 5) {
-  if(VLOG_IS_ON(vlog_level)) {
+  if (VLOG_IS_ON(vlog_level)) {
     folly::ByteRange range(buffer.data(), buffer.length());
-    if(printable) {
+    if (printable) {
       VLOG(vlog_level) << "buffer: "
-        << std::string((const char*)range.data(), range.size());
+                       << std::string((const char*)range.data(), range.size());
     } else {
       std::ostringstream out;
-      for(size_t i = 0; i < range.size(); i++) {
-        out << std::setw(2) << std::setfill('0')
-                << std::hex << (int)range.data()[i] << " ";
+      for (size_t i = 0; i < range.size(); i++) {
+        out << std::setw(2) << std::setfill('0') << std::hex
+            << (int)range.data()[i] << " ";
       }
       VLOG(vlog_level) << "buffer: " << out.str();
     }
@@ -105,6 +105,6 @@ struct CompareProtocolTest : public ::testing::Test {
   }
 };
 
-}
-}
-}
+} // namespace test
+} // namespace thrift
+} // namespace apache

@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 namespace folly {
 class IOBuf;
 }
@@ -49,6 +50,15 @@ struct BufferHelpers<std::unique_ptr<folly::IOBuf>> {
       const std::unique_ptr<folly::IOBuf>& src,
       folly::MutableByteRange dst);
   static void thawTo(folly::ByteRange src, std::unique_ptr<folly::IOBuf>& dst);
+};
+
+template <>
+struct BufferHelpers<folly::IOBuf> {
+  typedef uint8_t Item;
+  static size_t size(const folly::IOBuf& src);
+
+  static void copyTo(const folly::IOBuf& src, folly::MutableByteRange dst);
+  static void thawTo(folly::ByteRange src, folly::IOBuf& dst);
 };
 
 /**
@@ -151,3 +161,4 @@ struct Layout<T, typename std::enable_if<IsString<T>::value>::type>
 THRIFT_DECLARE_TRAIT(IsString, std::string)
 THRIFT_DECLARE_TRAIT(IsString, folly::fbstring)
 THRIFT_DECLARE_TRAIT(IsString, std::unique_ptr<folly::IOBuf>)
+THRIFT_DECLARE_TRAIT(IsString, folly::IOBuf)

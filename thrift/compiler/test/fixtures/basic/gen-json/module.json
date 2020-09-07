@@ -1,8 +1,9 @@
 {
+  "__fbthrift": {"@generated": 0},
   "thrift_module" : "module",
   "enumerations" : {
     "MyEnum" : {
-      "lineno" : 3,
+      "lineno" : 21,
       "constants" : {
         "MyValue1" : 0,
         "MyValue2" : 1
@@ -11,7 +12,7 @@
   },
   "structs" : {
     "MyStruct" : {
-      "lineno" : 8,
+      "lineno" : 26,
       "is_exception" : false,
       "is_union" : false,
       "fields" : {
@@ -30,11 +31,6 @@
           "spec_args" : "MyDataItem",
           "required" : true
         },
-        "major" : {
-          "type_enum" : "I64",
-          "spec_args" : null,
-          "required" : true
-        },
         "myEnum" : {
           "type_enum" : "ENUM",
           "spec_args" : "MyEnum",
@@ -43,17 +39,39 @@
       }
     },
     "MyDataItem" : {
-      "lineno" : 18,
+      "lineno" : 34,
       "is_exception" : false,
       "is_union" : false,
       "fields" : {
 
       }
+    },
+    "MyUnion" : {
+      "lineno" : 36,
+      "is_exception" : false,
+      "is_union" : true,
+      "fields" : {
+        "myEnum" : {
+          "type_enum" : "ENUM",
+          "spec_args" : "MyEnum",
+          "required" : true
+        },
+        "myStruct" : {
+          "type_enum" : "STRUCT",
+          "spec_args" : "MyStruct",
+          "required" : true
+        },
+        "myDataItem" : {
+          "type_enum" : "STRUCT",
+          "spec_args" : "MyDataItem",
+          "required" : true
+        }
+      }
     }
   },
   "services" : {
     "MyService" : {
-      "lineno" : 20,
+      "lineno" : 42,
       "functions" : {
         "MyService.ping" : {
           "return_type" : {
@@ -133,61 +151,15 @@
         }
       }
     },
-    "MyServiceFast" : {
-      "lineno" : 29,
+    "DbMixedStackArguments" : {
+      "lineno" : 51,
       "functions" : {
-        "MyServiceFast.ping" : {
-          "return_type" : {
-            "type_enum" : "VOID",
-            "spec_args" : null
-          },
-          "args" : [],
-          "throws" : []
-        },
-        "MyServiceFast.getRandomData" : {
-          "return_type" : {
-            "type_enum" : "STRING",
-            "spec_args" : null
-          },
-          "args" : [],
-          "throws" : []
-        },
-        "MyServiceFast.hasDataById" : {
-          "return_type" : {
-            "type_enum" : "BOOL",
-            "spec_args" : null
-          },
-          "args" : [
-            {
-              "type_enum" : "I64",
-              "spec_args" : null
-            }
-          ],
-          "throws" : []
-        },
-        "MyServiceFast.getDataById" : {
+        "DbMixedStackArguments.getDataByKey0" : {
           "return_type" : {
             "type_enum" : "STRING",
             "spec_args" : null
           },
           "args" : [
-            {
-              "type_enum" : "I64",
-              "spec_args" : null
-            }
-          ],
-          "throws" : []
-        },
-        "MyServiceFast.putDataById" : {
-          "return_type" : {
-            "type_enum" : "VOID",
-            "spec_args" : null
-          },
-          "args" : [
-            {
-              "type_enum" : "I64",
-              "spec_args" : null
-            },
             {
               "type_enum" : "STRING",
               "spec_args" : null
@@ -195,65 +167,17 @@
           ],
           "throws" : []
         },
-        "MyServiceFast.lobDataById" : {
+        "DbMixedStackArguments.getDataByKey1" : {
           "return_type" : {
-            "type_enum" : "VOID",
+            "type_enum" : "STRING",
             "spec_args" : null
           },
           "args" : [
-            {
-              "type_enum" : "I64",
-              "spec_args" : null
-            },
             {
               "type_enum" : "STRING",
               "spec_args" : null
             }
           ],
-          "throws" : []
-        }
-      }
-    },
-    "MyServiceEmpty" : {
-      "lineno" : 38,
-      "functions" : {
-
-      }
-    },
-    "MyServicePrioParent" : {
-      "lineno" : 41,
-      "functions" : {
-        "MyServicePrioParent.ping" : {
-          "return_type" : {
-            "type_enum" : "VOID",
-            "spec_args" : null
-          },
-          "args" : [],
-          "throws" : []
-        },
-        "MyServicePrioParent.pong" : {
-          "return_type" : {
-            "type_enum" : "VOID",
-            "spec_args" : null
-          },
-          "args" : [],
-          "throws" : []
-        }
-      }
-    },
-    "MyServicePrioChild" : {
-      "extends" : {
-        "type_enum" : "SERVICE",
-        "spec_args" : "MyServicePrioParent"
-      },
-      "lineno" : 46,
-      "functions" : {
-        "MyServicePrioChild.pang" : {
-          "return_type" : {
-            "type_enum" : "VOID",
-            "spec_args" : null
-          },
-          "args" : [],
           "throws" : []
         }
       }

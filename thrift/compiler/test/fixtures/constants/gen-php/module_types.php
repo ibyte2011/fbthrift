@@ -191,93 +191,6 @@ class Internship implements IThriftStruct {
 
 }
 
-class UnEnumStruct implements IThriftStruct {
-  static $_TSPEC = array(
-    1 => array(
-      'var' => 'city',
-      'type' => TType::I32,
-      'enum' => 'City',
-      ),
-    );
-  public static $_TFIELDMAP = array(
-    'city' => 1,
-  );
-  const STRUCTURAL_ID = 8709689501091584749;
-  public $city =   -1;
-
-  public function __construct($vals=null) {
-    if (is_array($vals)) {
-      if (isset($vals['city'])) {
-        $this->city = $vals['city'];
-      }
-    } else if ($vals) {
-      throw new TProtocolException(
-        'UnEnumStruct constructor must be passed array or null'
-      );
-    }
-  }
-
-  public function getName() {
-    return 'UnEnumStruct';
-  }
-
-  public static function __set_state($vals) {
-    return new UnEnumStruct($vals);
-  }
-
-  public function read(TProtocol $input)
-  {
-    $xfer = 0;
-    $fname = null;
-    $ftype = 0;
-    $fid = 0;
-    $xfer += $input->readStructBegin($fname);
-    while (true)
-    {
-      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
-      if ($ftype == TType::STOP) {
-        break;
-      }
-      if (!$fid && $fname !== null) {
-        if (isset(self::$_TFIELDMAP[$fname])) {
-          $fid = self::$_TFIELDMAP[$fname];
-          $ftype = self::$_TSPEC[$fid]['type'];
-        }
-      }
-      switch ($fid)
-      {
-        case 1:
-          if ($ftype == TType::I32) {
-            $xfer += $input->readI32($this->city);
-          } else {
-            $xfer += $input->skip($ftype);
-          }
-          break;
-        default:
-          $xfer += $input->skip($ftype);
-          break;
-      }
-      $xfer += $input->readFieldEnd();
-    }
-    $xfer += $input->readStructEnd();
-    return $xfer;
-  }
-
-  public function write(TProtocol $output) {
-    $xfer = 0;
-    $xfer += $output->writeStructBegin('UnEnumStruct');
-    if ($this->city !== null) {
-      $xfer += $output->writeFieldBegin('city', TType::I32, 1);
-      $xfer += $output->writeI32($this->city);
-      $xfer += $output->writeFieldEnd();
-    }
-    $xfer += $output->writeFieldStop();
-    $xfer += $output->writeStructEnd();
-    return $xfer;
-  }
-
-}
-
 class Range implements IThriftStruct {
   static $_TSPEC = array(
     1 => array(
@@ -806,6 +719,134 @@ class struct3 implements IThriftStruct {
       }
       $xfer += $output->writeFieldBegin('c', TType::STRUCT, 3);
       $xfer += $this->c->write($output);
+      $xfer += $output->writeFieldEnd();
+    }
+    $xfer += $output->writeFieldStop();
+    $xfer += $output->writeStructEnd();
+    return $xfer;
+  }
+
+}
+
+class struct4 implements IThriftStruct {
+  static $_TSPEC = array(
+    1 => array(
+      'var' => 'a',
+      'type' => TType::I32,
+      ),
+    2 => array(
+      'var' => 'b',
+      'type' => TType::DOUBLE,
+      ),
+    3 => array(
+      'var' => 'c',
+      'type' => TType::BYTE,
+      ),
+    );
+  public static $_TFIELDMAP = array(
+    'a' => 1,
+    'b' => 2,
+    'c' => 3,
+  );
+  const STRUCTURAL_ID = 3152965649269433242;
+  public $a = null;
+  public $b = null;
+  public $c = null;
+
+  public function __construct($vals=null) {
+    if (is_array($vals)) {
+      if (isset($vals['a'])) {
+        $this->a = $vals['a'];
+      }
+      if (isset($vals['b'])) {
+        $this->b = $vals['b'];
+      }
+      if (isset($vals['c'])) {
+        $this->c = $vals['c'];
+      }
+    } else if ($vals) {
+      throw new TProtocolException(
+        'struct4 constructor must be passed array or null'
+      );
+    }
+  }
+
+  public function getName() {
+    return 'struct4';
+  }
+
+  public static function __set_state($vals) {
+    return new struct4($vals);
+  }
+
+  public function read(TProtocol $input)
+  {
+    $xfer = 0;
+    $fname = null;
+    $ftype = 0;
+    $fid = 0;
+    $xfer += $input->readStructBegin($fname);
+    while (true)
+    {
+      $xfer += $input->readFieldBegin($fname, $ftype, $fid);
+      if ($ftype == TType::STOP) {
+        break;
+      }
+      if (!$fid && $fname !== null) {
+        if (isset(self::$_TFIELDMAP[$fname])) {
+          $fid = self::$_TFIELDMAP[$fname];
+          $ftype = self::$_TSPEC[$fid]['type'];
+        }
+      }
+      switch ($fid)
+      {
+        case 1:
+          if ($ftype == TType::I32) {
+            $xfer += $input->readI32($this->a);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 2:
+          if ($ftype == TType::DOUBLE) {
+            $xfer += $input->readDouble($this->b);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        case 3:
+          if ($ftype == TType::BYTE) {
+            $xfer += $input->readByte($this->c);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
+        default:
+          $xfer += $input->skip($ftype);
+          break;
+      }
+      $xfer += $input->readFieldEnd();
+    }
+    $xfer += $input->readStructEnd();
+    return $xfer;
+  }
+
+  public function write(TProtocol $output) {
+    $xfer = 0;
+    $xfer += $output->writeStructBegin('struct4');
+    if ($this->a !== null) {
+      $xfer += $output->writeFieldBegin('a', TType::I32, 1);
+      $xfer += $output->writeI32($this->a);
+      $xfer += $output->writeFieldEnd();
+    }
+    if (isset($this->b) && $this->b !== null) {
+      $xfer += $output->writeFieldBegin('b', TType::DOUBLE, 2);
+      $xfer += $output->writeDouble($this->b);
+      $xfer += $output->writeFieldEnd();
+    }
+    if (isset($this->c) && $this->c !== null) {
+      $xfer += $output->writeFieldBegin('c', TType::BYTE, 3);
+      $xfer += $output->writeByte($this->c);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();

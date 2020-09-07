@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -99,20 +99,6 @@ void ContextStack::postRead(
   }
 }
 
-void ContextStack::handlerError() {
-  FOLLY_SDT(
-      thrift,
-      thrift_context_stack_handler_error,
-      getServiceName(),
-      getMethod());
-
-  if (handlers_) {
-    for (size_t i = 0; i < handlers_->size(); i++) {
-      (*handlers_)[i]->handlerError(ctxs_[i], getMethod());
-    }
-  }
-}
-
 void ContextStack::handlerErrorWrapped(const folly::exception_wrapper& ew) {
   FOLLY_SDT(
       thrift,
@@ -123,24 +109,6 @@ void ContextStack::handlerErrorWrapped(const folly::exception_wrapper& ew) {
   if (handlers_) {
     for (size_t i = 0; i < handlers_->size(); i++) {
       (*handlers_)[i]->handlerErrorWrapped(ctxs_[i], getMethod(), ew);
-    }
-  }
-}
-
-void ContextStack::userException(
-    const std::string& ex,
-    const std::string& ex_what) {
-  FOLLY_SDT(
-      thrift,
-      thrift_context_stack_user_exception,
-      getServiceName(),
-      getMethod(),
-      ex.c_str(),
-      ex_what.c_str());
-
-  if (handlers_) {
-    for (size_t i = 0; i < handlers_->size(); i++) {
-      (*handlers_)[i]->userException(ctxs_[i], getMethod(), ex, ex_what);
     }
   }
 }

@@ -82,6 +82,40 @@ class module_CONSTANTS {
     return self::$__longDoubleValue;
   }
 
+  private static $__my_company = null;
+  public static function my_company() {
+    if (self::$__my_company == null) {
+      self::$__my_company =       0;
+    }
+    return self::$__my_company;
+  }
+
+  private static $__foo = null;
+  public static function foo() {
+    if (self::$__foo == null) {
+      self::$__foo = "foo";
+    }
+    return self::$__foo;
+  }
+
+  private static $__bar = null;
+  public static function bar() {
+    if (self::$__bar == null) {
+      self::$__bar = 42;
+    }
+    return self::$__bar;
+  }
+
+  private static $__mymap = null;
+  public static function mymap() {
+    if (self::$__mymap == null) {
+      self::$__mymap = array(
+        "keys" => "values",
+      );
+    }
+    return self::$__mymap;
+  }
+
   private static $__instagram = null;
   public static function instagram() {
     if (self::$__instagram == null) {
@@ -92,6 +126,17 @@ class module_CONSTANTS {
       ));
     }
     return self::$__instagram;
+  }
+
+  private static $__partial_const = null;
+  public static function partial_const() {
+    if (self::$__partial_const == null) {
+      self::$__partial_const = new Internship(array(
+        "weeks" => 8,
+        "title" => "Some Job",
+      ));
+    }
+    return self::$__partial_const;
   }
 
   private static $__kRanges = null;
@@ -139,6 +184,15 @@ class module_CONSTANTS {
     return self::$__pod_0;
   }
 
+  private static $__pod_s_0 = null;
+  public static function pod_s_0() {
+    if (self::$__pod_s_0 == null) {
+      self::$__pod_s_0 = new struct1(array(
+      ));
+    }
+    return self::$__pod_s_0;
+  }
+
   private static $__pod_1 = null;
   public static function pod_1() {
     if (self::$__pod_1 == null) {
@@ -148,6 +202,17 @@ class module_CONSTANTS {
       ));
     }
     return self::$__pod_1;
+  }
+
+  private static $__pod_s_1 = null;
+  public static function pod_s_1() {
+    if (self::$__pod_s_1 == null) {
+      self::$__pod_s_1 = new struct1(array(
+        "a" => 10,
+        "b" => "foo",
+      ));
+    }
+    return self::$__pod_s_1;
   }
 
   private static $__pod_2 = null;
@@ -170,6 +235,46 @@ class module_CONSTANTS {
     return self::$__pod_2;
   }
 
+  private static $__pod_trailing_commas = null;
+  public static function pod_trailing_commas() {
+    if (self::$__pod_trailing_commas == null) {
+      self::$__pod_trailing_commas = new struct2(array(
+        "a" => 98,
+        "b" => "gaz",
+        "c" => new struct1(array(
+          "a" => 12,
+          "b" => "bar",
+        )),
+        "d" => array(
+          11,
+          22,
+          33,
+        ),
+      ));
+    }
+    return self::$__pod_trailing_commas;
+  }
+
+  private static $__pod_s_2 = null;
+  public static function pod_s_2() {
+    if (self::$__pod_s_2 == null) {
+      self::$__pod_s_2 = new struct2(array(
+        "a" => 98,
+        "b" => "gaz",
+        "c" => new struct1(array(
+          "a" => 12,
+          "b" => "bar",
+        )),
+        "d" => array(
+          11,
+          22,
+          33,
+        ),
+      ));
+    }
+    return self::$__pod_s_2;
+  }
+
   private static $__pod_3 = null;
   public static function pod_3() {
     if (self::$__pod_3 == null) {
@@ -190,6 +295,40 @@ class module_CONSTANTS {
       ));
     }
     return self::$__pod_3;
+  }
+
+  private static $__pod_s_3 = null;
+  public static function pod_s_3() {
+    if (self::$__pod_s_3 == null) {
+      self::$__pod_s_3 = new struct3(array(
+        "a" => "abc",
+        "b" => 456,
+        "c" => new struct2(array(
+          "a" => 888,
+          "c" => new struct1(array(
+            "b" => "gaz",
+          )),
+          "d" => array(
+            1,
+            2,
+            3,
+          ),
+        )),
+      ));
+    }
+    return self::$__pod_s_3;
+  }
+
+  private static $__pod_4 = null;
+  public static function pod_4() {
+    if (self::$__pod_4 == null) {
+      self::$__pod_4 = new struct4(array(
+        "a" => 1234,
+        "b" => 0.333,
+        "c" => 25,
+      ));
+    }
+    return self::$__pod_4;
   }
 
   private static $__u_1_1 = null;
@@ -526,10 +665,20 @@ class module_CONSTANTS {
         "z" => 1e+09,
         "zeroDoubleValue" => 0,
         "longDoubleValue" => 2.59961e-05,
+        "my_company" =>         0,
+        "foo" => "foo",
+        "bar" => 42,
+        "mymap" => array(
+          "keys" => "values",
+        ),
         "instagram" => new Internship(array(
           "weeks" => 12,
           "title" => "Software Engineer",
           "employer" =>           3,
+        )),
+        "partial_const" => new Internship(array(
+          "weeks" => 8,
+          "title" => "Some Job",
         )),
         "kRanges" => array(
           new Range(array(
@@ -555,11 +704,43 @@ class module_CONSTANTS {
         ),
         "pod_0" => new struct1(array(
         )),
+        "pod_s_0" => new struct1(array(
+        )),
         "pod_1" => new struct1(array(
           "a" => 10,
           "b" => "foo",
         )),
+        "pod_s_1" => new struct1(array(
+          "a" => 10,
+          "b" => "foo",
+        )),
         "pod_2" => new struct2(array(
+          "a" => 98,
+          "b" => "gaz",
+          "c" => new struct1(array(
+            "a" => 12,
+            "b" => "bar",
+          )),
+          "d" => array(
+            11,
+            22,
+            33,
+          ),
+        )),
+        "pod_trailing_commas" => new struct2(array(
+          "a" => 98,
+          "b" => "gaz",
+          "c" => new struct1(array(
+            "a" => 12,
+            "b" => "bar",
+          )),
+          "d" => array(
+            11,
+            22,
+            33,
+          ),
+        )),
+        "pod_s_2" => new struct2(array(
           "a" => 98,
           "b" => "gaz",
           "c" => new struct1(array(
@@ -586,6 +767,26 @@ class module_CONSTANTS {
               3,
             ),
           )),
+        )),
+        "pod_s_3" => new struct3(array(
+          "a" => "abc",
+          "b" => 456,
+          "c" => new struct2(array(
+            "a" => 888,
+            "c" => new struct1(array(
+              "b" => "gaz",
+            )),
+            "d" => array(
+              1,
+              2,
+              3,
+            ),
+          )),
+        )),
+        "pod_4" => new struct4(array(
+          "a" => 1234,
+          "b" => 0.333,
+          "c" => 25,
         )),
         "u_1_1" => new union1(array(
           "i" => 97,

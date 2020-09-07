@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <bitset>
@@ -25,7 +26,8 @@
 #include <fatal/type/call_traits.h>
 #include <fatal/type/trie.h>
 #include <folly/Traits.h>
-#include <thrift/lib/cpp2/GeneratedSerializationCodeHelper.h>
+#include <folly/Utility.h>
+#include <thrift/lib/cpp2/protocol/detail/protocol_methods.h>
 #include <thrift/lib/cpp2/reflection/container_traits.h>
 #include <thrift/lib/cpp2/reflection/reflection.h>
 
@@ -212,7 +214,7 @@ struct protocol_methods<type_class::list<ElemClass>, Type> {
   template <typename Protocol>
   static void read(Protocol& protocol, Type& out) {
     std::uint32_t list_size = -1;
-    TType reported_type = protocol::T_STOP;
+    protocol::TType reported_type = protocol::T_STOP;
 
     out = Type();
 
@@ -301,7 +303,7 @@ struct protocol_methods<type_class::set<ElemClass>, Type> {
     // TODO: readSetBegin takes (TType, std::uint32_t)
     // instead of a (TType, std::size_t)
     std::uint32_t set_size = -1;
-    TType reported_type = protocol::T_STOP;
+    protocol::TType reported_type = protocol::T_STOP;
 
     out = Type();
     protocol.readSetBegin(reported_type, set_size);
@@ -378,7 +380,8 @@ struct protocol_methods<type_class::map<KeyClass, MappedClass>, Type> {
   static void read(Protocol& protocol, Type& out) {
     // TODO: see above re: readMapBegin taking a uint32_t size param
     std::uint32_t map_size = -1;
-    TType rpt_key_type = protocol::T_STOP, rpt_mapped_type = protocol::T_STOP;
+    protocol::TType rpt_key_type = protocol::T_STOP,
+                    rpt_mapped_type = protocol::T_STOP;
     out = Type();
 
     protocol.readMapBegin(rpt_key_type, rpt_mapped_type, map_size);
@@ -593,7 +596,7 @@ struct protocol_methods<type_class::variant, Union> {
     template <typename Fid, std::size_t Index>
     void operator()(
         fatal::indexed<Fid, Index>,
-        const TType ftype,
+        const protocol::TType ftype,
         Protocol& protocol,
         Union& obj) const {
       using descriptor = fatal::get<
@@ -637,6 +640,7 @@ struct protocol_methods<type_class::variant, Union> {
         bool const found = fatal::
             trie_find<typename enum_traits::fields, fatal::get_type::name>(
                 fname.begin(), fname.end(), member_fname_to_fid(), fid, ftype);
+        (void)found;
         assert(found);
       }
 
@@ -795,7 +799,7 @@ struct protocol_methods<type_class::structure, Struct> {
         typename isset_array>
     void operator()(
         fatal::indexed<Fid, Index>,
-        const TType ftype,
+        const protocol::TType ftype,
         Protocol& protocol,
         Struct& obj,
         isset_array& required_isset) {
@@ -810,8 +814,7 @@ struct protocol_methods<type_class::structure, Struct> {
 
       if (ftype == protocol_method::ttype_value) {
         detail::mark_isset<
-            static_cast<std::underlying_type<optionality>::type>(
-                member::optional::value),
+            folly::to_underlying(member::optional::value),
             required_fields,
             member>(required_isset, obj);
         protocol_method::read(
@@ -826,7 +829,6 @@ struct protocol_methods<type_class::structure, Struct> {
  public:
   template <typename Protocol>
   static void read(Protocol& protocol, Struct& out) {
-    using namespace fatal;
     std::string fname;
     apache::thrift::protocol::TType ftype = protocol::T_STOP;
     std::int16_t fid = -1;
@@ -834,7 +836,7 @@ struct protocol_methods<type_class::structure, Struct> {
 
     protocol.readStructBegin(fname);
     DVLOG(3) << "start reading struct: " << fname << " ("
-             << z_data<typename traits::name>() << ")";
+             << fatal::z_data<typename traits::name>() << ")";
 
     while (true) {
       protocol.readFieldBegin(fname, ftype, fid);
@@ -849,7 +851,7 @@ struct protocol_methods<type_class::structure, Struct> {
         // if so, look up fid via fname
         assert(fname != "");
         bool const found_ =
-            trie_find<typename traits::members, fatal::get_type::name>(
+            fatal::trie_find<typename traits::members, fatal::get_type::name>(
                 fname.begin(), fname.end(), member_fname_to_fid(), fid, ftype);
         if (!found_) {
           protocol.skip(ftype);
@@ -858,9 +860,9 @@ struct protocol_methods<type_class::structure, Struct> {
         }
       }
 
-      using sorted_fids =
-          sort<transform<typename traits::members, get_type::id>>;
-      if (!sorted_search<sorted_fids>(
+      using sorted_fids = fatal::sort<
+          fatal::transform<typename traits::members, fatal::get_type::id>>;
+      if (!fatal::sorted_search<sorted_fids>(
               fid, set_member_by_fid(), ftype, protocol, out, required_isset)) {
         DVLOG(3) << "didn't find field, fid: " << fid << ", fname: " << fname;
         protocol.skip(ftype);
@@ -871,8 +873,8 @@ struct protocol_methods<type_class::structure, Struct> {
 
     for (std::size_t idx = 0; idx < required_isset.size(); idx++) {
       if (!required_isset[idx]) {
-        throw apache::thrift::TProtocolException(
-            TProtocolException::MISSING_REQUIRED_FIELD,
+        throw protocol::TProtocolException(
+            protocol::TProtocolException::MISSING_REQUIRED_FIELD,
             "Required field was not found in serialized data!");
       }
     }
@@ -1243,9 +1245,9 @@ struct protocol_methods<type_class::structure, Struct> {
 
 template <typename Type, typename Protocol>
 std::size_t serializer_read(Type& out, Protocol& protocol) {
-  auto xferStart = protocol.getCurrentPosition().getCurrentPosition();
+  auto xferStart = protocol.getCursorPosition();
   protocol_methods<reflect_type_class<Type>, Type>::read(protocol, out);
-  return protocol.getCurrentPosition().getCurrentPosition() - xferStart;
+  return protocol.getCursorPosition() - xferStart;
 }
 
 template <typename Type, typename Protocol>

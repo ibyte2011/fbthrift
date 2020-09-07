@@ -6,11 +6,18 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+} // namespace tag
+namespace detail {
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 
@@ -30,23 +37,56 @@ class Nada;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class Empty final : private apache::thrift::detail::st::ComparisonOperators<Empty> {
+class Empty final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Empty;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   Empty() {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   Empty(apache::thrift::FragileConstructor);
 
   Empty(Empty&&) = default;
 
   Empty(const Empty&) = default;
 
+
   Empty& operator=(Empty&&) = default;
 
   Empty& operator=(const Empty&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
   bool operator==(const Empty& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Empty& __x, const Empty& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Empty& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Empty& __x, const Empty& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Empty& __x, const Empty& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Empty& __x, const Empty& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -62,57 +102,34 @@ class Empty final : private apache::thrift::detail::st::ComparisonOperators<Empt
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Empty >;
+  friend void swap(Empty& a, Empty& b);
 };
-
-void swap(Empty& a, Empty& b);
-extern template void Empty::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Empty::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Empty::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Empty::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Empty::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Empty::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Empty::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Empty::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Empty::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Empty>::clear( ::cpp2::Empty* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Empty>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::write(Protocol* proto,  ::cpp2::Empty const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Empty>::read(Protocol* proto,  ::cpp2::Empty* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::serializedSize(Protocol const* proto,  ::cpp2::Empty const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::serializedSizeZC(Protocol const* proto,  ::cpp2::Empty const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class Nada final : private apache::thrift::detail::st::ComparisonOperators<Nada> {
+class Nada final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
  public:
-  enum Type {
+  using __fbthrift_cpp2_type = Nada;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    true;
+
+
+ public:
+  enum Type : int {
     __EMPTY__ = 0,
   } ;
 
@@ -185,9 +202,25 @@ class Nada final : private apache::thrift::detail::st::ComparisonOperators<Nada>
     ~storage_type() {}
   } ;
   bool operator==(const Nada& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Nada& __x, const Nada& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Nada& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Nada& __x, const Nada& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Nada& __x, const Nada& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Nada& __x, const Nada& __y) {
+    return !(__x < __y);
+  }
+#endif
 
-  Type getType() const { return type_; }
+  Type getType() const { return static_cast<Type>(type_); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -203,7 +236,7 @@ class Nada final : private apache::thrift::detail::st::ComparisonOperators<Nada>
     (&val)->~T();
   }
 
-  Type type_;
+  std::underlying_type_t<Type> type_;
   storage_type value_;
 
  private:
@@ -211,50 +244,31 @@ class Nada final : private apache::thrift::detail::st::ComparisonOperators<Nada>
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Nada >;
+  friend void swap(Nada& a, Nada& b);
 };
-
-void swap(Nada& a, Nada& b);
-extern template void Nada::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Nada::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Nada::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Nada::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Nada::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Nada::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Nada::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Nada::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Nada::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
+
 namespace apache { namespace thrift {
 
-template <> inline void Cpp2Ops< ::cpp2::Nada>::clear( ::cpp2::Nada* obj) {
-  return obj->__clear();
-}
+template <> struct TEnumDataStorage<::cpp2::Nada::Type>;
 
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Nada>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
+template <> struct TEnumTraits<::cpp2::Nada::Type> {
+  using type = ::cpp2::Nada::Type;
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Nada>::write(Protocol* proto,  ::cpp2::Nada const* obj) {
-  return obj->write(proto);
-}
+  static constexpr std::size_t const size = 0;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
 
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Nada>::read(Protocol* proto,  ::cpp2::Nada* obj) {
-  return obj->readNoXfer(proto);
-}
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Nada>::serializedSize(Protocol const* proto,  ::cpp2::Nada const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Nada>::serializedSizeZC(Protocol const* proto,  ::cpp2::Nada const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
+};
 }} // apache::thrift

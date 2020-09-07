@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -110,7 +110,7 @@ void ProxygenThriftServer::ThriftRequestHandler::onBody(
 }
 
 void ProxygenThriftServer::ThriftRequestHandler::onEOM() noexcept {
-  folly::RequestContext::create();
+  folly::RequestContextScopeGuard rctxScopeGuard;
   connCtx_ = std::make_shared<apache::thrift::Cpp2ConnContext>(
       &msg_->getClientAddress(), nullptr, nullptr, nullptr, nullptr);
 
@@ -136,18 +136,27 @@ void ProxygenThriftServer::ThriftRequestHandler::onEOM() noexcept {
       connCtx_.get(), header_.get());
 
   request_ = new ProxygenRequest(this, header_, connCtx_, reqCtx_);
-  auto req =
-      std::unique_ptr<apache::thrift::ResponseChannelRequest>(request_);
+  auto req = apache::thrift::ResponseChannelRequest::UniquePtr(request_);
   auto protoId = static_cast<apache::thrift::protocol::PROTOCOL_TYPES>(
       header_->getProtocolId());
-  if (!apache::thrift::detail::ap::deserializeMessageBegin(
-          protoId, req, body_.get(), reqCtx_.get(), worker_->evb_)) {
+  const auto msgBegin = apache::thrift::detail::ap::deserializeMessageBegin(
+      *body_.get(), protoId);
+
+  if (!apache::thrift::detail::ap::setupRequestContextWithMessageBegin(
+          msgBegin, protoId, req, reqCtx_.get(), worker_->evb_)) {
     return;
   }
 
-  worker_->getProcessor()->process(
+  auto serializedRequest = [&] {
+    folly::IOBufQueue bufQueue;
+    bufQueue.append(std::move(body_));
+    bufQueue.trimStart(msgBegin.size);
+    return SerializedRequest(bufQueue.move());
+  }();
+
+  worker_->getProcessor()->processSerializedRequest(
       std::move(req),
-      std::move(body_),
+      std::move(serializedRequest),
       protoId,
       reqCtx_.get(),
       worker_->evb_,
@@ -171,13 +180,20 @@ void ProxygenThriftServer::ThriftRequestHandler::onError(
     ProxygenError err) noexcept {
   LOG(ERROR) << "Proxygen error=" << err;
 
+  if (request_) {
+    request_->clearHandler();
+    request_ = nullptr;
+  }
+  cancel();
+
   // TODO(ckwalsh) Expose proxygen errors as a counter somewhere
   delete this;
 }
 
 void ProxygenThriftServer::ThriftRequestHandler::sendReply(
     std::unique_ptr<folly::IOBuf>&& buf, // && from ResponseChannel.h
-    apache::thrift::MessageChannel::SendCallback* cb) {
+    apache::thrift::MessageChannel::SendCallback* cb,
+    folly::Optional<uint32_t>) {
   queueTimeout_.cancelTimeout();
   taskTimeout_.cancelTimeout();
 
@@ -193,7 +209,7 @@ void ProxygenThriftServer::ThriftRequestHandler::sendReply(
   response.status(200, "OK");
 
   for (auto itr : header_->releaseWriteHeaders()) {
-    response.header(itr.first, itr.second);
+    response.header(std::move(itr.first), std::move(itr.second));
   }
 
   response.header(
@@ -225,10 +241,10 @@ void ProxygenThriftServer::ThriftRequestHandler::sendReply(
 
   auto& headers = msg_->getHeaders();
 
-  if (headers.exists(Cpp2Connection::loadHeader)) {
-    auto& loadHeader = headers.getSingleOrEmpty(Cpp2Connection::loadHeader);
+  if (headers.exists(THeader::QUERY_LOAD_HEADER)) {
+    auto& loadHeader = headers.getSingleOrEmpty(THeader::QUERY_LOAD_HEADER);
     auto load = worker_->server_->getLoad(loadHeader);
-    response.header(Cpp2Connection::loadHeader, folly::to<std::string>(load));
+    response.header(THeader::QUERY_LOAD_HEADER, folly::to<std::string>(load));
   }
 
   response.body(std::move(buf)).sendWithEOM();
@@ -241,8 +257,7 @@ void ProxygenThriftServer::ThriftRequestHandler::sendReply(
 
 void ProxygenThriftServer::ThriftRequestHandler::sendErrorWrapped(
     folly::exception_wrapper ew,
-    std::string exCode,
-    apache::thrift::MessageChannel::MessageChannel::SendCallback* cb) {
+    std::string exCode) {
   // Other types are unimplemented.
   DCHECK(ew.is_compatible_with<apache::thrift::TApplicationException>());
 
@@ -269,13 +284,13 @@ void ProxygenThriftServer::ThriftRequestHandler::sendErrorWrapped(
           return;
         }
 
-        sendReply(std::move(exbuf), cb);
+        sendReply(std::move(exbuf), nullptr);
       });
 }
 
 void ProxygenThriftServer::ThriftRequestHandler::TaskTimeout::
     timeoutExpired() noexcept {
-  if (hard_ || !request_->reqCtx_->getStartedProcessing()) {
+  if (hard_ || !request_->getStartedProcessing()) {
     request_->sendErrorWrapped(
         folly::make_exception_wrapper<TApplicationException>(
             TApplicationException::TApplicationExceptionType::TIMEOUT,
@@ -293,16 +308,6 @@ void ProxygenThriftServer::ThriftRequestHandler::TaskTimeout::
   }
 }
 
-bool ProxygenThriftServer::isOverloaded(const THeader* header) {
-  if (UNLIKELY(isOverloaded_(header))) {
-    return true;
-  }
-
-  LOG(WARNING) << "isOverloaded is not implemented";
-
-  return false;
-}
-
 uint64_t ProxygenThriftServer::getNumDroppedConnections() const {
   uint64_t droppedConns = 0;
   if (server_) {
@@ -317,8 +322,8 @@ uint64_t ProxygenThriftServer::getNumDroppedConnections() const {
 }
 
 void ProxygenThriftServer::serve() {
-  if (!observer_ && apache::thrift::server::observerFactory_) {
-    observer_ = apache::thrift::server::observerFactory_->getObserver();
+  if (!getObserver() && server::observerFactory_) {
+    setObserver(server::observerFactory_->getObserver());
   }
 
   auto nPoolThreads = getNumCPUWorkerThreads();
@@ -353,7 +358,9 @@ void ProxygenThriftServer::serve() {
   if (port_ != -1) {
     IPs.emplace_back(SocketAddress("::", port_, true), httpProtocol_);
   } else {
-    IPs.emplace_back(address_, httpProtocol_);
+    for (const auto& address : addresses_) {
+      IPs.emplace_back(address, httpProtocol_);
+    }
   }
 
   HTTPServerOptions options;

@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -26,6 +26,21 @@ class Animal(thrift.py3.types.Enum):
 
 
 class Color(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        red: bool
+        green: bool
+        blue: bool
+        alpha: bool
+        pass
+
+    red: Final[float] = ...
+
+    green: Final[float] = ...
+
+    blue: Final[float] = ...
+
+    alpha: Final[float] = ...
+
     def __init__(
         self, *,
         red: _typing.Optional[float]=None,
@@ -36,10 +51,10 @@ class Color(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.
 
     def __call__(
         self, *,
-        red: _typing.Union[float, NOTSETTYPE, None]=NOTSET,
-        green: _typing.Union[float, NOTSETTYPE, None]=NOTSET,
-        blue: _typing.Union[float, NOTSETTYPE, None]=NOTSET,
-        alpha: _typing.Union[float, NOTSETTYPE, None]=NOTSET
+        red: _typing.Union[float, __NotSet, None]=NOTSET,
+        green: _typing.Union[float, __NotSet, None]=NOTSET,
+        blue: _typing.Union[float, __NotSet, None]=NOTSET,
+        alpha: _typing.Union[float, __NotSet, None]=NOTSET
     ) -> Color: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Color'], bytes]]: ...
@@ -52,17 +67,26 @@ class Color(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.
     def __le__(self, other: 'Color') -> bool: ...
     def __ge__(self, other: 'Color') -> bool: ...
 
-    @__property__
-    def red(self) -> float: ...
-    @__property__
-    def green(self) -> float: ...
-    @__property__
-    def blue(self) -> float: ...
-    @__property__
-    def alpha(self) -> float: ...
-
 
 class Vehicle(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        color: bool
+        licensePlate: bool
+        description: bool
+        name: bool
+        hasAC: bool
+        pass
+
+    color: Final['Color'] = ...
+
+    licensePlate: Final[_typing.Optional[str]] = ...
+
+    description: Final[_typing.Optional[str]] = ...
+
+    name: Final[_typing.Optional[str]] = ...
+
+    hasAC: Final[bool] = ...
+
     def __init__(
         self, *,
         color: _typing.Optional['Color']=None,
@@ -74,11 +98,11 @@ class Vehicle(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typin
 
     def __call__(
         self, *,
-        color: _typing.Union['Color', NOTSETTYPE, None]=NOTSET,
-        licensePlate: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        description: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        name: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        hasAC: _typing.Union[bool, NOTSETTYPE, None]=NOTSET
+        color: _typing.Union['Color', __NotSet, None]=NOTSET,
+        licensePlate: _typing.Union[str, __NotSet, None]=NOTSET,
+        description: _typing.Union[str, __NotSet, None]=NOTSET,
+        name: _typing.Union[str, __NotSet, None]=NOTSET,
+        hasAC: _typing.Union[bool, __NotSet, None]=NOTSET
     ) -> Vehicle: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Vehicle'], bytes]]: ...
@@ -91,19 +115,41 @@ class Vehicle(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typin
     def __le__(self, other: 'Vehicle') -> bool: ...
     def __ge__(self, other: 'Vehicle') -> bool: ...
 
-    @__property__
-    def color(self) -> 'Color': ...
-    @__property__
-    def licensePlate(self) -> _typing.Optional[str]: ...
-    @__property__
-    def description(self) -> _typing.Optional[str]: ...
-    @__property__
-    def name(self) -> _typing.Optional[str]: ...
-    @__property__
-    def hasAC(self) -> bool: ...
-
 
 class Person(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        id: bool
+        name: bool
+        age: bool
+        address: bool
+        favoriteColor: bool
+        friends: bool
+        bestFriend: bool
+        petNames: bool
+        afraidOfAnimal: bool
+        vehicles: bool
+        pass
+
+    id: Final[int] = ...
+
+    name: Final[str] = ...
+
+    age: Final[_typing.Optional[int]] = ...
+
+    address: Final[_typing.Optional[str]] = ...
+
+    favoriteColor: Final[_typing.Optional['Color']] = ...
+
+    friends: Final[_typing.Optional[_typing.AbstractSet[int]]] = ...
+
+    bestFriend: Final[_typing.Optional[int]] = ...
+
+    petNames: Final[_typing.Optional[_typing.Mapping[Animal, str]]] = ...
+
+    afraidOfAnimal: Final[_typing.Optional[Animal]] = ...
+
+    vehicles: Final[_typing.Optional[_typing.Sequence['Vehicle']]] = ...
+
     def __init__(
         self, *,
         id: _typing.Optional[int]=None,
@@ -120,16 +166,16 @@ class Person(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing
 
     def __call__(
         self, *,
-        id: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        name: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        age: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        address: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        favoriteColor: _typing.Union['Color', NOTSETTYPE, None]=NOTSET,
-        friends: _typing.Union[_typing.AbstractSet[int], NOTSETTYPE, None]=NOTSET,
-        bestFriend: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        petNames: _typing.Union[_typing.Mapping[Animal, str], NOTSETTYPE, None]=NOTSET,
-        afraidOfAnimal: _typing.Union[Animal, NOTSETTYPE, None]=NOTSET,
-        vehicles: _typing.Union[_typing.Sequence['Vehicle'], NOTSETTYPE, None]=NOTSET
+        id: _typing.Union[int, __NotSet, None]=NOTSET,
+        name: _typing.Union[str, __NotSet, None]=NOTSET,
+        age: _typing.Union[int, __NotSet, None]=NOTSET,
+        address: _typing.Union[str, __NotSet, None]=NOTSET,
+        favoriteColor: _typing.Union['Color', __NotSet, None]=NOTSET,
+        friends: _typing.Union[_typing.AbstractSet[int], __NotSet, None]=NOTSET,
+        bestFriend: _typing.Union[int, __NotSet, None]=NOTSET,
+        petNames: _typing.Union[_typing.Mapping[Animal, str], __NotSet, None]=NOTSET,
+        afraidOfAnimal: _typing.Union[Animal, __NotSet, None]=NOTSET,
+        vehicles: _typing.Union[_typing.Sequence['Vehicle'], __NotSet, None]=NOTSET
     ) -> Person: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Person'], bytes]]: ...
@@ -141,27 +187,6 @@ class Person(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing
     def __gt__(self, other: 'Person') -> bool: ...
     def __le__(self, other: 'Person') -> bool: ...
     def __ge__(self, other: 'Person') -> bool: ...
-
-    @__property__
-    def id(self) -> int: ...
-    @__property__
-    def name(self) -> str: ...
-    @__property__
-    def age(self) -> _typing.Optional[int]: ...
-    @__property__
-    def address(self) -> _typing.Optional[str]: ...
-    @__property__
-    def favoriteColor(self) -> _typing.Optional['Color']: ...
-    @__property__
-    def friends(self) -> _typing.Optional[_typing.AbstractSet[int]]: ...
-    @__property__
-    def bestFriend(self) -> _typing.Optional[int]: ...
-    @__property__
-    def petNames(self) -> _typing.Optional[_typing.Mapping[Animal, str]]: ...
-    @__property__
-    def afraidOfAnimal(self) -> _typing.Optional[Animal]: ...
-    @__property__
-    def vehicles(self) -> _typing.Optional[_typing.Sequence['Vehicle']]: ...
 
 
 class Set__i64(_typing.AbstractSet[int], _typing.Hashable):

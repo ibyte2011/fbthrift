@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -116,24 +116,26 @@ class ProxygenThriftServer : public BaseThriftServer,
     void onError(proxygen::ProxygenError err) noexcept override;
 
     // apache::thrift::ResponseChannelRequest
-    bool isActive() override {
+    bool isActive() const override {
       return active_;
     }
     void cancel() override {
       active_ = false;
+      if (connCtx_) {
+        connCtx_->connectionClosed();
+      }
     }
-    bool isOneway() override {
+    bool isOneway() const override {
       return false;
     }
 
     void sendReply(
         std::unique_ptr<folly::IOBuf>&&, // && from ResponseChannel.h
-        apache::thrift::MessageChannel::SendCallback* cb = nullptr) override;
+        apache::thrift::MessageChannel::SendCallback* cb = nullptr,
+        folly::Optional<uint32_t> crc32c = folly::none) override;
 
-    void sendErrorWrapped(
-        folly::exception_wrapper ex,
-        std::string exCode,
-        apache::thrift::MessageChannel::SendCallback* cb = nullptr) override;
+    void sendErrorWrapped(folly::exception_wrapper ex, std::string exCode)
+        override;
 
     class ProxygenRequest : public apache::thrift::ResponseChannelRequest {
      public:
@@ -153,7 +155,7 @@ class ProxygenThriftServer : public BaseThriftServer,
         }
       }
 
-      bool isActive() override {
+      bool isActive() const override {
         if (handler_) {
           return handler_->isActive();
         }
@@ -167,7 +169,7 @@ class ProxygenThriftServer : public BaseThriftServer,
         }
       }
 
-      bool isOneway() override {
+      bool isOneway() const override {
         if (handler_) {
           return handler_->isOneway();
         }
@@ -175,7 +177,7 @@ class ProxygenThriftServer : public BaseThriftServer,
         return false;
       }
 
-      bool isStream() override {
+      bool isStream() const override {
         if (handler_) {
           return handler_->isStream();
         }
@@ -185,18 +187,17 @@ class ProxygenThriftServer : public BaseThriftServer,
 
       void sendReply(
           std::unique_ptr<folly::IOBuf>&& buf, // && from ResponseChannel.h
-          apache::thrift::MessageChannel::SendCallback* cb = nullptr) override {
+          apache::thrift::MessageChannel::SendCallback* cb = nullptr,
+          folly::Optional<uint32_t> = folly::none) override {
         if (handler_) {
           handler_->sendReply(std::move(buf), cb);
         }
       }
 
-      void sendErrorWrapped(
-          folly::exception_wrapper ex,
-          std::string exCode,
-          apache::thrift::MessageChannel::SendCallback* cb = nullptr) override {
+      void sendErrorWrapped(folly::exception_wrapper ex, std::string exCode)
+          override {
         if (handler_) {
-          handler_->sendErrorWrapped(ex, exCode, cb);
+          handler_->sendErrorWrapped(ex, exCode);
         }
       }
 
@@ -248,14 +249,30 @@ class ProxygenThriftServer : public BaseThriftServer,
   class ConnectionContext : public apache::thrift::server::TConnectionContext {
    public:
     explicit ConnectionContext(const proxygen::HTTPSessionBase& session)
-        : apache::thrift::server::TConnectionContext() {
-      peerAddress_ = session.getPeerAddress();
-    }
+        : apache::thrift::server::TConnectionContext(),
+          peerAddress_(session.getPeerAddress()) {}
+
     ~ConnectionContext() override {}
+
+    const folly::SocketAddress* getPeerAddress() const final {
+      return &peerAddress_;
+    }
+
+   private:
+    folly::SocketAddress peerAddress_;
   };
 
-  bool isOverloaded(
-      const apache::thrift::transport::THeader* header = nullptr) override;
+  folly::Optional<std::string> checkOverload(
+      const transport::THeader::StringToStringMap*,
+      const std::string*) const override {
+    return {};
+  }
+
+  PreprocessResult preprocess(
+      const transport::THeader::StringToStringMap*,
+      const std::string*) const override {
+    return {};
+  }
 
   /**
    * Get the number of connections dropped by the AsyncServerSocket

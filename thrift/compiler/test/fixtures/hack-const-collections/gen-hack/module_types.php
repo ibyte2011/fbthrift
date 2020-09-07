@@ -13,54 +13,62 @@
 class Foo implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::LST,
       'etype' => \TType::STRING,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::STRING,
-        ],
-        'format' => 'collection',
-      ],
-    2 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::LST,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::LST,
         'etype' => \TType::SET,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::SET,
           'etype' => \TType::I32,
-          'elem' => dict[
+          'elem' => shape(
             'type' => \TType::I32,
-            ],
-            'format' => 'collection',
-          ],
+          ),
           'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    3 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    3 => shape(
       'var' => 'c',
       'type' => \TType::I64,
-      ],
-    4 => dict[
+    ),
+    4 => shape(
       'var' => 'd',
       'type' => \TType::BOOL,
-      ],
-    ];
-  public static ConstMap<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
     'b' => 2,
     'c' => 3,
     'd' => 4,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => ConstVector<string>,
+    ?'b' => ?ConstMap<string, ConstVector<ConstSet<int>>>,
+    ?'c' => int,
+    ?'d' => bool,
+  );
+
   const int STRUCTURAL_ID = 3946809642153193229;
   /**
    * Original thrift field:-
@@ -83,27 +91,55 @@ class Foo implements \IThriftStruct {
    */
   public bool $d;
 
+  <<__Rx>>
   public function __construct(?ConstVector<string> $a = null, ?ConstMap<string, ConstVector<ConstSet<int>>> $b = null, ?int $c = null, ?bool $d = null  ) {
-    if ($a === null) {
-      $this->a = Vector {};
-    } else {
-      $this->a = $a;
-    }
+    $this->a = $a ?? Vector {};
     $this->b = $b;
-    if ($c === null) {
-      $this->c = 7;
-    } else {
-      $this->c = $c;
-    }
-    if ($d === null) {
-      $this->d = false;
-    } else {
-      $this->d = $d;
-    }
+    $this->c = $c ?? 7;
+    $this->d = $d ?? false;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'c'),
+      Shapes::idx($shape, 'd'),
+    );
   }
 
   public function getName(): string {
     return 'Foo';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'c' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'd' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -115,15 +151,20 @@ class Foo implements \IThriftStruct {
 class Baz extends \TException implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'message',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static ConstMap<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'message' => 1,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'message' => string,
+  );
+
   const int STRUCTURAL_ID = 2427562471238739676;
   /**
    * Original thrift field:-
@@ -131,17 +172,38 @@ class Baz extends \TException implements \IThriftStruct {
    */
   public string $message;
 
+  <<__Rx>>
   public function __construct(?string $message = null  ) {
     parent::__construct();
-    if ($message === null) {
-      $this->message = '';
-    } else {
-      $this->message = $message;
-    }
+    $this->message = $message ?? '';
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'message'),
+    );
   }
 
   public function getName(): string {
     return 'Baz';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'message' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }

@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -25,22 +25,35 @@ class MyEnum(thrift.py3.types.Enum):
 
 
 class MyStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        MyIntField: bool
+        MyStringField: bool
+        MyDataField: bool
+        myEnum: bool
+        pass
+
+    MyIntField: Final[int] = ...
+
+    MyStringField: Final[str] = ...
+
+    MyDataField: Final['MyDataItem'] = ...
+
+    myEnum: Final[MyEnum] = ...
+
     def __init__(
         self, *,
         MyIntField: _typing.Optional[int]=None,
         MyStringField: _typing.Optional[str]=None,
         MyDataField: _typing.Optional['MyDataItem']=None,
-        major: _typing.Optional[int]=None,
         myEnum: _typing.Optional[MyEnum]=None
     ) -> None: ...
 
     def __call__(
         self, *,
-        MyIntField: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        MyStringField: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        MyDataField: _typing.Union['MyDataItem', NOTSETTYPE, None]=NOTSET,
-        major: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        myEnum: _typing.Union[MyEnum, NOTSETTYPE, None]=NOTSET
+        MyIntField: _typing.Union[int, __NotSet, None]=NOTSET,
+        MyStringField: _typing.Union[str, __NotSet, None]=NOTSET,
+        MyDataField: _typing.Union['MyDataItem', __NotSet, None]=NOTSET,
+        myEnum: _typing.Union[MyEnum, __NotSet, None]=NOTSET
     ) -> MyStruct: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['MyStruct'], bytes]]: ...
@@ -53,19 +66,11 @@ class MyStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
     def __le__(self, other: 'MyStruct') -> bool: ...
     def __ge__(self, other: 'MyStruct') -> bool: ...
 
-    @__property__
-    def MyIntField(self) -> int: ...
-    @__property__
-    def MyStringField(self) -> str: ...
-    @__property__
-    def MyDataField(self) -> 'MyDataItem': ...
-    @__property__
-    def major(self) -> int: ...
-    @__property__
-    def myEnum(self) -> MyEnum: ...
-
 
 class MyDataItem(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        pass
+
     def __init__(
         self, 
     ) -> None: ...
@@ -84,5 +89,47 @@ class MyDataItem(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_ty
     def __le__(self, other: 'MyDataItem') -> bool: ...
     def __ge__(self, other: 'MyDataItem') -> bool: ...
 
+
+class MyUnion(thrift.py3.types.Union, _typing.Hashable):
+    class __fbthrift_IsSet:
+        myEnum: bool
+        myStruct: bool
+        myDataItem: bool
+        pass
+
+    myEnum: Final[MyEnum] = ...
+
+    myStruct: Final['MyStruct'] = ...
+
+    myDataItem: Final['MyDataItem'] = ...
+
+    def __init__(
+        self, *,
+        myEnum: _typing.Optional[MyEnum]=None,
+        myStruct: _typing.Optional['MyStruct']=None,
+        myDataItem: _typing.Optional['MyDataItem']=None
+    ) -> None: ...
+
+    def __bool__(self) -> bool: ...
+    def __hash__(self) -> int: ...
+    def __repr__(self) -> str: ...
+    def __lt__(self, other: 'MyUnion') -> bool: ...
+    def __gt__(self, other: 'MyUnion') -> bool: ...
+    def __le__(self, other: 'MyUnion') -> bool: ...
+    def __ge__(self, other: 'MyUnion') -> bool: ...
+
+    class Type(thrift.py3.types.Enum):
+        EMPTY: MyUnion.Type = ...
+        myEnum: MyUnion.Type = ...
+        myStruct: MyUnion.Type = ...
+        myDataItem: MyUnion.Type = ...
+
+    @staticmethod
+    def fromValue(value: _typing.Union[None, MyEnum, 'MyStruct', 'MyDataItem']) -> MyUnion: ...
+    @__property__
+    def value(self) -> _typing.Union[None, MyEnum, 'MyStruct', 'MyDataItem']: ...
+    @__property__
+    def type(self) -> "MyUnion.Type": ...
+    def get_type(self) -> "MyUnion.Type": ...
 
 

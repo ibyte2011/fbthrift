@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +17,15 @@
 #pragma once
 
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 
 #include <folly/CPortability.h>
-#include <folly/Optional.h>
 #include <folly/Range.h>
 #include <folly/lang/Exception.h>
 
+#include <thrift/lib/cpp2/transport/rocket/RocketException.h>
 #include <thrift/lib/cpp2/transport/rocket/Types.h>
 #include <thrift/lib/cpp2/transport/rocket/framing/ErrorCode.h>
 #include <thrift/lib/cpp2/transport/rocket/framing/Flags.h>
@@ -39,7 +40,7 @@ class Serializer;
 
 class SetupFrame {
  public:
-  explicit SetupFrame(folly::IOBuf&& frame);
+  explicit SetupFrame(std::unique_ptr<folly::IOBuf> frame);
 
   explicit SetupFrame(Payload&& payload) : payload_(std::move(payload)) {}
 
@@ -71,7 +72,8 @@ class SetupFrame {
     return payload_;
   }
 
-  void serialize(Serializer& writer) const;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+  void serialize(Serializer& writer) &&;
 
  private:
   static constexpr folly::StringPiece kMimeType{"text/plain"};
@@ -84,7 +86,13 @@ class SetupFrame {
 
 class RequestResponseFrame {
  public:
-  explicit RequestResponseFrame(folly::IOBuf&& frame);
+  explicit RequestResponseFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  RequestResponseFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
 
   RequestResponseFrame(StreamId streamId, Payload&& payload)
       : streamId_(streamId), payload_(std::move(payload)) {}
@@ -115,6 +123,11 @@ class RequestResponseFrame {
     return payload_;
   }
 
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  std::unique_ptr<folly::IOBuf> serialize() &&;
   void serialize(Serializer& writer) &&;
 
  private:
@@ -122,13 +135,19 @@ class RequestResponseFrame {
   Flags flags_{Flags::none()};
   Payload payload_;
 
-  void serializeIntoSingleFrame(Serializer& writer) const;
+  void serializeIntoSingleFrame(Serializer& writer) &&;
   FOLLY_NOINLINE void serializeInFragmentsSlow(Serializer& writer) &&;
 };
 
 class RequestFnfFrame {
  public:
-  explicit RequestFnfFrame(folly::IOBuf&& frame);
+  explicit RequestFnfFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  RequestFnfFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
 
   RequestFnfFrame(StreamId streamId, Payload&& payload)
       : streamId_(streamId), payload_(std::move(payload)) {}
@@ -159,6 +178,11 @@ class RequestFnfFrame {
     return payload_;
   }
 
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  std::unique_ptr<folly::IOBuf> serialize() &&;
   void serialize(Serializer& writer) &&;
 
  private:
@@ -166,13 +190,19 @@ class RequestFnfFrame {
   Flags flags_{Flags::none()};
   Payload payload_;
 
-  void serializeIntoSingleFrame(Serializer& writer) const;
+  void serializeIntoSingleFrame(Serializer& writer) &&;
   FOLLY_NOINLINE void serializeInFragmentsSlow(Serializer& writer) &&;
 };
 
 class RequestStreamFrame {
  public:
-  explicit RequestStreamFrame(folly::IOBuf&& frame);
+  explicit RequestStreamFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  RequestStreamFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
 
   RequestStreamFrame(
       StreamId streamId,
@@ -182,7 +212,8 @@ class RequestStreamFrame {
         initialRequestN_(initialRequestN),
         payload_(std::move(payload)) {
     if (initialRequestN_ <= 0) {
-      folly::throw_exception<std::logic_error>("initialRequestN MUST be > 0");
+      folly::throw_exception<std::logic_error>(
+          "RequestStreamFrame's initialRequestN MUST be > 0");
     }
   }
 
@@ -216,6 +247,11 @@ class RequestStreamFrame {
     return payload_;
   }
 
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  std::unique_ptr<folly::IOBuf> serialize() &&;
   void serialize(Serializer& writer) &&;
 
  private:
@@ -224,13 +260,94 @@ class RequestStreamFrame {
   Flags flags_{Flags::none()};
   Payload payload_;
 
-  void serializeIntoSingleFrame(Serializer& writer) const;
+  void serializeIntoSingleFrame(Serializer& writer) &&;
+  FOLLY_NOINLINE void serializeInFragmentsSlow(Serializer& writer) &&;
+};
+
+class RequestChannelFrame {
+ public:
+  explicit RequestChannelFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  RequestChannelFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
+
+  RequestChannelFrame(
+      StreamId streamId,
+      Payload&& payload,
+      int32_t initialRequestN)
+      : streamId_(streamId),
+        initialRequestN_(initialRequestN),
+        payload_(std::move(payload)) {
+    if (initialRequestN_ <= 0) {
+      folly::throw_exception<std::logic_error>(
+          "RequestChannelFrame's initialRequestN MUST be > 0");
+    }
+  }
+
+  static constexpr FrameType frameType() {
+    return FrameType::REQUEST_CHANNEL;
+  }
+
+  static constexpr size_t frameHeaderSize() {
+    return 10;
+  }
+
+  StreamId streamId() const noexcept {
+    return streamId_;
+  }
+
+  bool hasFollows() const noexcept {
+    return flags_.follows();
+  }
+  void setHasFollows(bool hasFollows) noexcept {
+    flags_.follows(hasFollows);
+  }
+
+  bool hasComplete() const noexcept {
+    return flags_.complete();
+  }
+
+  void setHasComplete(bool hasComplete) noexcept {
+    flags_.complete(hasComplete);
+  }
+
+  int32_t initialRequestN() const noexcept {
+    return initialRequestN_;
+  }
+
+  const Payload& payload() const noexcept {
+    return payload_;
+  }
+
+  Payload& payload() noexcept {
+    return payload_;
+  }
+
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+  void serialize(Serializer& writer) &&;
+
+ private:
+  StreamId streamId_;
+  int32_t initialRequestN_;
+  Flags flags_{Flags::none()};
+  Payload payload_;
+
+  void serializeIntoSingleFrame(Serializer& writer) &&;
   FOLLY_NOINLINE void serializeInFragmentsSlow(Serializer& writer) &&;
 };
 
 class RequestNFrame {
  public:
-  explicit RequestNFrame(folly::IOBuf&& frame);
+  explicit RequestNFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  RequestNFrame(StreamId streamId, Flags flags, folly::io::Cursor& cursor);
 
   RequestNFrame(StreamId streamId, int32_t n)
       : streamId_(streamId), requestN_(n) {
@@ -255,7 +372,8 @@ class RequestNFrame {
     return requestN_;
   }
 
-  void serialize(Serializer& writer) const;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+  void serialize(Serializer& writer) &&;
 
  private:
   StreamId streamId_;
@@ -264,7 +382,7 @@ class RequestNFrame {
 
 class CancelFrame {
  public:
-  explicit CancelFrame(folly::IOBuf&& frame);
+  explicit CancelFrame(std::unique_ptr<folly::IOBuf> frame);
 
   explicit CancelFrame(StreamId streamId) : streamId_(streamId) {}
 
@@ -280,7 +398,8 @@ class CancelFrame {
     return streamId_;
   }
 
-  void serialize(Serializer& writer) const;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+  void serialize(Serializer& writer) &&;
 
  private:
   StreamId streamId_;
@@ -288,7 +407,13 @@ class CancelFrame {
 
 class PayloadFrame {
  public:
-  explicit PayloadFrame(folly::IOBuf&& frame);
+  explicit PayloadFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  PayloadFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
 
   PayloadFrame(StreamId streamId, Payload&& payload, Flags flags)
       : streamId_(streamId), flags_(flags), payload_(std::move(payload)) {}
@@ -325,6 +450,11 @@ class PayloadFrame {
     return flags_.next();
   }
 
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  std::unique_ptr<folly::IOBuf> serialize() &&;
   void serialize(Serializer& writer) &&;
 
  private:
@@ -332,18 +462,25 @@ class PayloadFrame {
   Flags flags_{Flags::none()};
   Payload payload_;
 
-  void serializeIntoSingleFrame(Serializer& writer) const;
+  void serializeIntoSingleFrame(Serializer& writer) &&;
+  std::unique_ptr<folly::IOBuf> serializeUsingMetadataHeadroom() &&;
   FOLLY_NOINLINE void serializeInFragmentsSlow(Serializer& writer) &&;
 };
 
 class ErrorFrame {
  public:
-  explicit ErrorFrame(folly::IOBuf&& frame);
+  explicit ErrorFrame(std::unique_ptr<folly::IOBuf> frame);
 
   ErrorFrame(StreamId streamId, ErrorCode errorCode, Payload&& payload)
       : streamId_(streamId),
         errorCode_(errorCode),
         payload_(std::move(payload)) {}
+
+  ErrorFrame(StreamId streamId, RocketException&& rocketException)
+      : ErrorFrame(
+            streamId,
+            rocketException.getErrorCode(),
+            Payload::makeFromData(rocketException.moveErrorData())) {}
 
   static constexpr FrameType frameType() {
     return FrameType::ERROR;
@@ -368,11 +505,124 @@ class ErrorFrame {
     return payload_;
   }
 
-  void serialize(Serializer& writer) const;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+  void serialize(Serializer& writer) &&;
 
  private:
   StreamId streamId_;
   ErrorCode errorCode_;
+  Payload payload_;
+};
+
+class MetadataPushFrame {
+ public:
+  explicit MetadataPushFrame(std::unique_ptr<folly::IOBuf> frame);
+
+  static constexpr FrameType frameType() {
+    return FrameType::METADATA_PUSH;
+  }
+
+  static constexpr size_t frameHeaderSize() {
+    return 6;
+  }
+
+  std::unique_ptr<folly::IOBuf> metadata() && {
+    return std::move(metadata_);
+  }
+
+  void serialize(Serializer& writer) &&;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+
+ private:
+  std::unique_ptr<folly::IOBuf> metadata_;
+};
+
+class KeepAliveFrame {
+ public:
+  explicit KeepAliveFrame(std::unique_ptr<folly::IOBuf> frame);
+  KeepAliveFrame(Flags flags, std::unique_ptr<folly::IOBuf> data)
+      : flags_(flags), data_(std::move(data)) {}
+
+  static constexpr FrameType frameType() {
+    return FrameType::KEEPALIVE;
+  }
+
+  static constexpr size_t frameHeaderSize() {
+    return 14;
+  }
+
+  bool hasRespondFlag() const {
+    return flags_.respond();
+  }
+
+  std::unique_ptr<folly::IOBuf> data() && {
+    return std::move(data_);
+  }
+
+  void serialize(Serializer& writer) &&;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+
+ private:
+  Flags flags_{Flags::none()};
+  std::unique_ptr<folly::IOBuf> data_;
+};
+
+class ExtFrame {
+ public:
+  explicit ExtFrame(std::unique_ptr<folly::IOBuf> frame);
+  ExtFrame(
+      StreamId streamId,
+      Flags flags,
+      folly::io::Cursor& cursor,
+      std::unique_ptr<folly::IOBuf> underlyingBuffer);
+  ExtFrame(
+      StreamId streamId,
+      Payload&& payload,
+      Flags flags,
+      ExtFrameType extFrameType)
+      : streamId_(streamId),
+        flags_(flags),
+        extFrameType_(extFrameType),
+        payload_(std::move(payload)) {}
+
+  static constexpr FrameType frameType() {
+    return FrameType::EXT;
+  }
+
+  static constexpr size_t frameHeaderSize() {
+    return 10;
+  }
+
+  StreamId streamId() const noexcept {
+    return streamId_;
+  }
+
+  const Payload& payload() const noexcept {
+    return payload_;
+  }
+  Payload& payload() noexcept {
+    return payload_;
+  }
+
+  bool hasIgnore() const noexcept {
+    return flags_.ignore();
+  }
+
+  Flags flags() const noexcept {
+    return Flags(flags_).metadata(payload().hasNonemptyMetadata());
+  }
+
+  ExtFrameType extFrameType() const noexcept {
+    return extFrameType_;
+  }
+
+  void serialize(Serializer& writer) &&;
+  std::unique_ptr<folly::IOBuf> serialize() &&;
+
+ private:
+  StreamId streamId_;
+  Flags flags_{Flags::none()};
+  ExtFrameType extFrameType_;
   Payload payload_;
 };
 

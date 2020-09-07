@@ -6,15 +6,9 @@
  */
 #pragma once
 
-#include "src/gen-cpp2/reflection_types.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/reflection_types.h"
 
-#include <thrift/lib/cpp2/GeneratedSerializationCodeHelper.h>
 #include <thrift/lib/cpp2/gen/module_types_tcc.h>
-
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/protocol/ProtocolReaderStructReadState.h>
-#include <thrift/lib/cpp2/protocol/SimpleJSONProtocol.h>
 
 
 namespace apache {
@@ -22,11 +16,11 @@ namespace thrift {
 namespace detail {
 
 template <>
-struct TccStructTraits< ::cpp2::ReflectionStruct> {
+struct TccStructTraits<::cpp2::ReflectionStruct> {
   static void translateFieldName(
       folly::StringPiece _fname,
       int16_t& fid,
-      apache::thrift::protocol::TType& _ftype);
+      apache::thrift::protocol::TType& _ftype) noexcept;
 };
 
 } // namespace detail
@@ -53,8 +47,10 @@ void ReflectionStruct::readNoXfer(Protocol_* iprot) {
   }
 _readField_fieldA:
   {
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::integral, int32_t>::read(*iprot, this->fieldA);
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::integral, int32_t>::readWithContext(*iprot, this->fieldA, _readState);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     this->__isset.fieldA = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -71,17 +67,18 @@ _end:
   return;
 
 _loop:
-  if (_readState.fieldType == apache::thrift::protocol::T_STOP) {
+  _readState.afterAdvanceFailure(iprot);
+  if (_readState.atStop()) {
     goto _end;
   }
   if (iprot->kUsesFieldNames()) {
-    apache::thrift::detail::TccStructTraits<ReflectionStruct>::translateFieldName(_readState.fieldName(), _readState.fieldId, _readState.fieldType);
+    _readState.template fillFieldTraitsFromName<apache::thrift::detail::TccStructTraits<ReflectionStruct>>();
   }
 
   switch (_readState.fieldId) {
     case 1:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_I32)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_I32))) {
         goto _readField_fieldA;
       } else {
         goto _skip;
@@ -90,7 +87,7 @@ _loop:
     default:
     {
 _skip:
-      iprot->skip(_readState.fieldType);
+      _readState.skip(iprot);
       _readState.readFieldEnd(iprot);
       _readState.readFieldBeginNoInline(iprot);
       goto _loop;
@@ -129,5 +126,18 @@ uint32_t ReflectionStruct::write(Protocol_* prot_) const {
   xfer += prot_->writeStructEnd();
   return xfer;
 }
+
+extern template void ReflectionStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
+extern template uint32_t ReflectionStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
+extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
+extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
+extern template void ReflectionStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
+extern template uint32_t ReflectionStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
+extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
+extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+extern template void ReflectionStruct::readNoXfer<>(apache::thrift::SimpleJSONProtocolReader*);
+extern template uint32_t ReflectionStruct::write<>(apache::thrift::SimpleJSONProtocolWriter*) const;
+extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
+extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
 
 } // cpp2

@@ -1,12 +1,12 @@
 <%!
 
-  Copyright 2016-present Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,5 +70,10 @@ Map:
 
 Struct:
 %><%#type:struct?%><%!
-    %>::apache::thrift::detail::make_constant<<% > common/type_namespace_cpp2%><%type:name%>>(<%#value:const_struct%><%#constant:type%><%#constant:value%>::apache::thrift::detail::wrap_argument<<%constant:index%>>(<% > common/cxx_value_prefix%><% > common/iterate_const_values%><% > common/cxx_value_suffix%>)<%^last?%>, <%/last?%><%/constant:value%><%/constant:type%><%/value:const_struct%>)<%!
+    %>::apache::thrift::detail::make_constant<<% > common/type_namespace_cpp2%><%type:name%>>(<%!
+        %><% > common/type_class%>{}<%!
+        %><%#value:const_struct%><%#constant:type%><%#constant:value%>, <%!
+        %>::apache::thrift::detail::wrap_struct_argument<::apache::thrift::tag::<%constant:name%>>(<%!
+            %><% > common/cxx_value_prefix%><% > common/iterate_const_values%><% > common/cxx_value_suffix%>)<%!
+        %><%/constant:value%><%/constant:type%><%/value:const_struct%>)<%!
 %><%/type:struct?%>

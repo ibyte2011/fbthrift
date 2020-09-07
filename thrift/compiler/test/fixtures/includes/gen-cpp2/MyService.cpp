@@ -4,91 +4,99 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/MyService.h"
-#include "src/gen-cpp2/MyService.tcc"
-
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/MyService.h"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/MyService.tcc"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/service_metadata.h"
+#include <thrift/lib/cpp2/gen/service_cpp.h>
 
 namespace cpp2 {
 std::unique_ptr<apache::thrift::AsyncProcessor> MyServiceSvIf::getProcessor() {
   return std::make_unique<MyServiceAsyncProcessor>(this);
 }
 
+
 void MyServiceSvIf::query(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("query");
+}
+
+folly::SemiFuture<folly::Unit> MyServiceSvIf::semifuture_query(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
+  return apache::thrift::detail::si::semifuture([&] {
+    return query(std::move(s), std::move(i));
+  });
 }
 
 folly::Future<folly::Unit> MyServiceSvIf::future_query(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
   return apache::thrift::detail::si::future(semifuture_query(std::move(s), std::move(i)), getThreadManager());
 }
 
-folly::SemiFuture<folly::Unit> MyServiceSvIf::semifuture_query(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
-  return apache::thrift::detail::si::semifuture([&] { return query(std::move(s), std::move(i)); });
-}
 
 void MyServiceSvIf::async_tm_query(std::unique_ptr<apache::thrift::HandlerCallback<void>> callback, std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_query(std::move(s), std::move(i)); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_query(std::move(s), std::move(i));
+  });
 }
 
 void MyServiceSvIf::has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("has_arg_docs");
 }
 
+folly::SemiFuture<folly::Unit> MyServiceSvIf::semifuture_has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
+  return apache::thrift::detail::si::semifuture([&] {
+    return has_arg_docs(std::move(s), std::move(i));
+  });
+}
+
 folly::Future<folly::Unit> MyServiceSvIf::future_has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
   return apache::thrift::detail::si::future(semifuture_has_arg_docs(std::move(s), std::move(i)), getThreadManager());
 }
 
-folly::SemiFuture<folly::Unit> MyServiceSvIf::semifuture_has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
-  return apache::thrift::detail::si::semifuture([&] { return has_arg_docs(std::move(s), std::move(i)); });
-}
 
 void MyServiceSvIf::async_tm_has_arg_docs(std::unique_ptr<apache::thrift::HandlerCallback<void>> callback, std::unique_ptr< ::cpp2::MyStruct> s, std::unique_ptr< ::cpp2::Included> i) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_has_arg_docs(std::move(s), std::move(i)); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_has_arg_docs(std::move(s), std::move(i));
+  });
 }
 
-void MyServiceSvNull::query(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {}
+void MyServiceSvNull::query(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {
+  return;
+}
 
-void MyServiceSvNull::has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {}
+void MyServiceSvNull::has_arg_docs(std::unique_ptr< ::cpp2::MyStruct> /*s*/, std::unique_ptr< ::cpp2::Included> /*i*/) {
+  return;
+}
 
 const char* MyServiceAsyncProcessor::getServiceName() {
   return "MyService";
 }
 
-folly::Optional<std::string> MyServiceAsyncProcessor::getCacheKey(folly::IOBuf* buf, apache::thrift::protocol::PROTOCOL_TYPES protType) {
-  return apache::thrift::detail::ap::get_cache_key(buf, protType, cacheKeyMap_);
+void MyServiceAsyncProcessor::getServiceMetadata(apache::thrift::metadata::ThriftServiceMetadataResponse& response) {
+  ::apache::thrift::detail::md::ServiceMetadata<MyServiceSvIf>::gen(*response.metadata_ref(), *response.context_ref());
 }
 
-void MyServiceAsyncProcessor::process(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
-  apache::thrift::detail::ap::process(this, std::move(req), std::move(buf), protType, context, eb, tm);
+void MyServiceAsyncProcessor::processSerializedRequest(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
+  apache::thrift::detail::ap::process(this, std::move(req), std::move(serializedRequest), protType, context, eb, tm);
 }
 
-bool MyServiceAsyncProcessor::isOnewayMethod(const folly::IOBuf* buf, const apache::thrift::transport::THeader* header) {
-  return apache::thrift::detail::ap::is_oneway_method(buf, header, onewayMethods_);
+std::shared_ptr<folly::RequestContext> MyServiceAsyncProcessor::getBaseContextForRequest() {
+  return iface_->getBaseContextForRequest();
 }
 
-std::unordered_set<std::string> MyServiceAsyncProcessor::onewayMethods_ {};
-std::unordered_map<std::string, int16_t> MyServiceAsyncProcessor::cacheKeyMap_ {};
-const MyServiceAsyncProcessor::BinaryProtocolProcessMap& MyServiceAsyncProcessor::getBinaryProtocolProcessMap() {
+const MyServiceAsyncProcessor::ProcessMap& MyServiceAsyncProcessor::getBinaryProtocolProcessMap() {
   return binaryProcessMap_;
 }
 
-const MyServiceAsyncProcessor::BinaryProtocolProcessMap MyServiceAsyncProcessor::binaryProcessMap_ {
+const MyServiceAsyncProcessor::ProcessMap MyServiceAsyncProcessor::binaryProcessMap_ {
   {"query", &MyServiceAsyncProcessor::_processInThread_query<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
   {"has_arg_docs", &MyServiceAsyncProcessor::_processInThread_has_arg_docs<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
 };
 
-const MyServiceAsyncProcessor::CompactProtocolProcessMap& MyServiceAsyncProcessor::getCompactProtocolProcessMap() {
+const MyServiceAsyncProcessor::ProcessMap& MyServiceAsyncProcessor::getCompactProtocolProcessMap() {
   return compactProcessMap_;
 }
 
-const MyServiceAsyncProcessor::CompactProtocolProcessMap MyServiceAsyncProcessor::compactProcessMap_ {
+const MyServiceAsyncProcessor::ProcessMap MyServiceAsyncProcessor::compactProcessMap_ {
   {"query", &MyServiceAsyncProcessor::_processInThread_query<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
   {"has_arg_docs", &MyServiceAsyncProcessor::_processInThread_has_arg_docs<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
 };
 
 } // cpp2
-namespace apache { namespace thrift {
-
-}} // apache::thrift

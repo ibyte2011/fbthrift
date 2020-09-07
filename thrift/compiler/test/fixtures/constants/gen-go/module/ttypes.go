@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 )
 
 // (needed to ensure safety because of naive import list construction.)
@@ -122,6 +122,22 @@ func CompanyFromString(s string) (Company, error) {
 }
 
 func CompanyPtr(v Company) *Company { return &v }
+
+type MyCompany = Company
+
+func MyCompanyPtr(v MyCompany) *MyCompany { return &v }
+
+type MyStringIdentifier = string
+
+func MyStringIdentifierPtr(v MyStringIdentifier) *MyStringIdentifier { return &v }
+
+type MyIntIdentifier = int32
+
+func MyIntIdentifierPtr(v MyIntIdentifier) *MyIntIdentifier { return &v }
+
+type MyMapIdentifier = map[string]string
+
+func MyMapIdentifierPtr(v MyMapIdentifier) *MyMapIdentifier { return &v }
 
 // Attributes:
 //  - Weeks
@@ -278,93 +294,16 @@ func (p *Internship) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Internship(%+v)", *p)
-}
 
-// Attributes:
-//  - City
-type UnEnumStruct struct {
-  City City `thrift:"city,1" db:"city" json:"city"`
-}
-
-func NewUnEnumStruct() *UnEnumStruct {
-  return &UnEnumStruct{
-City: -1,
-}
-}
-
-
-func (p *UnEnumStruct) GetCity() City {
-  return p.City
-}
-func (p *UnEnumStruct) Read(iprot thrift.Protocol) error {
-  if _, err := iprot.ReadStructBegin(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  weeksVal := fmt.Sprintf("%v", p.Weeks)
+  titleVal := fmt.Sprintf("%v", p.Title)
+  var employerVal string
+  if p.Employer == nil {
+    employerVal = "<nil>"
+  } else {
+    employerVal = fmt.Sprintf("%v", *p.Employer)
   }
-
-
-  for {
-    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
-    if err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
-    }
-    if fieldTypeId == thrift.STOP { break; }
-    switch fieldId {
-    case 1:
-      if err := p.ReadField1(iprot); err != nil {
-        return err
-      }
-    default:
-      if err := iprot.Skip(fieldTypeId); err != nil {
-        return err
-      }
-    }
-    if err := iprot.ReadFieldEnd(); err != nil {
-      return err
-    }
-  }
-  if err := iprot.ReadStructEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-  }
-  return nil
-}
-
-func (p *UnEnumStruct)  ReadField1(iprot thrift.Protocol) error {
-  if v, err := iprot.ReadI32(); err != nil {
-  return thrift.PrependError("error reading field 1: ", err)
-} else {
-  temp := City(v)
-  p.City = temp
-}
-  return nil
-}
-
-func (p *UnEnumStruct) Write(oprot thrift.Protocol) error {
-  if err := oprot.WriteStructBegin("UnEnumStruct"); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
-  if err := p.writeField1(oprot); err != nil { return err }
-  if err := oprot.WriteFieldStop(); err != nil {
-    return thrift.PrependError("write field stop error: ", err) }
-  if err := oprot.WriteStructEnd(); err != nil {
-    return thrift.PrependError("write struct stop error: ", err) }
-  return nil
-}
-
-func (p *UnEnumStruct) writeField1(oprot thrift.Protocol) (err error) {
-  if err := oprot.WriteFieldBegin("city", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:city: ", p), err) }
-  if err := oprot.WriteI32(int32(p.City)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.city (1) field write error: ", p), err) }
-  if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:city: ", p), err) }
-  return err
-}
-
-func (p *UnEnumStruct) String() string {
-  if p == nil {
-    return "<nil>"
-  }
-  return fmt.Sprintf("UnEnumStruct(%+v)", *p)
+  return fmt.Sprintf("Internship({Weeks:%s Title:%s Employer:%s})", weeksVal, titleVal, employerVal)
 }
 
 // Attributes:
@@ -487,7 +426,10 @@ func (p *Range) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Range(%+v)", *p)
+
+  minVal := fmt.Sprintf("%v", p.Min)
+  maxVal := fmt.Sprintf("%v", p.Max)
+  return fmt.Sprintf("Range({Min:%s Max:%s})", minVal, maxVal)
 }
 
 // Attributes:
@@ -604,7 +546,10 @@ func (p *Struct1) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Struct1(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  return fmt.Sprintf("Struct1({A:%s B:%s})", aVal, bVal)
 }
 
 // Attributes:
@@ -807,7 +752,17 @@ func (p *Struct2) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Struct2(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  var cVal string
+  if p.C == nil {
+    cVal = "<nil>"
+  } else {
+    cVal = fmt.Sprintf("%v", p.C)
+  }
+  dVal := fmt.Sprintf("%v", p.D)
+  return fmt.Sprintf("Struct2({A:%s B:%s C:%s D:%s})", aVal, bVal, cVal, dVal)
 }
 
 // Attributes:
@@ -959,7 +914,192 @@ func (p *Struct3) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Struct3(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  var cVal string
+  if p.C == nil {
+    cVal = "<nil>"
+  } else {
+    cVal = fmt.Sprintf("%v", p.C)
+  }
+  return fmt.Sprintf("Struct3({A:%s B:%s C:%s})", aVal, bVal, cVal)
+}
+
+// Attributes:
+//  - A
+//  - B
+//  - C
+type Struct4 struct {
+  A int32 `thrift:"a,1" db:"a" json:"a"`
+  B *float64 `thrift:"b,2" db:"b" json:"b,omitempty"`
+  C *int8 `thrift:"c,3" db:"c" json:"c,omitempty"`
+}
+
+func NewStruct4() *Struct4 {
+  return &Struct4{}
+}
+
+
+func (p *Struct4) GetA() int32 {
+  return p.A
+}
+var Struct4_B_DEFAULT float64
+func (p *Struct4) GetB() float64 {
+  if !p.IsSetB() {
+    return Struct4_B_DEFAULT
+  }
+return *p.B
+}
+var Struct4_C_DEFAULT int8
+func (p *Struct4) GetC() int8 {
+  if !p.IsSetC() {
+    return Struct4_C_DEFAULT
+  }
+return *p.C
+}
+func (p *Struct4) IsSetB() bool {
+  return p.B != nil
+}
+
+func (p *Struct4) IsSetC() bool {
+  return p.C != nil
+}
+
+func (p *Struct4) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    case 3:
+      if err := p.ReadField3(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *Struct4)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI32(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.A = v
+}
+  return nil
+}
+
+func (p *Struct4)  ReadField2(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadDouble(); err != nil {
+  return thrift.PrependError("error reading field 2: ", err)
+} else {
+  p.B = &v
+}
+  return nil
+}
+
+func (p *Struct4)  ReadField3(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadByte(); err != nil {
+  return thrift.PrependError("error reading field 3: ", err)
+} else {
+  temp := int8(v)
+  p.C = &temp
+}
+  return nil
+}
+
+func (p *Struct4) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("struct4"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := p.writeField3(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *Struct4) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("a", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:a: ", p), err) }
+  if err := oprot.WriteI32(int32(p.A)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.a (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:a: ", p), err) }
+  return err
+}
+
+func (p *Struct4) writeField2(oprot thrift.Protocol) (err error) {
+  if p.IsSetB() {
+    if err := oprot.WriteFieldBegin("b", thrift.DOUBLE, 2); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:b: ", p), err) }
+    if err := oprot.WriteDouble(float64(*p.B)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.b (2) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 2:b: ", p), err) }
+  }
+  return err
+}
+
+func (p *Struct4) writeField3(oprot thrift.Protocol) (err error) {
+  if p.IsSetC() {
+    if err := oprot.WriteFieldBegin("c", thrift.BYTE, 3); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:c: ", p), err) }
+    if err := oprot.WriteByte(byte(*p.C)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.c (3) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 3:c: ", p), err) }
+  }
+  return err
+}
+
+func (p *Struct4) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  aVal := fmt.Sprintf("%v", p.A)
+  var bVal string
+  if p.B == nil {
+    bVal = "<nil>"
+  } else {
+    bVal = fmt.Sprintf("%v", *p.B)
+  }
+  var cVal string
+  if p.C == nil {
+    cVal = "<nil>"
+  } else {
+    cVal = fmt.Sprintf("%v", *p.C)
+  }
+  return fmt.Sprintf("Struct4({A:%s B:%s C:%s})", aVal, bVal, cVal)
 }
 
 // Attributes:
@@ -1105,7 +1245,20 @@ func (p *Union1) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Union1(%+v)", *p)
+
+  var iVal string
+  if p.I == nil {
+    iVal = "<nil>"
+  } else {
+    iVal = fmt.Sprintf("%v", *p.I)
+  }
+  var dVal string
+  if p.D == nil {
+    dVal = "<nil>"
+  } else {
+    dVal = fmt.Sprintf("%v", *p.D)
+  }
+  return fmt.Sprintf("Union1({I:%s D:%s})", iVal, dVal)
 }
 
 // Attributes:
@@ -1335,6 +1488,31 @@ func (p *Union2) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Union2(%+v)", *p)
+
+  var iVal string
+  if p.I == nil {
+    iVal = "<nil>"
+  } else {
+    iVal = fmt.Sprintf("%v", *p.I)
+  }
+  var dVal string
+  if p.D == nil {
+    dVal = "<nil>"
+  } else {
+    dVal = fmt.Sprintf("%v", *p.D)
+  }
+  var sVal string
+  if p.S == nil {
+    sVal = "<nil>"
+  } else {
+    sVal = fmt.Sprintf("%v", p.S)
+  }
+  var uVal string
+  if p.U == nil {
+    uVal = "<nil>"
+  } else {
+    uVal = fmt.Sprintf("%v", p.U)
+  }
+  return fmt.Sprintf("Union2({I:%s D:%s S:%s U:%s})", iVal, dVal, sVal, uVal)
 }
 

@@ -1,3 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from cython.operator cimport dereference as deref
 from cpython.exc cimport PyErr_Occurred
 from libcpp.vector cimport vector
@@ -20,7 +34,6 @@ class TransportErrorType(Enum):
     INVALID_FRAME_SIZE = cTTransportExceptionType__INVALID_FRAME_SIZE
     SSL_ERROR = cTTransportExceptionType__SSL_ERROR
     COULD_NOT_BIND = cTTransportExceptionType__COULD_NOT_BIND
-    SASL_HANDSHAKE_TIMEOUT = cTTransportExceptionType__SASL_HANDSHAKE_TIMEOUT
     NETWORK_ERROR = cTTransportExceptionType__NETWORK_ERROR
 
 
@@ -67,6 +80,12 @@ cdef create_Error(shared_ptr[cTException] ex):
     message = (<bytes>deref(ex).what()).decode('utf-8')
     inst = <Error>Error.__new__(Error, message)
     return inst
+
+
+cdef class GeneratedError(Error):
+    """This is the base class for all Generated Thrift Exceptions"""
+    cdef object __fbthrift_isset(self):
+        raise TypeError(f"{type(self)} does not have concept of isset")
 
 
 cdef class ApplicationError(Error):

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 include "includes.thrift"
 cpp_include "<folly/small_vector.h>"
 
@@ -100,11 +116,9 @@ typedef list<complexStructTypeDef> mostComplexTypeDef
 
 union ComplexUnion {
   1: i64 intValue;
-  101: required i64 req_intValue;
-  201: optional i64 opt_intValue;
+  201: i64 opt_intValue;
   3: string stringValue;
-  103: required string req_stringValue;
-  203: optional string opt_stringValue;
+  203: string opt_stringValue;
   4: i16 intValue2;
   6: i32 intValue3;
   7: double doubelValue;
@@ -112,21 +126,18 @@ union ComplexUnion {
   9: list<i32> union_list
   10: set<i64> union_set
   11: map<string, i32> union_map
-  111: required map<string, i32> req_union_map
-  211: optional map<string, i32> opt_union_map
+  211: map<string, i32> opt_union_map
   12: MyEnumA enum_field
   13: list<MyEnumA> enum_container
   14: MyStruct a_struct
   15: set<MyStruct> a_set_struct
   16: SimpleUnion a_union
-  116: required SimpleUnion req_a_union
-  216: optional SimpleUnion opt_a_union
+  216: SimpleUnion opt_a_union
   17: list<SimpleUnion> a_union_list
   18: unionTypeDef a_union_typedef
   19: list<unionTypeDef> a_union_typedef_list
   20: binary MyBinaryField
-  21: optional binary MyBinaryField2
-  22: required binary MyBinaryField3
+  21: binary MyBinaryField2
   23: list<binary> MyBinaryListField4
   24: MyStruct ref_field (cpp.ref);
   25: MyStruct ref_field2 (cpp.ref_type="shared_const")
@@ -292,6 +303,11 @@ struct AnnotatedStruct {
     cpp.declare_equal_to = 1,
     cpp2.methods = "void foo(const std::string& bar) {}"
 )
+
+struct ComplexContainerStruct {
+    1: map<string, IOBuf> map_of_iobufs
+    2: map<string, IOBufPtr> map_of_iobuf_ptrs
+}
 
 service EmptyService {
 }

@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -21,6 +21,15 @@ __property__ = property
 
 
 class Included(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        MyIntField: bool
+        MyTransitiveField: bool
+        pass
+
+    MyIntField: Final[int] = ...
+
+    MyTransitiveField: Final[_transitive_types.Foo] = ...
+
     def __init__(
         self, *,
         MyIntField: _typing.Optional[int]=None,
@@ -29,8 +38,8 @@ class Included(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
 
     def __call__(
         self, *,
-        MyIntField: _typing.Union[int, NOTSETTYPE, None]=NOTSET,
-        MyTransitiveField: _typing.Union[_transitive_types.Foo, NOTSETTYPE, None]=NOTSET
+        MyIntField: _typing.Union[int, __NotSet, None]=NOTSET,
+        MyTransitiveField: _typing.Union[_transitive_types.Foo, __NotSet, None]=NOTSET
     ) -> Included: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Included'], bytes]]: ...
@@ -42,11 +51,6 @@ class Included(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
     def __gt__(self, other: 'Included') -> bool: ...
     def __le__(self, other: 'Included') -> bool: ...
     def __ge__(self, other: 'Included') -> bool: ...
-
-    @__property__
-    def MyIntField(self) -> int: ...
-    @__property__
-    def MyTransitiveField(self) -> _transitive_types.Foo: ...
 
 
 ExampleIncluded: Included = ...

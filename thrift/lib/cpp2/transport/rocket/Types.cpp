@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,24 +27,13 @@ void Payload::append(Payload&& other) {
   // fragmented) metadata arrives first, then the actual data.
   // If we are appending a payload that has metadata, then the current payload
   // should not have data.
-  DCHECK(!other.hasNonemptyMetadata() || data_.empty());
+  DCHECK(
+      !other.hasNonemptyMetadata() ||
+      metadataSize_ == buffer_->computeChainDataLength());
 
-  if (other.metadata_) {
-    if (metadata_) {
-      metadata_->prependChain(std::make_unique<folly::IOBuf>(*other.metadata_));
-    } else {
-      metadata_ = std::move(other.metadata_);
-    }
-  }
-
-  if (!other.data_.empty()) {
-    if (!data_.empty()) {
-      data_.prependChain(
-          std::make_unique<folly::IOBuf>(std::move(other.data_)));
-    } else {
-      data_ = std::move(other.data_);
-    }
-  }
+  metadataSize_ += other.metadataSize_;
+  metadataAndDataSize_ += other.metadataAndDataSize_;
+  buffer_->prependChain(std::move(other.buffer_));
 }
 
 std::ostream& operator<<(std::ostream& os, StreamId streamId) {

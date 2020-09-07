@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <fstream>
@@ -21,10 +22,14 @@
 #include <stdexcept>
 
 #include <boost/filesystem.hpp>
-#include <mstch/mstch.hpp>
+#include <thrift/compiler/mustache/mstch.h>
 
 #include <thrift/compiler/generate/t_generator.h>
 #include <thrift/compiler/generate/t_mstch_objects.h>
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 class t_mstch_generator : public t_generator {
  public:
@@ -36,11 +41,6 @@ class t_mstch_generator : public t_generator {
       bool convert_delimiter = false);
 
  protected:
-  /**
-   *  Directory containing template files for generating code
-   */
-  boost::filesystem::path template_dir_;
-
   /**
    * Option pairs specified on command line for influencing generation behavior
    */
@@ -186,7 +186,7 @@ class t_mstch_generator : public t_generator {
   template <typename container>
   mstch::array dump_elems(const container& elems) {
     using T = typename container::value_type;
-    mstch::array result{};
+    mstch::array result;
     int32_t index = 0;
     for (auto itr = elems.begin(); itr != elems.end(); ++itr) {
       auto map =
@@ -206,17 +206,14 @@ class t_mstch_generator : public t_generator {
     }
   }
 
+  bool has_option(const std::string& key) const;
   std::unique_ptr<std::string> get_option(const std::string& key);
 
-  const t_type& resolve_typedef(const t_type& type) const;
-
  private:
-  std::map<std::string, std::string> template_map_{};
+  std::map<std::string, std::string> template_map_;
   bool convert_delimiter_;
 
-  void gen_template_map(
-      const boost::filesystem::path& root,
-      const std::string& sub_directory);
+  void gen_template_map(const boost::filesystem::path& root);
 
   /**
    * For every key in the map, prepends a prefix to that key for mstch.
@@ -237,3 +234,7 @@ class t_mstch_generator : public t_generator {
   std::shared_ptr<mstch_generators> generators_;
   std::shared_ptr<mstch_cache> cache_;
 };
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache

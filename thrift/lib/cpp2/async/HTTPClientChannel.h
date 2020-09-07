@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,13 +20,13 @@
 #include <memory>
 #include <unordered_map>
 
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/DelayedDestruction.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/Request.h>
 #include <proxygen/lib/http/HTTPConnector.h>
 #include <proxygen/lib/http/session/HTTPTransaction.h>
 #include <proxygen/lib/http/session/HTTPUpstreamSession.h>
-#include <thrift/lib/cpp/async/TAsyncTransport.h>
 #include <thrift/lib/cpp/transport/THeader.h>
 #include <thrift/lib/cpp2/async/ClientChannel.h>
 
@@ -50,12 +50,12 @@ class HTTPClientChannel : public ClientChannel,
       std::unique_ptr<HTTPClientChannel, folly::DelayedDestruction::Destructor>;
 
   static HTTPClientChannel::Ptr newHTTP1xChannel(
-      async::TAsyncTransport::UniquePtr transport,
+      folly::AsyncTransport::UniquePtr transport,
       const std::string& httpHost,
       const std::string& httpUrl);
 
   static HTTPClientChannel::Ptr newHTTP2Channel(
-      async::TAsyncTransport::UniquePtr transport);
+      folly::AsyncTransport::UniquePtr transport);
 
   void setHTTPHost(const std::string& host) {
     httpHost_ = host;
@@ -85,10 +85,6 @@ class HTTPClientChannel : public ClientChannel,
   void detachEventBase() override;
   bool isDetachable() override;
 
-  bool isSecurityActive() override {
-    return false;
-  }
-
   // Client timeouts for read, write.
   // Servers should use timeout methods on underlying transport.
   void setTimeout(uint32_t ms) override {
@@ -116,19 +112,19 @@ class HTTPClientChannel : public ClientChannel,
     return evb_;
   }
 
-  uint32_t sendRequest(
-      RpcOptions&,
-      std::unique_ptr<RequestCallback>,
-      std::unique_ptr<apache::thrift::ContextStack>,
-      std::unique_ptr<folly::IOBuf>,
-      std::shared_ptr<apache::thrift::transport::THeader>) override;
+  void sendRequestResponse(
+      const RpcOptions&,
+      folly::StringPiece,
+      SerializedRequest&&,
+      std::shared_ptr<apache::thrift::transport::THeader>,
+      RequestClientCallback::Ptr) override;
 
-  uint32_t sendOnewayRequest(
-      RpcOptions&,
-      std::unique_ptr<RequestCallback>,
-      std::unique_ptr<apache::thrift::ContextStack>,
-      std::unique_ptr<folly::IOBuf>,
-      std::shared_ptr<apache::thrift::transport::THeader>) override;
+  void sendRequestNoResponse(
+      const RpcOptions&,
+      folly::StringPiece,
+      SerializedRequest&&,
+      std::shared_ptr<apache::thrift::transport::THeader>,
+      RequestClientCallback::Ptr) override;
 
   void setCloseCallback(CloseCallback* cb) override {
     closeCallback_ = cb;
@@ -138,10 +134,9 @@ class HTTPClientChannel : public ClientChannel,
     return protocolId_;
   }
 
-  async::TAsyncTransport* getTransport() override {
+  folly::AsyncTransport* getTransport() override {
     if (httpSession_) {
-      return dynamic_cast<async::TAsyncTransport*>(
-          httpSession_->getTransport());
+      return dynamic_cast<folly::AsyncTransport*>(httpSession_->getTransport());
     } else {
       return nullptr;
     }
@@ -155,17 +150,16 @@ class HTTPClientChannel : public ClientChannel,
       size_t receiveSessionWindowSize);
 
  protected:
-  uint32_t sendRequest_(
-      RpcOptions&,
+  void sendRequest_(
+      const RpcOptions&,
       bool oneway,
-      std::unique_ptr<RequestCallback>,
-      std::unique_ptr<apache::thrift::ContextStack>,
       std::unique_ptr<folly::IOBuf>,
-      std::shared_ptr<apache::thrift::transport::THeader>);
+      std::shared_ptr<apache::thrift::transport::THeader>,
+      RequestClientCallback::Ptr);
 
  private:
   HTTPClientChannel(
-      async::TAsyncTransport::UniquePtr transport,
+      folly::AsyncTransport::UniquePtr transport,
       std::unique_ptr<proxygen::HTTPCodec> codec);
 
   ~HTTPClientChannel() override;
@@ -175,12 +169,7 @@ class HTTPClientChannel : public ClientChannel,
         public proxygen::HTTPTransactionHandler,
         public proxygen::HTTPTransaction::TransportCallback {
    public:
-    HTTPTransactionCallback(
-        bool oneway,
-        std::unique_ptr<RequestCallback> cb,
-        std::unique_ptr<apache::thrift::ContextStack> ctx,
-        bool isSecurityActive,
-        uint16_t protoId);
+    HTTPTransactionCallback(bool oneway, RequestClientCallback::Ptr cb);
 
     ~HTTPTransactionCallback() override;
 
@@ -273,10 +262,7 @@ class HTTPClientChannel : public ClientChannel,
    private:
     bool oneway_;
 
-    std::unique_ptr<RequestCallback> cb_;
-    std::unique_ptr<apache::thrift::ContextStack> ctx_;
-    bool isSecurityActive_;
-    uint16_t protoId_;
+    RequestClientCallback::Ptr cb_;
 
     proxygen::HTTPTransaction* txn_;
     std::unique_ptr<proxygen::HTTPMessage> msg_;

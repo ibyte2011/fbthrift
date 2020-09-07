@@ -1,20 +1,17 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef T_JAVA_GENERATOR_H
@@ -28,8 +25,19 @@
 #include <string>
 #include <vector>
 
-
 #include <thrift/compiler/generate/t_oop_generator.h>
+
+namespace apache {
+namespace thrift {
+namespace compiler {
+
+struct StructGenParams {
+  bool is_exception = false;
+  bool in_class = false;
+  bool is_result = false;
+  bool gen_immutable = false;
+  bool gen_builder = false;
+};
 
 /**
  * Java code generator.
@@ -40,21 +48,11 @@ class t_java_generator : public t_oop_generator {
   t_java_generator(
       t_program* program,
       t_generation_context context,
-      const std::map<std::string, std::string>& parsed_options,
+      const std::map<std::string, std::string>& /*parsed_options*/,
       const std::string& /*option_string*/)
       : t_oop_generator(program, std::move(context)) {
     std::map<std::string, std::string>::const_iterator iter;
-
-    iter = parsed_options.find("beans");
-    bean_style_ = (iter != parsed_options.end());
-
-    iter = parsed_options.find("nocamel");
-    nocamel_style_ = (iter != parsed_options.end());
-
-    iter = parsed_options.find("hashcode");
-    gen_hash_code_ = (iter != parsed_options.end());
-
-    out_dir_base_ = (bean_style_ ? "gen-javabean" : "gen-java");
+    out_dir_base_ = "gen-java";
   }
 
   /**
@@ -102,12 +100,17 @@ class t_java_generator : public t_oop_generator {
       std::ofstream& out,
       t_struct* tstruct,
       const std::vector<t_field*>& fields);
+  void generate_java_constructor_using_builder(
+      std::ofstream& out,
+      t_struct* tstruct,
+      const std::vector<t_field*>& fields,
+      uint32_t bitset_size,
+      bool useDefaultConstructor);
   void generate_java_struct_definition(
       std::ofstream& out,
       t_struct* tstruct,
-      bool is_xception = false,
-      bool in_class = false,
-      bool is_result = false);
+      StructGenParams params);
+  void construct_constant_fields(std::ofstream& out, t_struct* tstruct);
   void generate_java_struct_equality(std::ofstream& out, t_struct* tstruct);
   void generate_java_struct_compare_to(std::ofstream& out, t_struct* tstruct);
   void generate_java_struct_reader(std::ofstream& out, t_struct* tstruct);
@@ -133,8 +136,10 @@ class t_java_generator : public t_oop_generator {
   void generate_generic_field_getters_setters(
       std::ofstream& out,
       t_struct* tstruct);
-  void generate_generic_isset_method(std::ofstream& out, t_struct* tstruct);
-  void generate_java_bean_boilerplate(std::ofstream& out, t_struct* tstruct);
+  void generate_java_bean_boilerplate(
+      std::ofstream& out,
+      t_struct* tstruct,
+      bool gen_immutable);
   std::string get_simple_getter_name(t_field* field);
 
   void generate_function_helpers(t_function* tfunction);
@@ -246,7 +251,9 @@ class t_java_generator : public t_oop_generator {
       std::ofstream& out,
       std::string contents);
 
-  bool is_comparable(t_type* type, std::vector<t_type*>* enclosing = nullptr);
+  virtual bool is_comparable(
+      t_type* type,
+      std::vector<t_type*>* enclosing = nullptr);
   bool struct_has_all_comparable_fields(
       t_struct* tstruct,
       std::vector<t_type*>* enclosing);
@@ -254,20 +261,25 @@ class t_java_generator : public t_oop_generator {
   bool type_has_naked_binary(t_type* type);
   bool struct_has_naked_binary_fields(t_struct* tstruct);
 
-  bool has_bit_vector(t_struct* tstruct);
+  virtual bool has_bit_vector(t_struct* tstruct);
 
   /**
    * Helper rendering functions
    */
 
   std::string java_package();
-  virtual std::string java_type_imports();
+  virtual std::string java_service_imports();
+  virtual std::string java_struct_imports();
   std::string java_thrift_imports();
   std::string java_suppress_warnings_enum();
   std::string java_suppress_warnings_consts();
   std::string java_suppress_warnings_union();
   std::string java_suppress_warnings_struct();
   std::string java_suppress_warnings_service();
+  virtual boost::optional<std::string> java_struct_parent_class(
+      t_struct* tstruct,
+      StructGenParams params);
+
   virtual std::string type_name(
       t_type* ttype,
       bool in_container = false,
@@ -307,24 +319,44 @@ class t_java_generator : public t_oop_generator {
   bool type_can_be_null(t_type* ttype) {
     ttype = ttype->get_true_type();
 
-    return ttype->is_container() || ttype->is_struct() ||
-        ttype->is_xception() || ttype->is_string();
+    return generate_boxed_primitive || ttype->is_container() ||
+        ttype->is_struct() || ttype->is_xception() ||
+        ttype->is_string_or_binary() || ttype->is_enum();
   }
 
   std::string constant_name(std::string name);
 
- private:
+ protected:
+  // indicate if we can generate the method
+  // E.g. Java doesn't support streaming, so all streaming methods are skipped
+  bool can_generate_method(t_function* func) {
+    return !func->get_returntype()->is_streamresponse() &&
+        !func->get_returntype()->is_sink();
+  }
+
+  bool is_field_sensitive(t_field* field) {
+    return field->annotations_.find("java.sensitive") !=
+        field->annotations_.end();
+  }
+
+  std::string namespace_key_;
+  bool generate_field_metadata_ = true;
+  bool generate_immutable_structs_ = false;
+  bool generate_boxed_primitive = false;
+  bool generate_builder = true;
+
   /**
    * File streams
    */
-
   std::string package_name_;
   std::ofstream f_service_;
   std::string package_dir_;
 
-  bool bean_style_;
-  bool nocamel_style_;
-  bool gen_hash_code_;
+  static constexpr size_t MAX_NUM_JAVA_CONSTRUCTOR_PARAMS = 127;
 };
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache
 
 #endif

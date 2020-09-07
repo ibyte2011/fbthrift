@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "thrift/compiler/ast/base_types.h"
 
 namespace apache {
@@ -30,20 +31,8 @@ t_type* string_type() {
 }
 
 t_type* binary_type() {
-  static t_base_type type = [] {
-    static t_base_type tmp_type{"string", t_base_type::TYPE_STRING};
-    tmp_type.set_binary(true);
-    return tmp_type;
-  }();
-  return &type;
-}
-
-t_type* slist_type() {
-  static t_base_type type = [] {
-    static t_base_type tmp_type{"string", t_base_type::TYPE_STRING};
-    tmp_type.set_string_list(true);
-    return tmp_type;
-  }();
+  // NOTE: thrift compiler used to treat both string and binary as string.
+  static t_base_type type{"string", t_base_type::TYPE_BINARY};
   return &type;
 }
 

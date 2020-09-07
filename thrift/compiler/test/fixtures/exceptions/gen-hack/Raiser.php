@@ -90,6 +90,86 @@ interface RaiserIf extends \IThriftSyncIf {
  * Original thrift service:-
  * Raiser
  */
+interface RaiserClientIf extends \IThriftSyncIf {
+  /**
+   * Original thrift definition:-
+   * void
+   *   doBland();
+   */
+  public function doBland(): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   doRaise()
+   *   throws (1: Banal b,
+   *           2: Fiery f,
+   *           3: Serious s);
+   */
+  public function doRaise(): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get200();
+   */
+  public function get200(): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get500()
+   *   throws (1: Fiery f,
+   *           2: Banal b,
+   *           3: Serious s);
+   */
+  public function get500(): Awaitable<string>;
+}
+
+/**
+ * Original thrift service:-
+ * Raiser
+ */
+interface RaiserAsyncRpcOptionsIf extends \IThriftAsyncRpcOptionsIf {
+  /**
+   * Original thrift definition:-
+   * void
+   *   doBland();
+   */
+  public function doBland(\RpcOptions $rpc_options): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   doRaise()
+   *   throws (1: Banal b,
+   *           2: Fiery f,
+   *           3: Serious s);
+   */
+  public function doRaise(\RpcOptions $rpc_options): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get200();
+   */
+  public function get200(\RpcOptions $rpc_options): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get500()
+   *   throws (1: Fiery f,
+   *           2: Banal b,
+   *           3: Serious s);
+   */
+  public function get500(\RpcOptions $rpc_options): Awaitable<string>;
+}
+
+/**
+ * Original thrift service:-
+ * Raiser
+ */
 trait RaiserClientBase {
   require extends \ThriftClientBase;
 
@@ -99,11 +179,11 @@ trait RaiserClientBase {
     );
     try {
       $this->eventHandler_->preSend('doBland', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'doBland', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'doBland', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -136,9 +216,9 @@ trait RaiserClientBase {
   protected function recvImpl_doBland(?int $expectedsequenceid = null): void {
     try {
       $this->eventHandler_->preRecv('doBland', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'Raiser_doBland_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'Raiser_doBland_result');
       }
@@ -148,7 +228,11 @@ trait RaiserClientBase {
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -189,11 +273,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('doRaise', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'doRaise', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'doRaise', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -226,9 +310,9 @@ return;
   protected function recvImpl_doRaise(?int $expectedsequenceid = null): void {
     try {
       $this->eventHandler_->preRecv('doRaise', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'Raiser_doRaise_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'Raiser_doRaise_result');
       }
@@ -238,7 +322,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -294,11 +382,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('get200', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'get200', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'get200', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -331,9 +419,9 @@ return;
   protected function recvImpl_get200(?int $expectedsequenceid = null): string {
     try {
       $this->eventHandler_->preRecv('get200', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'Raiser_get200_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'Raiser_get200_result');
       }
@@ -343,7 +431,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -390,11 +482,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('get500', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'get500', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'get500', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -427,9 +519,9 @@ return;
   protected function recvImpl_get500(?int $expectedsequenceid = null): string {
     try {
       $this->eventHandler_->preRecv('get500', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'Raiser_get500_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'Raiser_get500_result');
       }
@@ -439,7 +531,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -506,8 +602,20 @@ class RaiserAsyncClient extends \ThriftClientBase implements RaiserAsyncIf {
    *   doBland();
    */
   public async function doBland(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doBland");
     $currentseqid = $this->sendImpl_doBland();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_doBland($currentseqid);
   }
 
@@ -520,8 +628,20 @@ class RaiserAsyncClient extends \ThriftClientBase implements RaiserAsyncIf {
    *           3: Serious s);
    */
   public async function doRaise(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doRaise");
     $currentseqid = $this->sendImpl_doRaise();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_doRaise($currentseqid);
   }
 
@@ -531,8 +651,20 @@ class RaiserAsyncClient extends \ThriftClientBase implements RaiserAsyncIf {
    *   get200();
    */
   public async function get200(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get200");
     $currentseqid = $this->sendImpl_get200();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_get200($currentseqid);
   }
 
@@ -545,37 +677,49 @@ class RaiserAsyncClient extends \ThriftClientBase implements RaiserAsyncIf {
    *           3: Serious s);
    */
   public async function get500(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get500");
     $currentseqid = $this->sendImpl_get500();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_get500($currentseqid);
   }
 
 }
 
-class RaiserClient extends \ThriftClientBase implements RaiserIf {
+class RaiserClient extends \ThriftClientBase implements RaiserClientIf {
   use RaiserClientBase;
-
-  <<__Deprecated('use gen_doBland()')>>
-  public function doBland(): void {
-    $currentseqid = $this->sendImpl_doBland();
-    $this->recvImpl_doBland($currentseqid);
-  }
 
   /**
    * Original thrift definition:-
    * void
    *   doBland();
    */
-  public async function gen_doBland(): Awaitable<void> {
+  public async function doBland(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doBland");
     $currentseqid = $this->sendImpl_doBland();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_doBland($currentseqid);
-  }
-
-  <<__Deprecated('use gen_doRaise()')>>
-  public function doRaise(): void {
-    $currentseqid = $this->sendImpl_doRaise();
-    $this->recvImpl_doRaise($currentseqid);
   }
 
   /**
@@ -586,16 +730,22 @@ class RaiserClient extends \ThriftClientBase implements RaiserIf {
    *           2: Fiery f,
    *           3: Serious s);
    */
-  public async function gen_doRaise(): Awaitable<void> {
+  public async function doRaise(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doRaise");
     $currentseqid = $this->sendImpl_doRaise();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_doRaise($currentseqid);
-  }
-
-  <<__Deprecated('use gen_get200()')>>
-  public function get200(): string {
-    $currentseqid = $this->sendImpl_get200();
-    return $this->recvImpl_get200($currentseqid);
   }
 
   /**
@@ -603,16 +753,22 @@ class RaiserClient extends \ThriftClientBase implements RaiserIf {
    * string
    *   get200();
    */
-  public async function gen_get200(): Awaitable<string> {
+  public async function get200(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get200");
     $currentseqid = $this->sendImpl_get200();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_get200($currentseqid);
-  }
-
-  <<__Deprecated('use gen_get500()')>>
-  public function get500(): string {
-    $currentseqid = $this->sendImpl_get500();
-    return $this->recvImpl_get500($currentseqid);
   }
 
   /**
@@ -623,9 +779,21 @@ class RaiserClient extends \ThriftClientBase implements RaiserIf {
    *           2: Banal b,
    *           3: Serious s);
    */
-  public async function gen_get500(): Awaitable<string> {
+  public async function get500(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get500");
     $currentseqid = $this->sendImpl_get500();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_get500($currentseqid);
   }
 
@@ -656,22 +824,149 @@ class RaiserClient extends \ThriftClientBase implements RaiserIf {
   }
 }
 
+class RaiserAsyncRpcOptionsClient extends \ThriftClientBase implements RaiserAsyncRpcOptionsIf {
+  use RaiserClientBase;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   doBland();
+   */
+  public async function doBland(\RpcOptions $rpc_options): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doBland");
+    $currentseqid = $this->sendImpl_doBland();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    $this->recvImpl_doBland($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   doRaise()
+   *   throws (1: Banal b,
+   *           2: Fiery f,
+   *           3: Serious s);
+   */
+  public async function doRaise(\RpcOptions $rpc_options): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("Raiser", "doRaise");
+    $currentseqid = $this->sendImpl_doRaise();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    $this->recvImpl_doRaise($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get200();
+   */
+  public async function get200(\RpcOptions $rpc_options): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get200");
+    $currentseqid = $this->sendImpl_get200();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_get200($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   get500()
+   *   throws (1: Fiery f,
+   *           2: Banal b,
+   *           3: Serious s);
+   */
+  public async function get500(\RpcOptions $rpc_options): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Raiser", "get500");
+    $currentseqid = $this->sendImpl_get500();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_get500($currentseqid);
+  }
+
+}
+
 // HELPER FUNCTIONS AND STRUCTURES
 
 class Raiser_doBland_args implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'Raiser_doBland_args';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -679,17 +974,41 @@ class Raiser_doBland_args implements \IThriftStruct {
 class Raiser_doBland_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'Raiser_doBland_result';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -697,17 +1016,41 @@ class Raiser_doBland_result implements \IThriftStruct {
 class Raiser_doRaise_args implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'Raiser_doRaise_args';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -715,38 +1058,80 @@ class Raiser_doRaise_args implements \IThriftStruct {
 class Raiser_doRaise_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'b',
       'type' => \TType::STRUCT,
-      'class' => 'Banal',
-      ],
-    2 => dict[
+      'class' => Banal::class,
+    ),
+    2 => shape(
       'var' => 'f',
       'type' => \TType::STRUCT,
-      'class' => 'Fiery',
-      ],
-    3 => dict[
+      'class' => Fiery::class,
+    ),
+    3 => shape(
       'var' => 's',
       'type' => \TType::STRUCT,
-      'class' => 'Serious',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'class' => Serious::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'b' => 1,
     'f' => 2,
     's' => 3,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'b' => ?Banal,
+    ?'f' => ?Fiery,
+    ?'s' => ?Serious,
+  );
+
   const int STRUCTURAL_ID = 1991614683033939916;
   public ?Banal $b;
   public ?Fiery $f;
   public ?Serious $s;
 
+  <<__Rx>>
   public function __construct(?Banal $b = null, ?Fiery $f = null, ?Serious $s = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'f'),
+      Shapes::idx($shape, 's'),
+    );
   }
 
   public function getName(): string {
     return 'Raiser_doRaise_result';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'f' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        's' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -754,17 +1139,41 @@ class Raiser_doRaise_result implements \IThriftStruct {
 class Raiser_get200_args implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'Raiser_get200_args';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -772,23 +1181,53 @@ class Raiser_get200_args implements \IThriftStruct {
 class Raiser_get200_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    0 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => string,
+  );
+
   const int STRUCTURAL_ID = 1365128170602685579;
   public ?string $success;
 
+  <<__Rx>>
   public function __construct(?string $success = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+    );
   }
 
   public function getName(): string {
     return 'Raiser_get200_result';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -796,17 +1235,41 @@ class Raiser_get200_result implements \IThriftStruct {
 class Raiser_get500_args implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'Raiser_get500_args';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -814,45 +1277,107 @@ class Raiser_get500_args implements \IThriftStruct {
 class Raiser_get500_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    0 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::STRING,
-      ],
-    1 => dict[
+    ),
+    1 => shape(
       'var' => 'f',
       'type' => \TType::STRUCT,
-      'class' => 'Fiery',
-      ],
-    2 => dict[
+      'class' => Fiery::class,
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::STRUCT,
-      'class' => 'Banal',
-      ],
-    3 => dict[
+      'class' => Banal::class,
+    ),
+    3 => shape(
       'var' => 's',
       'type' => \TType::STRUCT,
-      'class' => 'Serious',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'class' => Serious::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
     'f' => 1,
     'b' => 2,
     's' => 3,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => string,
+    ?'f' => ?Fiery,
+    ?'b' => ?Banal,
+    ?'s' => ?Serious,
+  );
+
   const int STRUCTURAL_ID = 6147773747560615508;
   public ?string $success;
   public ?Fiery $f;
   public ?Banal $b;
   public ?Serious $s;
 
+  <<__Rx>>
   public function __construct(?string $success = null, ?Fiery $f = null, ?Banal $b = null, ?Serious $s = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+      Shapes::idx($shape, 'f'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 's'),
+    );
   }
 
   public function getName(): string {
     return 'Raiser_get500_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'f' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        's' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
+}
+
+class RaiserStaticMetadata implements \IThriftServiceStaticMetadata {
+  public static function getAllStructuredAnnotations(): \TServiceAnnotations {
+    return shape(
+      'service' => dict[],
+      'functions' => dict[
+        'doBland' => dict[],
+        'doRaise' => dict[],
+        'get200' => dict[],
+        'get500' => dict[],
+      ],
+    );
+  }
 }
 

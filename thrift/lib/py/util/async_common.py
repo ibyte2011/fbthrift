@@ -1,3 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Common base for asyncio and Trollius (the Python 2 asyncio backport).
 Ideally this would be all that's necessary but we can't use the async/await
@@ -33,7 +47,7 @@ from thrift.Thrift import (
     TMessageType,
 )
 
-if six.PY3 and not thrift.trollius:
+if six.PY3:
     import asyncio
 else:
     import trollius as asyncio
@@ -366,8 +380,8 @@ class ThriftHeaderClientProtocolBase(FramedProtocol):
         try:
             method(iprot, mtype, seqid)
         except (
-            asyncio.futures.InvalidStateError,
             asyncio.CancelledError,
+            asyncio.InvalidStateError,
         ) as e:
             logger.warning("Method %r cancelled: %s", fname, str(e))
 

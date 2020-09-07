@@ -6,23 +6,197 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct anInteger;
+struct aString;
+struct opt_value;
+struct value;
+struct req_value;
+struct opt_ref;
+struct ref;
+struct req_ref;
+struct u;
+struct aDouble;
+struct f;
+struct mes;
+struct list_ref;
+struct set_ref;
+struct map_ref;
+struct list_ref_unique;
+struct set_ref_shared;
+struct list_ref_shared_const;
+struct opt_shared_const;
+struct shared_const;
+struct req_shared_const;
+struct def_field;
+struct opt_field;
+struct req_field;
+struct def_field;
+struct opt_field;
+struct req_field;
+struct def_field;
+struct opt_field;
+struct req_field;
+struct def_field;
+struct opt_field;
+struct req_field;
+struct def_field;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_anInteger
+#define APACHE_THRIFT_ACCESSOR_anInteger
+APACHE_THRIFT_DEFINE_ACCESSOR(anInteger);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_aString
+#define APACHE_THRIFT_ACCESSOR_aString
+APACHE_THRIFT_DEFINE_ACCESSOR(aString);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_value
+#define APACHE_THRIFT_ACCESSOR_opt_value
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_value);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_value
+#define APACHE_THRIFT_ACCESSOR_value
+APACHE_THRIFT_DEFINE_ACCESSOR(value);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_value
+#define APACHE_THRIFT_ACCESSOR_req_value
+APACHE_THRIFT_DEFINE_ACCESSOR(req_value);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_ref
+#define APACHE_THRIFT_ACCESSOR_opt_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_ref
+#define APACHE_THRIFT_ACCESSOR_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_ref
+#define APACHE_THRIFT_ACCESSOR_req_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(req_ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_u
+#define APACHE_THRIFT_ACCESSOR_u
+APACHE_THRIFT_DEFINE_ACCESSOR(u);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_aDouble
+#define APACHE_THRIFT_ACCESSOR_aDouble
+APACHE_THRIFT_DEFINE_ACCESSOR(aDouble);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_f
+#define APACHE_THRIFT_ACCESSOR_f
+APACHE_THRIFT_DEFINE_ACCESSOR(f);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_mes
+#define APACHE_THRIFT_ACCESSOR_mes
+APACHE_THRIFT_DEFINE_ACCESSOR(mes);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_list_ref
+#define APACHE_THRIFT_ACCESSOR_list_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(list_ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_set_ref
+#define APACHE_THRIFT_ACCESSOR_set_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(set_ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_map_ref
+#define APACHE_THRIFT_ACCESSOR_map_ref
+APACHE_THRIFT_DEFINE_ACCESSOR(map_ref);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_list_ref_unique
+#define APACHE_THRIFT_ACCESSOR_list_ref_unique
+APACHE_THRIFT_DEFINE_ACCESSOR(list_ref_unique);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_set_ref_shared
+#define APACHE_THRIFT_ACCESSOR_set_ref_shared
+APACHE_THRIFT_DEFINE_ACCESSOR(set_ref_shared);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_list_ref_shared_const
+#define APACHE_THRIFT_ACCESSOR_list_ref_shared_const
+APACHE_THRIFT_DEFINE_ACCESSOR(list_ref_shared_const);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_shared_const
+#define APACHE_THRIFT_ACCESSOR_opt_shared_const
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_shared_const);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_shared_const
+#define APACHE_THRIFT_ACCESSOR_shared_const
+APACHE_THRIFT_DEFINE_ACCESSOR(shared_const);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_shared_const
+#define APACHE_THRIFT_ACCESSOR_req_shared_const
+APACHE_THRIFT_DEFINE_ACCESSOR(req_shared_const);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_def_field
+#define APACHE_THRIFT_ACCESSOR_def_field
+APACHE_THRIFT_DEFINE_ACCESSOR(def_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_field
+#define APACHE_THRIFT_ACCESSOR_opt_field
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_field
+#define APACHE_THRIFT_ACCESSOR_req_field
+APACHE_THRIFT_DEFINE_ACCESSOR(req_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_def_field
+#define APACHE_THRIFT_ACCESSOR_def_field
+APACHE_THRIFT_DEFINE_ACCESSOR(def_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_field
+#define APACHE_THRIFT_ACCESSOR_opt_field
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_field
+#define APACHE_THRIFT_ACCESSOR_req_field
+APACHE_THRIFT_DEFINE_ACCESSOR(req_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_def_field
+#define APACHE_THRIFT_ACCESSOR_def_field
+APACHE_THRIFT_DEFINE_ACCESSOR(def_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_field
+#define APACHE_THRIFT_ACCESSOR_opt_field
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_field
+#define APACHE_THRIFT_ACCESSOR_req_field
+APACHE_THRIFT_DEFINE_ACCESSOR(req_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_def_field
+#define APACHE_THRIFT_ACCESSOR_def_field
+APACHE_THRIFT_DEFINE_ACCESSOR(def_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_opt_field
+#define APACHE_THRIFT_ACCESSOR_opt_field
+APACHE_THRIFT_DEFINE_ACCESSOR(opt_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_req_field
+#define APACHE_THRIFT_ACCESSOR_req_field
+APACHE_THRIFT_DEFINE_ACCESSOR(req_field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_def_field
+#define APACHE_THRIFT_ACCESSOR_def_field
+APACHE_THRIFT_DEFINE_ACCESSOR(def_field);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 namespace cpp2 {
 
 enum class TypedEnum : short {
   VAL1 = 0,
-  VAL2 = 1
+  VAL2 = 1,
 };
 
-using _TypedEnum_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<TypedEnum, TypedEnum>;
-extern const _TypedEnum_EnumMapFactory::ValuesToNamesMapType _TypedEnum_VALUES_TO_NAMES;
-extern const _TypedEnum_EnumMapFactory::NamesToValuesMapType _TypedEnum_NAMES_TO_VALUES;
 
 
 
@@ -30,8 +204,8 @@ extern const _TypedEnum_EnumMapFactory::NamesToValuesMapType _TypedEnum_NAMES_TO
 namespace std {
 
 
-template<> struct hash<typename  ::cpp2::TypedEnum> : public apache::thrift::detail::enum_hash<typename  ::cpp2::TypedEnum> {};
-template<> struct equal_to<typename  ::cpp2::TypedEnum> : public apache::thrift::detail::enum_equal_to<typename  ::cpp2::TypedEnum> {};
+template<> struct hash<typename ::cpp2::TypedEnum> : public apache::thrift::detail::enum_hash<typename ::cpp2::TypedEnum> {};
+template<> struct equal_to<typename ::cpp2::TypedEnum> : public apache::thrift::detail::enum_equal_to<typename ::cpp2::TypedEnum> {};
 
 
 } // std
@@ -39,26 +213,34 @@ template<> struct equal_to<typename  ::cpp2::TypedEnum> : public apache::thrift:
 namespace apache { namespace thrift {
 
 
-template <> struct TEnumDataStorage< ::cpp2::TypedEnum>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::cpp2::TypedEnum>::size;
-template <> const folly::Range<const  ::cpp2::TypedEnum*> TEnumTraits< ::cpp2::TypedEnum>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::TypedEnum>::names;
-#endif
-template <> const char* TEnumTraits< ::cpp2::TypedEnum>::findName( ::cpp2::TypedEnum value);
-template <> bool TEnumTraits< ::cpp2::TypedEnum>::findValue(const char* name,  ::cpp2::TypedEnum* outValue);
+template <> struct TEnumDataStorage<::cpp2::TypedEnum>;
 
-template <> inline constexpr  ::cpp2::TypedEnum TEnumTraits< ::cpp2::TypedEnum>::min() {
-  return  ::cpp2::TypedEnum::VAL1;
-}
+template <> struct TEnumTraits<::cpp2::TypedEnum> {
+  using type = ::cpp2::TypedEnum;
 
-template <> inline constexpr  ::cpp2::TypedEnum TEnumTraits< ::cpp2::TypedEnum>::max() {
-  return  ::cpp2::TypedEnum::VAL2;
-}
+  static constexpr std::size_t const size = 2;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+  static constexpr type min() { return type::VAL1; }
+  static constexpr type max() { return type::VAL2; }
+};
 
 
 }} // apache::thrift
 
+namespace cpp2 {
+
+using _TypedEnum_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<TypedEnum>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _TypedEnum_EnumMapFactory::ValuesToNamesMapType _TypedEnum_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _TypedEnum_EnumMapFactory::NamesToValuesMapType _TypedEnum_NAMES_TO_VALUES;
+
+} // cpp2
 
 // END declare_enums
 // BEGIN struct_indirection
@@ -87,9 +269,22 @@ class StructWithRefAndAnnotCppNoexceptMoveCtor;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<MyUnion> {
+class MyUnion final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
  public:
-  enum Type {
+  using __fbthrift_cpp2_type = MyUnion;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    true;
+
+
+ public:
+  enum Type : int {
     __EMPTY__ = 0,
     anInteger = 1,
     aString = 2,
@@ -193,14 +388,6 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     }
     return *this;
   }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    set_anInteger(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    set_aString(arg.extract());
-  }
   void __clear();
 
   ~MyUnion() {
@@ -208,13 +395,29 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
   }
   union storage_type {
     int32_t anInteger;
-    std::string aString;
+    ::std::string aString;
 
     storage_type() {}
     ~storage_type() {}
   } ;
   bool operator==(const MyUnion& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const MyUnion& __x, const MyUnion& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const MyUnion& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const MyUnion& __x, const MyUnion& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const MyUnion& __x, const MyUnion& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const MyUnion& __x, const MyUnion& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   int32_t& set_anInteger(int32_t t = int32_t()) {
     __clear();
@@ -223,24 +426,24 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     return value_.anInteger;
   }
 
-  std::string& set_aString(std::string const &t) {
+  ::std::string& set_aString(::std::string const &t) {
     __clear();
     type_ = Type::aString;
-    ::new (std::addressof(value_.aString)) std::string(t);
+    ::new (std::addressof(value_.aString)) ::std::string(t);
     return value_.aString;
   }
 
-  std::string& set_aString(std::string&& t) {
+  ::std::string& set_aString(::std::string&& t) {
     __clear();
     type_ = Type::aString;
-    ::new (std::addressof(value_.aString)) std::string(std::move(t));
+    ::new (std::addressof(value_.aString)) ::std::string(std::move(t));
     return value_.aString;
   }
 
-  template<typename... T, typename = ::apache::thrift::safe_overload_t<std::string, T...>> std::string& set_aString(T&&... t) {
+  template<typename... T, typename = ::apache::thrift::safe_overload_t<::std::string, T...>> ::std::string& set_aString(T&&... t) {
     __clear();
     type_ = Type::aString;
-    ::new (std::addressof(value_.aString)) std::string(std::forward<T>(t)...);
+    ::new (std::addressof(value_.aString)) ::std::string(std::forward<T>(t)...);
     return value_.aString;
   }
 
@@ -249,7 +452,7 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     return value_.anInteger;
   }
 
-  std::string const & get_aString() const {
+  ::std::string const & get_aString() const {
     assert(type_ == Type::aString);
     return value_.aString;
   }
@@ -259,7 +462,7 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     return value_.anInteger;
   }
 
-  std::string & mutable_aString() {
+  ::std::string & mutable_aString() {
     assert(type_ == Type::aString);
     return value_.aString;
   }
@@ -269,12 +472,50 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     return std::move(value_.anInteger);
   }
 
-  std::string move_aString() {
+  ::std::string move_aString() {
     assert(type_ == Type::aString);
     return std::move(value_.aString);
   }
 
-  Type getType() const { return type_; }
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> anInteger_ref() const& {
+    return {value_.anInteger, type_, anInteger, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> anInteger_ref() const&& {
+    return {value_.anInteger, type_, anInteger, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> anInteger_ref() & {
+    return {value_.anInteger, type_, anInteger, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> anInteger_ref() && {
+    return {value_.anInteger, type_, anInteger, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> aString_ref() const& {
+    return {value_.aString, type_, aString, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> aString_ref() const&& {
+    return {value_.aString, type_, aString, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> aString_ref() & {
+    return {value_.aString, type_, aString, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> aString_ref() && {
+    return {value_.aString, type_, aString, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  Type getType() const { return static_cast<Type>(type_); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -290,7 +531,7 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
     (&val)->~T();
   }
 
-  Type type_;
+  std::underlying_type_t<Type> type_;
   storage_type value_;
 
  private:
@@ -298,117 +539,162 @@ class MyUnion final : private apache::thrift::detail::st::ComparisonOperators<My
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< MyUnion >;
+  friend void swap(MyUnion& a, MyUnion& b);
 };
-
-void swap(MyUnion& a, MyUnion& b);
-extern template void MyUnion::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t MyUnion::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t MyUnion::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t MyUnion::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void MyUnion::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t MyUnion::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t MyUnion::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t MyUnion::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t MyUnion::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::MyUnion>::clear( ::cpp2::MyUnion* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::MyUnion>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyUnion>::write(Protocol* proto,  ::cpp2::MyUnion const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::MyUnion>::read(Protocol* proto,  ::cpp2::MyUnion* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyUnion>::serializedSize(Protocol const* proto,  ::cpp2::MyUnion const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyUnion>::serializedSizeZC(Protocol const* proto,  ::cpp2::MyUnion const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class MyField final : private apache::thrift::detail::st::ComparisonOperators<MyField> {
+class MyField final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = MyField;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   MyField() :
       opt_value(0),
       value(0),
       req_value(0) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   MyField(apache::thrift::FragileConstructor, int64_t opt_value__arg, int64_t value__arg, int64_t req_value__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    opt_value = arg.extract();
-    __isset.opt_value = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    value = arg.extract();
-    __isset.value = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_value = arg.extract();
-  }
 
   MyField(MyField&&) = default;
 
   MyField(const MyField&) = default;
 
+
   MyField& operator=(MyField&&) = default;
 
   MyField& operator=(const MyField&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ private:
   int64_t opt_value;
+ public:
   int64_t value;
+ public:
   int64_t req_value;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool opt_value;
     bool value;
   } __isset = {};
   bool operator==(const MyField& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const MyField& __x, const MyField& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const MyField& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const MyField& __x, const MyField& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const MyField& __x, const MyField& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const MyField& __x, const MyField& __y) {
+    return !(__x < __y);
+  }
+#endif
 
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref<const int64_t> opt_value_ref() const& {
-    return {opt_value, __isset.opt_value};
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> opt_value_ref() const& {
+    return {this->opt_value, __isset.opt_value};
   }
 
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref<int64_t> opt_value_ref() & {
-    return {opt_value, __isset.opt_value};
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> opt_value_ref() const&& {
+    return {std::move(this->opt_value), __isset.opt_value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> opt_value_ref() & {
+    return {this->opt_value, __isset.opt_value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> opt_value_ref() && {
+    return {std::move(this->opt_value), __isset.opt_value};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> value_ref() const& {
+    return {this->value, __isset.value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> value_ref() const&& {
+    return {std::move(this->value), __isset.value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> value_ref() & {
+    return {this->value, __isset.value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> value_ref() && {
+    return {std::move(this->value), __isset.value};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE auto req_value_ref() const& {
+    return ::apache::thrift::required_field_ref<const T&>{this->req_value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE auto req_value_ref() const&& {
+    return ::apache::thrift::required_field_ref<const T&&>{std::move(this->req_value)};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE auto req_value_ref() & {
+    return ::apache::thrift::required_field_ref<T&>{this->req_value};
+  }
+
+  template <typename..., typename T = int64_t>
+  FOLLY_ERASE auto req_value_ref() && {
+    return ::apache::thrift::required_field_ref<T&&>{std::move(this->req_value)};
   }
 
   const int64_t* get_opt_value() const& {
-    return __isset.opt_value ? std::addressof(opt_value) : nullptr;
+    return opt_value_ref() ? std::addressof(opt_value) : nullptr;
   }
 
   int64_t* get_opt_value() & {
-    return __isset.opt_value ? std::addressof(opt_value) : nullptr;
+    return opt_value_ref() ? std::addressof(opt_value) : nullptr;
   }
   int64_t* get_opt_value() && = delete;
 
   int64_t& set_opt_value(int64_t opt_value_) {
     opt_value = opt_value_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.opt_value = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return opt_value;
   }
 
@@ -418,7 +704,9 @@ class MyField final : private apache::thrift::detail::st::ComparisonOperators<My
 
   int64_t& set_value(int64_t value_) {
     value = value_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.value = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return value;
   }
 
@@ -445,86 +733,109 @@ class MyField final : private apache::thrift::detail::st::ComparisonOperators<My
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< MyField >;
+  friend void swap(MyField& a, MyField& b);
 };
-
-void swap(MyField& a, MyField& b);
-extern template void MyField::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t MyField::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t MyField::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t MyField::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void MyField::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t MyField::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t MyField::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t MyField::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t MyField::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::MyField>::clear( ::cpp2::MyField* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::MyField>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyField>::write(Protocol* proto,  ::cpp2::MyField const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::MyField>::read(Protocol* proto,  ::cpp2::MyField* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyField>::serializedSize(Protocol const* proto,  ::cpp2::MyField const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyField>::serializedSizeZC(Protocol const* proto,  ::cpp2::MyField const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class MyStruct final : private apache::thrift::detail::st::ComparisonOperators<MyStruct> {
+class MyStruct final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = MyStruct;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   MyStruct() :
       ref(std::make_unique< ::cpp2::MyField>()),
       req_ref(std::make_unique< ::cpp2::MyField>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   MyStruct(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::MyField> opt_ref__arg, std::unique_ptr< ::cpp2::MyField> ref__arg, std::unique_ptr< ::cpp2::MyField> req_ref__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    opt_ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
 
   MyStruct(MyStruct&&) = default;
   MyStruct(const MyStruct& src);
 
+
   MyStruct& operator=(MyStruct&&) = default;
   MyStruct& operator=(const MyStruct& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::unique_ptr< ::cpp2::MyField> opt_ref;
+ public:
   std::unique_ptr< ::cpp2::MyField> ref;
+ public:
   std::unique_ptr< ::cpp2::MyField> req_ref;
+
+ public:
   bool operator==(const MyStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const MyStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const MyStruct& __x, const MyStruct& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T& opt_ref_ref() & { return opt_ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T& opt_ref_ref() const& { return opt_ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T&& opt_ref_ref() && { return std::move(opt_ref); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T&& opt_ref_ref() const&& { return std::move(opt_ref); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T& ref_ref() & { return ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T& ref_ref() const& { return ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T&& ref_ref() && { return std::move(ref); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T&& ref_ref() const&& { return std::move(ref); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T& req_ref_ref() & { return req_ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T& req_ref_ref() const& { return req_ref; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE T&& req_ref_ref() && { return std::move(req_ref); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyField>>
+  FOLLY_ERASE const T&& req_ref_ref() const&& { return std::move(req_ref); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -540,93 +851,136 @@ class MyStruct final : private apache::thrift::detail::st::ComparisonOperators<M
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< MyStruct >;
+  friend void swap(MyStruct& a, MyStruct& b);
 };
-
-void swap(MyStruct& a, MyStruct& b);
-extern template void MyStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t MyStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t MyStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void MyStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t MyStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t MyStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t MyStruct::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::MyStruct>::clear( ::cpp2::MyStruct* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::MyStruct>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyStruct>::write(Protocol* proto,  ::cpp2::MyStruct const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::MyStruct>::read(Protocol* proto,  ::cpp2::MyStruct* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyStruct>::serializedSize(Protocol const* proto,  ::cpp2::MyStruct const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::MyStruct>::serializedSizeZC(Protocol const* proto,  ::cpp2::MyStruct const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithUnion final : private apache::thrift::detail::st::ComparisonOperators<StructWithUnion> {
+class StructWithUnion final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithUnion;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithUnion() :
       u(std::make_unique< ::cpp2::MyUnion>()),
       aDouble(0) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithUnion(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::MyUnion> u__arg, double aDouble__arg,  ::cpp2::MyField f__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    u = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    aDouble = arg.extract();
-    __isset.aDouble = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    f = arg.extract();
-    __isset.f = true;
-  }
 
   StructWithUnion(StructWithUnion&&) = default;
   StructWithUnion(const StructWithUnion& src);
 
+
   StructWithUnion& operator=(StructWithUnion&&) = default;
   StructWithUnion& operator=(const StructWithUnion& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::unique_ptr< ::cpp2::MyUnion> u;
+ public:
   double aDouble;
+ public:
    ::cpp2::MyField f;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool aDouble;
     bool f;
   } __isset = {};
   bool operator==(const StructWithUnion& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithUnion& __x, const StructWithUnion& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithUnion& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithUnion& __x, const StructWithUnion& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithUnion& __x, const StructWithUnion& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithUnion& __x, const StructWithUnion& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyUnion>>
+  FOLLY_ERASE T& u_ref() & { return u; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyUnion>>
+  FOLLY_ERASE const T& u_ref() const& { return u; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyUnion>>
+  FOLLY_ERASE T&& u_ref() && { return std::move(u); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::MyUnion>>
+  FOLLY_ERASE const T&& u_ref() const&& { return std::move(u); }
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> aDouble_ref() const& {
+    return {this->aDouble, __isset.aDouble};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> aDouble_ref() const&& {
+    return {std::move(this->aDouble), __isset.aDouble};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> aDouble_ref() & {
+    return {this->aDouble, __isset.aDouble};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> aDouble_ref() && {
+    return {std::move(this->aDouble), __isset.aDouble};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::MyField>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> f_ref() const& {
+    return {this->f, __isset.f};
+  }
+
+  template <typename..., typename T =  ::cpp2::MyField>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> f_ref() const&& {
+    return {std::move(this->f), __isset.f};
+  }
+
+  template <typename..., typename T =  ::cpp2::MyField>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> f_ref() & {
+    return {this->f, __isset.f};
+  }
+
+  template <typename..., typename T =  ::cpp2::MyField>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> f_ref() && {
+    return {std::move(this->f), __isset.f};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   double get_aDouble() const {
     return aDouble;
@@ -634,7 +988,9 @@ class StructWithUnion final : private apache::thrift::detail::st::ComparisonOper
 
   double& set_aDouble(double aDouble_) {
     aDouble = aDouble_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.aDouble = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return aDouble;
   }
   const  ::cpp2::MyField& get_f() const&;
@@ -643,7 +999,9 @@ class StructWithUnion final : private apache::thrift::detail::st::ComparisonOper
   template <typename T_StructWithUnion_f_struct_setter =  ::cpp2::MyField>
    ::cpp2::MyField& set_f(T_StructWithUnion_f_struct_setter&& f_) {
     f = std::forward<T_StructWithUnion_f_struct_setter>(f_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.f = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return f;
   }
 
@@ -661,97 +1019,108 @@ class StructWithUnion final : private apache::thrift::detail::st::ComparisonOper
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithUnion >;
+  friend void swap(StructWithUnion& a, StructWithUnion& b);
 };
-
-void swap(StructWithUnion& a, StructWithUnion& b);
-extern template void StructWithUnion::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithUnion::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithUnion::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithUnion::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithUnion::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithUnion::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithUnion::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithUnion::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithUnion::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithUnion>::clear( ::cpp2::StructWithUnion* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithUnion>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithUnion>::write(Protocol* proto,  ::cpp2::StructWithUnion const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithUnion>::read(Protocol* proto,  ::cpp2::StructWithUnion* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithUnion>::serializedSize(Protocol const* proto,  ::cpp2::StructWithUnion const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithUnion>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithUnion const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class RecursiveStruct final : private apache::thrift::detail::st::ComparisonOperators<RecursiveStruct> {
+class RecursiveStruct final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = RecursiveStruct;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   RecursiveStruct() {}
   // FragileConstructor for use in initialization lists only.
-  RecursiveStruct(apache::thrift::FragileConstructor, std::vector< ::cpp2::RecursiveStruct> mes__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    mes = arg.extract();
-    __isset.mes = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  RecursiveStruct(apache::thrift::FragileConstructor, ::std::vector< ::cpp2::RecursiveStruct> mes__arg);
 
   RecursiveStruct(RecursiveStruct&&) = default;
 
   RecursiveStruct(const RecursiveStruct&) = default;
 
+
   RecursiveStruct& operator=(RecursiveStruct&&) = default;
 
   RecursiveStruct& operator=(const RecursiveStruct&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
-  std::vector< ::cpp2::RecursiveStruct> mes;
+ private:
+  ::std::vector< ::cpp2::RecursiveStruct> mes;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool mes;
   } __isset = {};
   bool operator==(const RecursiveStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const RecursiveStruct& __x, const RecursiveStruct& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const RecursiveStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const RecursiveStruct& __x, const RecursiveStruct& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const RecursiveStruct& __x, const RecursiveStruct& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const RecursiveStruct& __x, const RecursiveStruct& __y) {
+    return !(__x < __y);
+  }
+#endif
 
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref<const std::vector< ::cpp2::RecursiveStruct>> mes_ref() const& {
-    return {mes, __isset.mes};
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::vector< ::cpp2::RecursiveStruct>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> mes_ref() const& {
+    return {this->mes, __isset.mes};
   }
 
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref<std::vector< ::cpp2::RecursiveStruct>> mes_ref() & {
-    return {mes, __isset.mes};
+  template <typename..., typename T = ::std::vector< ::cpp2::RecursiveStruct>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> mes_ref() const&& {
+    return {std::move(this->mes), __isset.mes};
   }
-  const std::vector< ::cpp2::RecursiveStruct>* get_mes() const&;
-  std::vector< ::cpp2::RecursiveStruct>* get_mes() &;
-  std::vector< ::cpp2::RecursiveStruct>* get_mes() && = delete;
 
-  template <typename T_RecursiveStruct_mes_struct_setter = std::vector< ::cpp2::RecursiveStruct>>
-  std::vector< ::cpp2::RecursiveStruct>& set_mes(T_RecursiveStruct_mes_struct_setter&& mes_) {
+  template <typename..., typename T = ::std::vector< ::cpp2::RecursiveStruct>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> mes_ref() & {
+    return {this->mes, __isset.mes};
+  }
+
+  template <typename..., typename T = ::std::vector< ::cpp2::RecursiveStruct>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> mes_ref() && {
+    return {std::move(this->mes), __isset.mes};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+  const ::std::vector< ::cpp2::RecursiveStruct>* get_mes() const&;
+  ::std::vector< ::cpp2::RecursiveStruct>* get_mes() &;
+  ::std::vector< ::cpp2::RecursiveStruct>* get_mes() && = delete;
+
+  template <typename T_RecursiveStruct_mes_struct_setter = ::std::vector< ::cpp2::RecursiveStruct>>
+  ::std::vector< ::cpp2::RecursiveStruct>& set_mes(T_RecursiveStruct_mes_struct_setter&& mes_) {
     mes = std::forward<T_RecursiveStruct_mes_struct_setter>(mes_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.mes = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return mes;
   }
 
@@ -769,103 +1138,150 @@ class RecursiveStruct final : private apache::thrift::detail::st::ComparisonOper
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< RecursiveStruct >;
+  friend void swap(RecursiveStruct& a, RecursiveStruct& b);
 };
-
-void swap(RecursiveStruct& a, RecursiveStruct& b);
-extern template void RecursiveStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t RecursiveStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t RecursiveStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t RecursiveStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void RecursiveStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t RecursiveStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t RecursiveStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t RecursiveStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t RecursiveStruct::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::RecursiveStruct>::clear( ::cpp2::RecursiveStruct* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::RecursiveStruct>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::RecursiveStruct>::write(Protocol* proto,  ::cpp2::RecursiveStruct const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::RecursiveStruct>::read(Protocol* proto,  ::cpp2::RecursiveStruct* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::RecursiveStruct>::serializedSize(Protocol const* proto,  ::cpp2::RecursiveStruct const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::RecursiveStruct>::serializedSizeZC(Protocol const* proto,  ::cpp2::RecursiveStruct const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithContainers final : private apache::thrift::detail::st::ComparisonOperators<StructWithContainers> {
+class StructWithContainers final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithContainers;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
   StructWithContainers();
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 
   // FragileConstructor for use in initialization lists only.
-  StructWithContainers(apache::thrift::FragileConstructor, std::unique_ptr<std::vector<int32_t>> list_ref__arg, std::unique_ptr<std::set<int32_t>> set_ref__arg, std::unique_ptr<std::map<int32_t, int32_t>> map_ref__arg, std::unique_ptr<std::vector<int32_t>> list_ref_unique__arg, std::shared_ptr<std::set<int32_t>> set_ref_shared__arg, std::shared_ptr<const std::vector<int32_t>> list_ref_shared_const__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    list_ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    set_ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    map_ref = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    list_ref_unique = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<5, _T> arg) {
-    set_ref_shared = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<6, _T> arg) {
-    list_ref_shared_const = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
+  [[deprecated("This constructor is deprecated")]]
+  StructWithContainers(apache::thrift::FragileConstructor, std::unique_ptr<::std::vector<int32_t>> list_ref__arg, std::unique_ptr<::std::set<int32_t>> set_ref__arg, std::unique_ptr<::std::map<int32_t, int32_t>> map_ref__arg, std::unique_ptr<::std::vector<int32_t>> list_ref_unique__arg, std::shared_ptr<::std::set<int32_t>> set_ref_shared__arg, std::shared_ptr<const ::std::vector<int32_t>> list_ref_shared_const__arg);
 
   StructWithContainers(StructWithContainers&&) = default;
   StructWithContainers(const StructWithContainers& src);
 
+
   StructWithContainers& operator=(StructWithContainers&&) = default;
   StructWithContainers& operator=(const StructWithContainers& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
 
   ~StructWithContainers();
 
-  std::unique_ptr<std::vector<int32_t>> list_ref;
-  std::unique_ptr<std::set<int32_t>> set_ref;
-  std::unique_ptr<std::map<int32_t, int32_t>> map_ref;
-  std::unique_ptr<std::vector<int32_t>> list_ref_unique;
-  std::shared_ptr<std::set<int32_t>> set_ref_shared;
-  std::shared_ptr<const std::vector<int32_t>> list_ref_shared_const;
+ public:
+  std::unique_ptr<::std::vector<int32_t>> list_ref;
+ public:
+  std::unique_ptr<::std::set<int32_t>> set_ref;
+ public:
+  std::unique_ptr<::std::map<int32_t, int32_t>> map_ref;
+ public:
+  std::unique_ptr<::std::vector<int32_t>> list_ref_unique;
+ public:
+  std::shared_ptr<::std::set<int32_t>> set_ref_shared;
+ public:
+  std::shared_ptr<const ::std::vector<int32_t>> list_ref_shared_const;
+
+ public:
   bool operator==(const StructWithContainers& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithContainers& __x, const StructWithContainers& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithContainers& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithContainers& __x, const StructWithContainers& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithContainers& __x, const StructWithContainers& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithContainers& __x, const StructWithContainers& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE T& list_ref_ref() & { return list_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE const T& list_ref_ref() const& { return list_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE T&& list_ref_ref() && { return std::move(list_ref); }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE const T&& list_ref_ref() const&& { return std::move(list_ref); }
+  template <typename ..., typename T = std::unique_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE T& set_ref_ref() & { return set_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE const T& set_ref_ref() const& { return set_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE T&& set_ref_ref() && { return std::move(set_ref); }
+
+  template <typename ..., typename T = std::unique_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE const T&& set_ref_ref() const&& { return std::move(set_ref); }
+  template <typename ..., typename T = std::unique_ptr<::std::map<int32_t, int32_t>>>
+  FOLLY_ERASE T& map_ref_ref() & { return map_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::map<int32_t, int32_t>>>
+  FOLLY_ERASE const T& map_ref_ref() const& { return map_ref; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::map<int32_t, int32_t>>>
+  FOLLY_ERASE T&& map_ref_ref() && { return std::move(map_ref); }
+
+  template <typename ..., typename T = std::unique_ptr<::std::map<int32_t, int32_t>>>
+  FOLLY_ERASE const T&& map_ref_ref() const&& { return std::move(map_ref); }
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE T& list_ref_unique_ref() & { return list_ref_unique; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE const T& list_ref_unique_ref() const& { return list_ref_unique; }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE T&& list_ref_unique_ref() && { return std::move(list_ref_unique); }
+
+  template <typename ..., typename T = std::unique_ptr<::std::vector<int32_t>>>
+  FOLLY_ERASE const T&& list_ref_unique_ref() const&& { return std::move(list_ref_unique); }
+  template <typename ..., typename T = std::shared_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE T& set_ref_shared_ref() & { return set_ref_shared; }
+
+  template <typename ..., typename T = std::shared_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE const T& set_ref_shared_ref() const& { return set_ref_shared; }
+
+  template <typename ..., typename T = std::shared_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE T&& set_ref_shared_ref() && { return std::move(set_ref_shared); }
+
+  template <typename ..., typename T = std::shared_ptr<::std::set<int32_t>>>
+  FOLLY_ERASE const T&& set_ref_shared_ref() const&& { return std::move(set_ref_shared); }
+  template <typename ..., typename T = std::shared_ptr<const ::std::vector<int32_t>>>
+  FOLLY_ERASE T& list_ref_shared_const_ref() & { return list_ref_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const ::std::vector<int32_t>>>
+  FOLLY_ERASE const T& list_ref_shared_const_ref() const& { return list_ref_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const ::std::vector<int32_t>>>
+  FOLLY_ERASE T&& list_ref_shared_const_ref() && { return std::move(list_ref_shared_const); }
+
+  template <typename ..., typename T = std::shared_ptr<const ::std::vector<int32_t>>>
+  FOLLY_ERASE const T&& list_ref_shared_const_ref() const&& { return std::move(list_ref_shared_const); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -881,88 +1297,111 @@ class StructWithContainers final : private apache::thrift::detail::st::Compariso
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithContainers >;
+  friend void swap(StructWithContainers& a, StructWithContainers& b);
 };
-
-void swap(StructWithContainers& a, StructWithContainers& b);
-extern template void StructWithContainers::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithContainers::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithContainers::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithContainers::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithContainers::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithContainers::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithContainers::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithContainers::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithContainers::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithContainers>::clear( ::cpp2::StructWithContainers* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithContainers>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithContainers>::write(Protocol* proto,  ::cpp2::StructWithContainers const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithContainers>::read(Protocol* proto,  ::cpp2::StructWithContainers* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithContainers>::serializedSize(Protocol const* proto,  ::cpp2::StructWithContainers const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithContainers>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithContainers const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithSharedConst final : private apache::thrift::detail::st::ComparisonOperators<StructWithSharedConst> {
+class StructWithSharedConst final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithSharedConst;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithSharedConst() :
       shared_const(std::make_shared< ::cpp2::MyField>()),
       req_shared_const(std::make_shared< ::cpp2::MyField>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithSharedConst(apache::thrift::FragileConstructor, std::shared_ptr<const  ::cpp2::MyField> opt_shared_const__arg, std::shared_ptr<const  ::cpp2::MyField> shared_const__arg, std::shared_ptr<const  ::cpp2::MyField> req_shared_const__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    opt_shared_const = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    shared_const = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_shared_const = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
 
   StructWithSharedConst(StructWithSharedConst&&) = default;
 
   StructWithSharedConst(const StructWithSharedConst&) = default;
 
+
   StructWithSharedConst& operator=(StructWithSharedConst&&) = default;
 
   StructWithSharedConst& operator=(const StructWithSharedConst&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::shared_ptr<const  ::cpp2::MyField> opt_shared_const;
+ public:
   std::shared_ptr<const  ::cpp2::MyField> shared_const;
+ public:
   std::shared_ptr<const  ::cpp2::MyField> req_shared_const;
+
+ public:
   bool operator==(const StructWithSharedConst& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithSharedConst& __x, const StructWithSharedConst& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithSharedConst& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithSharedConst& __x, const StructWithSharedConst& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithSharedConst& __x, const StructWithSharedConst& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithSharedConst& __x, const StructWithSharedConst& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T& opt_shared_const_ref() & { return opt_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T& opt_shared_const_ref() const& { return opt_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T&& opt_shared_const_ref() && { return std::move(opt_shared_const); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T&& opt_shared_const_ref() const&& { return std::move(opt_shared_const); }
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T& shared_const_ref() & { return shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T& shared_const_ref() const& { return shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T&& shared_const_ref() && { return std::move(shared_const); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T&& shared_const_ref() const&& { return std::move(shared_const); }
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T& req_shared_const_ref() & { return req_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T& req_shared_const_ref() const& { return req_shared_const; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE T&& req_shared_const_ref() && { return std::move(req_shared_const); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::MyField>>
+  FOLLY_ERASE const T&& req_shared_const_ref() const&& { return std::move(req_shared_const); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -978,71 +1417,68 @@ class StructWithSharedConst final : private apache::thrift::detail::st::Comparis
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithSharedConst >;
+  friend void swap(StructWithSharedConst& a, StructWithSharedConst& b);
 };
-
-void swap(StructWithSharedConst& a, StructWithSharedConst& b);
-extern template void StructWithSharedConst::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithSharedConst::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithSharedConst::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithSharedConst::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithSharedConst::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithSharedConst::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithSharedConst::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithSharedConst::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithSharedConst::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithSharedConst>::clear( ::cpp2::StructWithSharedConst* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithSharedConst>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithSharedConst>::write(Protocol* proto,  ::cpp2::StructWithSharedConst const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithSharedConst>::read(Protocol* proto,  ::cpp2::StructWithSharedConst* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithSharedConst>::serializedSize(Protocol const* proto,  ::cpp2::StructWithSharedConst const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithSharedConst>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithSharedConst const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class Empty final : private apache::thrift::detail::st::ComparisonOperators<Empty> {
+class Empty final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Empty;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   Empty() {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   Empty(apache::thrift::FragileConstructor);
 
   Empty(Empty&&) = default;
 
   Empty(const Empty&) = default;
 
+
   Empty& operator=(Empty&&) = default;
 
   Empty& operator=(const Empty&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
   bool operator==(const Empty& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Empty& __x, const Empty& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Empty& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Empty& __x, const Empty& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Empty& __x, const Empty& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Empty& __x, const Empty& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1058,86 +1494,109 @@ class Empty final : private apache::thrift::detail::st::ComparisonOperators<Empt
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Empty >;
+  friend void swap(Empty& a, Empty& b);
 };
-
-void swap(Empty& a, Empty& b);
-extern template void Empty::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Empty::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Empty::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Empty::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Empty::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Empty::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Empty::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Empty::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Empty::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Empty>::clear( ::cpp2::Empty* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Empty>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::write(Protocol* proto,  ::cpp2::Empty const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Empty>::read(Protocol* proto,  ::cpp2::Empty* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::serializedSize(Protocol const* proto,  ::cpp2::Empty const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Empty>::serializedSizeZC(Protocol const* proto,  ::cpp2::Empty const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithRef final : private apache::thrift::detail::st::ComparisonOperators<StructWithRef> {
+class StructWithRef final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithRef;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithRef() :
       def_field(std::make_unique< ::cpp2::Empty>()),
       req_field(std::make_unique< ::cpp2::Empty>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithRef(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg, std::unique_ptr< ::cpp2::Empty> opt_field__arg, std::unique_ptr< ::cpp2::Empty> req_field__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    def_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    opt_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
 
   StructWithRef(StructWithRef&&) = default;
   StructWithRef(const StructWithRef& src);
 
+
   StructWithRef& operator=(StructWithRef&&) = default;
   StructWithRef& operator=(const StructWithRef& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::unique_ptr< ::cpp2::Empty> def_field;
+ public:
   std::unique_ptr< ::cpp2::Empty> opt_field;
+ public:
   std::unique_ptr< ::cpp2::Empty> req_field;
+
+ public:
   bool operator==(const StructWithRef& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithRef& __x, const StructWithRef& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithRef& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithRef& __x, const StructWithRef& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithRef& __x, const StructWithRef& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithRef& __x, const StructWithRef& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& def_field_ref() & { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& def_field_ref() const& { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& def_field_ref() && { return std::move(def_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& def_field_ref() const&& { return std::move(def_field); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& opt_field_ref() & { return opt_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& opt_field_ref() const& { return opt_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& opt_field_ref() && { return std::move(opt_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& opt_field_ref() const&& { return std::move(opt_field); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& req_field_ref() & { return req_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& req_field_ref() const& { return req_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& req_field_ref() && { return std::move(req_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& req_field_ref() const&& { return std::move(req_field); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1153,86 +1612,109 @@ class StructWithRef final : private apache::thrift::detail::st::ComparisonOperat
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithRef >;
+  friend void swap(StructWithRef& a, StructWithRef& b);
 };
-
-void swap(StructWithRef& a, StructWithRef& b);
-extern template void StructWithRef::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithRef::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithRef::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithRef::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithRef::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithRef::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithRef::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithRef::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithRef::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithRef>::clear( ::cpp2::StructWithRef* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithRef>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRef>::write(Protocol* proto,  ::cpp2::StructWithRef const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithRef>::read(Protocol* proto,  ::cpp2::StructWithRef* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRef>::serializedSize(Protocol const* proto,  ::cpp2::StructWithRef const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRef>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithRef const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithRefTypeUnique final : private apache::thrift::detail::st::ComparisonOperators<StructWithRefTypeUnique> {
+class StructWithRefTypeUnique final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithRefTypeUnique;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithRefTypeUnique() :
       def_field(std::make_unique< ::cpp2::Empty>()),
       req_field(std::make_unique< ::cpp2::Empty>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithRefTypeUnique(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg, std::unique_ptr< ::cpp2::Empty> opt_field__arg, std::unique_ptr< ::cpp2::Empty> req_field__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    def_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    opt_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
 
   StructWithRefTypeUnique(StructWithRefTypeUnique&&) = default;
   StructWithRefTypeUnique(const StructWithRefTypeUnique& src);
 
+
   StructWithRefTypeUnique& operator=(StructWithRefTypeUnique&&) = default;
   StructWithRefTypeUnique& operator=(const StructWithRefTypeUnique& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::unique_ptr< ::cpp2::Empty> def_field;
+ public:
   std::unique_ptr< ::cpp2::Empty> opt_field;
+ public:
   std::unique_ptr< ::cpp2::Empty> req_field;
+
+ public:
   bool operator==(const StructWithRefTypeUnique& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithRefTypeUnique& __x, const StructWithRefTypeUnique& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithRefTypeUnique& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithRefTypeUnique& __x, const StructWithRefTypeUnique& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithRefTypeUnique& __x, const StructWithRefTypeUnique& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithRefTypeUnique& __x, const StructWithRefTypeUnique& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& def_field_ref() & { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& def_field_ref() const& { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& def_field_ref() && { return std::move(def_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& def_field_ref() const&& { return std::move(def_field); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& opt_field_ref() & { return opt_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& opt_field_ref() const& { return opt_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& opt_field_ref() && { return std::move(opt_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& opt_field_ref() const&& { return std::move(opt_field); }
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& req_field_ref() & { return req_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& req_field_ref() const& { return req_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& req_field_ref() && { return std::move(req_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& req_field_ref() const&& { return std::move(req_field); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1248,88 +1730,111 @@ class StructWithRefTypeUnique final : private apache::thrift::detail::st::Compar
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithRefTypeUnique >;
+  friend void swap(StructWithRefTypeUnique& a, StructWithRefTypeUnique& b);
 };
-
-void swap(StructWithRefTypeUnique& a, StructWithRefTypeUnique& b);
-extern template void StructWithRefTypeUnique::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithRefTypeUnique::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeUnique::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeUnique::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithRefTypeUnique::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithRefTypeUnique::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeUnique::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeUnique::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithRefTypeUnique::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::clear( ::cpp2::StructWithRefTypeUnique* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::write(Protocol* proto,  ::cpp2::StructWithRefTypeUnique const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::read(Protocol* proto,  ::cpp2::StructWithRefTypeUnique* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::serializedSize(Protocol const* proto,  ::cpp2::StructWithRefTypeUnique const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeUnique>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithRefTypeUnique const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithRefTypeShared final : private apache::thrift::detail::st::ComparisonOperators<StructWithRefTypeShared> {
+class StructWithRefTypeShared final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithRefTypeShared;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithRefTypeShared() :
       def_field(std::make_shared< ::cpp2::Empty>()),
       req_field(std::make_shared< ::cpp2::Empty>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithRefTypeShared(apache::thrift::FragileConstructor, std::shared_ptr< ::cpp2::Empty> def_field__arg, std::shared_ptr< ::cpp2::Empty> opt_field__arg, std::shared_ptr< ::cpp2::Empty> req_field__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    def_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    opt_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
 
   StructWithRefTypeShared(StructWithRefTypeShared&&) = default;
 
   StructWithRefTypeShared(const StructWithRefTypeShared&) = default;
 
+
   StructWithRefTypeShared& operator=(StructWithRefTypeShared&&) = default;
 
   StructWithRefTypeShared& operator=(const StructWithRefTypeShared&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::shared_ptr< ::cpp2::Empty> def_field;
+ public:
   std::shared_ptr< ::cpp2::Empty> opt_field;
+ public:
   std::shared_ptr< ::cpp2::Empty> req_field;
+
+ public:
   bool operator==(const StructWithRefTypeShared& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithRefTypeShared& __x, const StructWithRefTypeShared& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithRefTypeShared& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithRefTypeShared& __x, const StructWithRefTypeShared& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithRefTypeShared& __x, const StructWithRefTypeShared& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithRefTypeShared& __x, const StructWithRefTypeShared& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& def_field_ref() & { return def_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& def_field_ref() const& { return def_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& def_field_ref() && { return std::move(def_field); }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& def_field_ref() const&& { return std::move(def_field); }
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& opt_field_ref() & { return opt_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& opt_field_ref() const& { return opt_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& opt_field_ref() && { return std::move(opt_field); }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& opt_field_ref() const&& { return std::move(opt_field); }
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& req_field_ref() & { return req_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& req_field_ref() const& { return req_field; }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& req_field_ref() && { return std::move(req_field); }
+
+  template <typename ..., typename T = std::shared_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& req_field_ref() const&& { return std::move(req_field); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1345,88 +1850,111 @@ class StructWithRefTypeShared final : private apache::thrift::detail::st::Compar
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithRefTypeShared >;
+  friend void swap(StructWithRefTypeShared& a, StructWithRefTypeShared& b);
 };
-
-void swap(StructWithRefTypeShared& a, StructWithRefTypeShared& b);
-extern template void StructWithRefTypeShared::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithRefTypeShared::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeShared::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeShared::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithRefTypeShared::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithRefTypeShared::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeShared::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeShared::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithRefTypeShared::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithRefTypeShared>::clear( ::cpp2::StructWithRefTypeShared* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithRefTypeShared>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeShared>::write(Protocol* proto,  ::cpp2::StructWithRefTypeShared const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithRefTypeShared>::read(Protocol* proto,  ::cpp2::StructWithRefTypeShared* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeShared>::serializedSize(Protocol const* proto,  ::cpp2::StructWithRefTypeShared const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeShared>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithRefTypeShared const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithRefTypeSharedConst final : private apache::thrift::detail::st::ComparisonOperators<StructWithRefTypeSharedConst> {
+class StructWithRefTypeSharedConst final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithRefTypeSharedConst;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithRefTypeSharedConst() :
       def_field(std::make_shared< ::cpp2::Empty>()),
       req_field(std::make_shared< ::cpp2::Empty>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithRefTypeSharedConst(apache::thrift::FragileConstructor, std::shared_ptr<const  ::cpp2::Empty> def_field__arg, std::shared_ptr<const  ::cpp2::Empty> opt_field__arg, std::shared_ptr<const  ::cpp2::Empty> req_field__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    def_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    opt_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    req_field = std::make_shared<std::decay_t<_T>>(arg.extract());
-  }
 
   StructWithRefTypeSharedConst(StructWithRefTypeSharedConst&&) = default;
 
   StructWithRefTypeSharedConst(const StructWithRefTypeSharedConst&) = default;
 
+
   StructWithRefTypeSharedConst& operator=(StructWithRefTypeSharedConst&&) = default;
 
   StructWithRefTypeSharedConst& operator=(const StructWithRefTypeSharedConst&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::shared_ptr<const  ::cpp2::Empty> def_field;
+ public:
   std::shared_ptr<const  ::cpp2::Empty> opt_field;
+ public:
   std::shared_ptr<const  ::cpp2::Empty> req_field;
+
+ public:
   bool operator==(const StructWithRefTypeSharedConst& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithRefTypeSharedConst& __x, const StructWithRefTypeSharedConst& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithRefTypeSharedConst& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithRefTypeSharedConst& __x, const StructWithRefTypeSharedConst& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithRefTypeSharedConst& __x, const StructWithRefTypeSharedConst& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithRefTypeSharedConst& __x, const StructWithRefTypeSharedConst& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T& def_field_ref() & { return def_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T& def_field_ref() const& { return def_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T&& def_field_ref() && { return std::move(def_field); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T&& def_field_ref() const&& { return std::move(def_field); }
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T& opt_field_ref() & { return opt_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T& opt_field_ref() const& { return opt_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T&& opt_field_ref() && { return std::move(opt_field); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T&& opt_field_ref() const&& { return std::move(opt_field); }
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T& req_field_ref() & { return req_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T& req_field_ref() const& { return req_field; }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE T&& req_field_ref() && { return std::move(req_field); }
+
+  template <typename ..., typename T = std::shared_ptr<const  ::cpp2::Empty>>
+  FOLLY_ERASE const T&& req_field_ref() const&& { return std::move(req_field); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1442,75 +1970,84 @@ class StructWithRefTypeSharedConst final : private apache::thrift::detail::st::C
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithRefTypeSharedConst >;
+  friend void swap(StructWithRefTypeSharedConst& a, StructWithRefTypeSharedConst& b);
 };
-
-void swap(StructWithRefTypeSharedConst& a, StructWithRefTypeSharedConst& b);
-extern template void StructWithRefTypeSharedConst::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithRefTypeSharedConst::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeSharedConst::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeSharedConst::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithRefTypeSharedConst::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithRefTypeSharedConst::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithRefTypeSharedConst::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithRefTypeSharedConst::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithRefTypeSharedConst::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::clear( ::cpp2::StructWithRefTypeSharedConst* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::write(Protocol* proto,  ::cpp2::StructWithRefTypeSharedConst const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::read(Protocol* proto,  ::cpp2::StructWithRefTypeSharedConst* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::serializedSize(Protocol const* proto,  ::cpp2::StructWithRefTypeSharedConst const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefTypeSharedConst>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithRefTypeSharedConst const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class StructWithRefAndAnnotCppNoexceptMoveCtor final : private apache::thrift::detail::st::ComparisonOperators<StructWithRefAndAnnotCppNoexceptMoveCtor> {
+class StructWithRefAndAnnotCppNoexceptMoveCtor final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = StructWithRefAndAnnotCppNoexceptMoveCtor;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   StructWithRefAndAnnotCppNoexceptMoveCtor() :
       def_field(std::make_unique< ::cpp2::Empty>()) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   StructWithRefAndAnnotCppNoexceptMoveCtor(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    def_field = std::make_unique<std::decay_t<_T>>(arg.extract());
-  }
-  StructWithRefAndAnnotCppNoexceptMoveCtor(StructWithRefAndAnnotCppNoexceptMoveCtor&& other) noexcept :
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+StructWithRefAndAnnotCppNoexceptMoveCtor(StructWithRefAndAnnotCppNoexceptMoveCtor&& other) noexcept :
       def_field(std::move(other.def_field)) {}
-  StructWithRefAndAnnotCppNoexceptMoveCtor(const StructWithRefAndAnnotCppNoexceptMoveCtor& src);
+
+THRIFT_IGNORE_ISSET_USE_WARNING_END  StructWithRefAndAnnotCppNoexceptMoveCtor(const StructWithRefAndAnnotCppNoexceptMoveCtor& src);
+
 
   StructWithRefAndAnnotCppNoexceptMoveCtor& operator=(StructWithRefAndAnnotCppNoexceptMoveCtor&&) = default;
   StructWithRefAndAnnotCppNoexceptMoveCtor& operator=(const StructWithRefAndAnnotCppNoexceptMoveCtor& src);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   std::unique_ptr< ::cpp2::Empty> def_field;
+
+ public:
   bool operator==(const StructWithRefAndAnnotCppNoexceptMoveCtor& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const StructWithRefAndAnnotCppNoexceptMoveCtor& __x, const StructWithRefAndAnnotCppNoexceptMoveCtor& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const StructWithRefAndAnnotCppNoexceptMoveCtor& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const StructWithRefAndAnnotCppNoexceptMoveCtor& __x, const StructWithRefAndAnnotCppNoexceptMoveCtor& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const StructWithRefAndAnnotCppNoexceptMoveCtor& __x, const StructWithRefAndAnnotCppNoexceptMoveCtor& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const StructWithRefAndAnnotCppNoexceptMoveCtor& __x, const StructWithRefAndAnnotCppNoexceptMoveCtor& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T& def_field_ref() & { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T& def_field_ref() const& { return def_field; }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE T&& def_field_ref() && { return std::move(def_field); }
+
+  template <typename ..., typename T = std::unique_ptr< ::cpp2::Empty>>
+  FOLLY_ERASE const T&& def_field_ref() const&& { return std::move(def_field); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1526,50 +2063,31 @@ class StructWithRefAndAnnotCppNoexceptMoveCtor final : private apache::thrift::d
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< StructWithRefAndAnnotCppNoexceptMoveCtor >;
+  friend void swap(StructWithRefAndAnnotCppNoexceptMoveCtor& a, StructWithRefAndAnnotCppNoexceptMoveCtor& b);
 };
-
-void swap(StructWithRefAndAnnotCppNoexceptMoveCtor& a, StructWithRefAndAnnotCppNoexceptMoveCtor& b);
-extern template void StructWithRefAndAnnotCppNoexceptMoveCtor::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void StructWithRefAndAnnotCppNoexceptMoveCtor::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
+
 namespace apache { namespace thrift {
 
-template <> inline void Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::clear( ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor* obj) {
-  return obj->__clear();
-}
+template <> struct TEnumDataStorage<::cpp2::MyUnion::Type>;
 
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
+template <> struct TEnumTraits<::cpp2::MyUnion::Type> {
+  using type = ::cpp2::MyUnion::Type;
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::write(Protocol* proto,  ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor const* obj) {
-  return obj->write(proto);
-}
+  static constexpr std::size_t const size = 2;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
 
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::read(Protocol* proto,  ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor* obj) {
-  return obj->readNoXfer(proto);
-}
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::serializedSize(Protocol const* proto,  ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::serializedSizeZC(Protocol const* proto,  ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
+};
 }} // apache::thrift

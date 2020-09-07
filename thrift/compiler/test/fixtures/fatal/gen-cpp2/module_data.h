@@ -6,123 +6,86 @@
  */
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <thrift/lib/cpp/Thrift.h>
+#include <thrift/lib/cpp2/gen/module_data_h.h>
 
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/fatal/gen-cpp2/module_types.h"
 
-namespace test_cpp2 { namespace cpp_reflection {
+namespace apache { namespace thrift {
 
-struct _enum1EnumDataStorage {
-  using type = enum1;
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::enum1> {
+  using type = ::test_cpp2::cpp_reflection::enum1;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<enum1, 3> values = {{
-    enum1::field0,
-    enum1::field1,
-    enum1::field2,
+  static constexpr const std::array<type, size> values = {{
+    type::field0,
+    type::field1,
+    type::field2,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "field0",
     "field1",
     "field2",
   }};
 };
-
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::test_cpp2::cpp_reflection::enum1> {
-  using storage_type =  ::test_cpp2::cpp_reflection::_enum1EnumDataStorage;
-};
-
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
-
-struct _enum2EnumDataStorage {
-  using type = enum2;
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::enum2> {
+  using type = ::test_cpp2::cpp_reflection::enum2;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<enum2, 3> values = {{
-    enum2::field0_2,
-    enum2::field1_2,
-    enum2::field2_2,
+  static constexpr const std::array<type, size> values = {{
+    type::field0_2,
+    type::field1_2,
+    type::field2_2,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "field0_2",
     "field1_2",
     "field2_2",
   }};
 };
-
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::test_cpp2::cpp_reflection::enum2> {
-  using storage_type =  ::test_cpp2::cpp_reflection::_enum2EnumDataStorage;
-};
-
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
-
-struct _enum3EnumDataStorage {
-  using type = enum3;
-  static constexpr const std::size_t size = 3;
-  static constexpr const std::array<enum3, 3> values = {{
-    enum3::field0_3,
-    enum3::field1_3,
-    enum3::field2_3,
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::enum3> {
+  using type = ::test_cpp2::cpp_reflection::enum3;
+  static constexpr const std::size_t size = 2;
+  static constexpr const std::array<type, size> values = {{
+    type::field0_3,
+    type::field1_3,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "field0_3",
     "field1_3",
-    "field2_3",
   }};
 };
-
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::test_cpp2::cpp_reflection::enum3> {
-  using storage_type =  ::test_cpp2::cpp_reflection::_enum3EnumDataStorage;
-};
-
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
-
-struct _enum_with_special_namesEnumDataStorage {
-  using type = enum_with_special_names;
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::enum_with_special_names> {
+  using type = ::test_cpp2::cpp_reflection::enum_with_special_names;
   static constexpr const std::size_t size = 28;
-  static constexpr const std::array<enum_with_special_names, 28> values = {{
-    enum_with_special_names::get,
-    enum_with_special_names::getter,
-    enum_with_special_names::lists,
-    enum_with_special_names::maps,
-    enum_with_special_names::name,
-    enum_with_special_names::name_to_value,
-    enum_with_special_names::names,
-    enum_with_special_names::prefix_tree,
-    enum_with_special_names::sets,
-    enum_with_special_names::setter,
-    enum_with_special_names::str,
-    enum_with_special_names::strings,
-    enum_with_special_names::type,
-    enum_with_special_names::value,
-    enum_with_special_names::value_to_name,
-    enum_with_special_names::values,
-    enum_with_special_names::id,
-    enum_with_special_names::ids,
-    enum_with_special_names::descriptor,
-    enum_with_special_names::descriptors,
-    enum_with_special_names::key,
-    enum_with_special_names::keys,
-    enum_with_special_names::annotation,
-    enum_with_special_names::annotations,
-    enum_with_special_names::member,
-    enum_with_special_names::members,
-    enum_with_special_names::field,
-    enum_with_special_names::fields,
+  static constexpr const std::array<type, size> values = {{
+    type::get,
+    type::getter,
+    type::lists,
+    type::maps,
+    type::name,
+    type::name_to_value,
+    type::names,
+    type::prefix_tree,
+    type::sets,
+    type::setter,
+    type::str,
+    type::strings,
+    type::type,
+    type::value,
+    type::value_to_name,
+    type::values,
+    type::id,
+    type::ids,
+    type::descriptor,
+    type::descriptors,
+    type::key,
+    type::keys,
+    type::annotation,
+    type::annotations,
+    type::member,
+    type::members,
+    type::field,
+    type::fields,
   }};
-  static constexpr const std::array<folly::StringPiece, 28> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "get",
     "getter",
     "lists",
@@ -154,12 +117,139 @@ struct _enum_with_special_namesEnumDataStorage {
   }};
 };
 
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::union1::Type> {
+  using type = ::test_cpp2::cpp_reflection::union1::Type;
+  static constexpr const std::size_t size = 4;
+  static constexpr const std::array<type, size> values = {{
+    type::ui,
+    type::ud,
+    type::us,
+    type::ue,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "ui",
+    "ud",
+    "us",
+    "ue",
+  }};
+};
 
-template <> struct TEnumDataStorage< ::test_cpp2::cpp_reflection::enum_with_special_names> {
-  using storage_type =  ::test_cpp2::cpp_reflection::_enum_with_special_namesEnumDataStorage;
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::union2::Type> {
+  using type = ::test_cpp2::cpp_reflection::union2::Type;
+  static constexpr const std::size_t size = 4;
+  static constexpr const std::array<type, size> values = {{
+    type::ui_2,
+    type::ud_2,
+    type::us_2,
+    type::ue_2,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "ui_2",
+    "ud_2",
+    "us_2",
+    "ue_2",
+  }};
+};
+
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::union3::Type> {
+  using type = ::test_cpp2::cpp_reflection::union3::Type;
+  static constexpr const std::size_t size = 4;
+  static constexpr const std::array<type, size> values = {{
+    type::ui_3,
+    type::ud_3,
+    type::us_3,
+    type::ue_3,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "ui_3",
+    "ud_3",
+    "us_3",
+    "ue_3",
+  }};
+};
+
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::unionA::Type> {
+  using type = ::test_cpp2::cpp_reflection::unionA::Type;
+  static constexpr const std::size_t size = 5;
+  static constexpr const std::array<type, size> values = {{
+    type::i,
+    type::d,
+    type::s,
+    type::e,
+    type::a,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "i",
+    "d",
+    "s",
+    "e",
+    "a",
+  }};
+};
+
+template <> struct TEnumDataStorage<::test_cpp2::cpp_reflection::union_with_special_names::Type> {
+  using type = ::test_cpp2::cpp_reflection::union_with_special_names::Type;
+  static constexpr const std::size_t size = 28;
+  static constexpr const std::array<type, size> values = {{
+    type::get,
+    type::getter,
+    type::lists,
+    type::maps,
+    type::name,
+    type::name_to_value,
+    type::names,
+    type::prefix_tree,
+    type::sets,
+    type::setter,
+    type::str,
+    type::strings,
+    type::type,
+    type::value,
+    type::value_to_name,
+    type::values,
+    type::id,
+    type::ids,
+    type::descriptor,
+    type::descriptors,
+    type::key,
+    type::keys,
+    type::annotation,
+    type::annotations,
+    type::member,
+    type::members,
+    type::field,
+    type::fields,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "get",
+    "getter",
+    "lists",
+    "maps",
+    "name",
+    "name_to_value",
+    "names",
+    "prefix_tree",
+    "sets",
+    "setter",
+    "str",
+    "strings",
+    "type",
+    "value",
+    "value_to_name",
+    "values",
+    "id",
+    "ids",
+    "descriptor",
+    "descriptors",
+    "key",
+    "keys",
+    "annotation",
+    "annotations",
+    "member",
+    "members",
+    "field",
+    "fields",
+  }};
 };
 
 }} // apache::thrift
-

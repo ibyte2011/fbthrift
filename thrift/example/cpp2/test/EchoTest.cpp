@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <folly/futures/Future.h>
 #include <folly/synchronization/Baton.h>
@@ -65,13 +65,6 @@ class EchoTest : public testing::Test {
   ServerConfigsMock serverConfigs_;
   std::shared_ptr<EchoHandler> handler_;
 };
-
-TEST_F(EchoTest, SyncCall) {
-  std::string echo = "Echo Message";
-  std::string response;
-  client_->sync_echo(response, echo);
-  EXPECT_EQ(echo, response);
-}
 
 TEST_F(EchoTest, AsyncCall) {
   ClientReceiveState result;

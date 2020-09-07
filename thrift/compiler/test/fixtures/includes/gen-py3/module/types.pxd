@@ -5,10 +5,16 @@
 #  @generated
 #
 
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+    uint32_t as cuint32_t,
+)
 from libcpp.string cimport string
 from libcpp cimport bool as cbool, nullptr, nullptr_t
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
@@ -17,64 +23,66 @@ from thrift.py3.exceptions cimport cTException
 cimport folly.iobuf as __iobuf
 cimport thrift.py3.exceptions
 cimport thrift.py3.types
-from thrift.py3.types cimport bstring, move
+from thrift.py3.common cimport Protocol as __Protocol
+from thrift.py3.types cimport bstring, move, field_ref as __FieldRef, optional_field_ref as __OptionalFieldRef
 from folly.optional cimport cOptional
 cimport includes.types as _includes_types
+cdef extern from "gen-py3/module/types.h":
+  pass
 
 
 
 
 
-cdef extern from "gen-cpp2/module_types_custom_protocol.h" namespace "cpp2":
-    # Forward Declaration
-    cdef cppclass cMyStruct "cpp2::MyStruct"
-
-cdef extern from "gen-cpp2/module_types.h" namespace "cpp2":
-    cdef cppclass cMyStruct__isset "cpp2::MyStruct::__isset":
+cdef extern from "gen-cpp2/module_types_custom_protocol.h" namespace "::cpp2":
+    cdef cppclass cMyStruct__isset "::cpp2::MyStruct::__isset":
         bint MyIncludedField
         bint MyOtherIncludedField
         bint MyIncludedInt
 
-    cdef cppclass cMyStruct "cpp2::MyStruct":
+    cdef cppclass cMyStruct "::cpp2::MyStruct":
         cMyStruct() except +
         cMyStruct(const cMyStruct&) except +
         bint operator==(cMyStruct&)
+        bint operator!=(cMyStruct&)
         bint operator<(cMyStruct&)
         bint operator>(cMyStruct&)
         bint operator<=(cMyStruct&)
         bint operator>=(cMyStruct&)
+        __FieldRef[_includes_types.cIncluded] MyIncludedField_ref()
         _includes_types.cIncluded MyIncludedField
+        __FieldRef[_includes_types.cIncluded] MyOtherIncludedField_ref()
         _includes_types.cIncluded MyOtherIncludedField
-        int64_t MyIncludedInt
+        __FieldRef[cint64_t] MyIncludedInt_ref()
+        cint64_t MyIncludedInt
         cMyStruct__isset __isset
 
-    cdef shared_ptr[_includes_types.cIncluded] reference_shared_ptr_MyIncludedField "thrift::py3::reference_shared_ptr<cpp2::Included>"(shared_ptr[cMyStruct]&, _includes_types.cIncluded&)
-    cdef shared_ptr[_includes_types.cIncluded] reference_shared_ptr_MyOtherIncludedField "thrift::py3::reference_shared_ptr<cpp2::Included>"(shared_ptr[cMyStruct]&, _includes_types.cIncluded&)
+    cdef shared_ptr[_includes_types.cIncluded] reference_shared_ptr_MyIncludedField "::thrift::py3::reference_shared_ptr<::cpp2::Included>"(shared_ptr[cMyStruct]&, _includes_types.cIncluded&)
+    cdef shared_ptr[_includes_types.cIncluded] reference_shared_ptr_MyOtherIncludedField "::thrift::py3::reference_shared_ptr<::cpp2::Included>"(shared_ptr[cMyStruct]&, _includes_types.cIncluded&)
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[cMyStruct] move(unique_ptr[cMyStruct])
-    cdef shared_ptr[cMyStruct] move_shared "std::move"(shared_ptr[cMyStruct])
-    cdef unique_ptr[cMyStruct] move_unique "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cMyStruct] __fbthrift_move "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cMyStruct] __fbthrift_move_shared "std::move"(shared_ptr[cMyStruct])
+    cdef unique_ptr[cMyStruct] __fbthrift_move_unique "std::move"(unique_ptr[cMyStruct])
 
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const cpp2::MyStruct>"(shared_ptr[cMyStruct])
+    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const ::cpp2::MyStruct>"(shared_ptr[cMyStruct])
 
-# Forward Definition of the cython struct
-cdef class MyStruct(thrift.py3.types.Struct)
 
 
 cdef class MyStruct(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cMyStruct] _cpp_obj
-    cdef _includes_types.Included __MyIncludedField
-    cdef _includes_types.Included __MyOtherIncludedField
+    cdef _includes_types.Included __field_MyIncludedField
+    cdef _includes_types.Included __field_MyOtherIncludedField
 
     @staticmethod
     cdef unique_ptr[cMyStruct] _make_instance(
         cMyStruct* base_instance,
-        object MyIncludedField,
-        object MyOtherIncludedField,
+        bint* __isNOTSET,
+        _includes_types.Included MyIncludedField,
+        _includes_types.Included MyOtherIncludedField,
         object MyIncludedInt
     ) except *
 

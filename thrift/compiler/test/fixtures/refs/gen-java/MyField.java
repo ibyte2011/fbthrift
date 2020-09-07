@@ -13,10 +13,8 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.util.BitSet;
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.facebook.thrift.*;
+import com.facebook.thrift.annotations.*;
 import com.facebook.thrift.async.*;
 import com.facebook.thrift.meta_data.*;
 import com.facebook.thrift.server.*;
@@ -36,7 +34,6 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
   public static final int OPT_VALUE = 1;
   public static final int VALUE = 2;
   public static final int REQ_VALUE = 3;
-  public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
   private static final int __OPT_VALUE_ISSET_ID = 0;
@@ -45,6 +42,7 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
   private BitSet __isset_bit_vector = new BitSet(3);
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
+
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
     tmpMetaDataMap.put(OPT_VALUE, new FieldMetaData("opt_value", TFieldRequirementType.OPTIONAL, 
@@ -64,17 +62,15 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
   }
 
   public MyField(
-    long req_value)
-  {
+      long req_value) {
     this();
     this.req_value = req_value;
     setReq_valueIsSet(true);
   }
 
   public MyField(
-    long value,
-    long req_value)
-  {
+      long value,
+      long req_value) {
     this();
     this.value = value;
     setValueIsSet(true);
@@ -83,10 +79,9 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
   }
 
   public MyField(
-    long opt_value,
-    long value,
-    long req_value)
-  {
+      long opt_value,
+      long value,
+      long req_value) {
     this();
     this.opt_value = opt_value;
     setOpt_valueIsSet(true);
@@ -94,6 +89,53 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     setValueIsSet(true);
     this.req_value = req_value;
     setReq_valueIsSet(true);
+  }
+
+  public static class Builder {
+    private long opt_value;
+    private long value;
+    private long req_value;
+
+    BitSet __optional_isset = new BitSet(3);
+
+    public Builder() {
+    }
+
+    public Builder setOpt_value(final long opt_value) {
+      this.opt_value = opt_value;
+      __optional_isset.set(__OPT_VALUE_ISSET_ID, true);
+      return this;
+    }
+
+    public Builder setValue(final long value) {
+      this.value = value;
+      __optional_isset.set(__VALUE_ISSET_ID, true);
+      return this;
+    }
+
+    public Builder setReq_value(final long req_value) {
+      this.req_value = req_value;
+      __optional_isset.set(__REQ_VALUE_ISSET_ID, true);
+      return this;
+    }
+
+    public MyField build() {
+      MyField result = new MyField();
+      if (__optional_isset.get(__OPT_VALUE_ISSET_ID)) {
+        result.setOpt_value(this.opt_value);
+      }
+      if (__optional_isset.get(__VALUE_ISSET_ID)) {
+        result.setValue(this.value);
+      }
+      if (__optional_isset.get(__REQ_VALUE_ISSET_ID)) {
+        result.setReq_value(this.req_value);
+      }
+      return result;
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
@@ -111,12 +153,7 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     return new MyField(this);
   }
 
-  @Deprecated
-  public MyField clone() {
-    return new MyField(this);
-  }
-
-  public long  getOpt_value() {
+  public long getOpt_value() {
     return this.opt_value;
   }
 
@@ -135,11 +172,11 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     return __isset_bit_vector.get(__OPT_VALUE_ISSET_ID);
   }
 
-  public void setOpt_valueIsSet(boolean value) {
-    __isset_bit_vector.set(__OPT_VALUE_ISSET_ID, value);
+  public void setOpt_valueIsSet(boolean __value) {
+    __isset_bit_vector.set(__OPT_VALUE_ISSET_ID, __value);
   }
 
-  public long  getValue() {
+  public long getValue() {
     return this.value;
   }
 
@@ -158,11 +195,11 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     return __isset_bit_vector.get(__VALUE_ISSET_ID);
   }
 
-  public void setValueIsSet(boolean value) {
-    __isset_bit_vector.set(__VALUE_ISSET_ID, value);
+  public void setValueIsSet(boolean __value) {
+    __isset_bit_vector.set(__VALUE_ISSET_ID, __value);
   }
 
-  public long  getReq_value() {
+  public long getReq_value() {
     return this.req_value;
   }
 
@@ -181,33 +218,33 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     return __isset_bit_vector.get(__REQ_VALUE_ISSET_ID);
   }
 
-  public void setReq_valueIsSet(boolean value) {
-    __isset_bit_vector.set(__REQ_VALUE_ISSET_ID, value);
+  public void setReq_valueIsSet(boolean __value) {
+    __isset_bit_vector.set(__REQ_VALUE_ISSET_ID, __value);
   }
 
-  public void setFieldValue(int fieldID, Object value) {
+  public void setFieldValue(int fieldID, Object __value) {
     switch (fieldID) {
     case OPT_VALUE:
-      if (value == null) {
+      if (__value == null) {
         unsetOpt_value();
       } else {
-        setOpt_value((Long)value);
+        setOpt_value((Long)__value);
       }
       break;
 
     case VALUE:
-      if (value == null) {
+      if (__value == null) {
         unsetValue();
       } else {
-        setValue((Long)value);
+        setValue((Long)__value);
       }
       break;
 
     case REQ_VALUE:
-      if (value == null) {
+      if (__value == null) {
         unsetReq_value();
       } else {
-        setReq_value((Long)value);
+        setReq_value((Long)__value);
       }
       break;
 
@@ -232,68 +269,28 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
     }
   }
 
-  // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
-  public boolean isSet(int fieldID) {
-    switch (fieldID) {
-    case OPT_VALUE:
-      return isSetOpt_value();
-    case VALUE:
-      return isSetValue();
-    case REQ_VALUE:
-      return isSetReq_value();
-    default:
-      throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-    }
-  }
-
   @Override
-  public boolean equals(Object that) {
-    if (that == null)
+  public boolean equals(Object _that) {
+    if (_that == null)
       return false;
-    if (that instanceof MyField)
-      return this.equals((MyField)that);
-    return false;
-  }
-
-  public boolean equals(MyField that) {
-    if (that == null)
-      return false;
-    if (this == that)
+    if (this == _that)
       return true;
+    if (!(_that instanceof MyField))
+      return false;
+    MyField that = (MyField)_that;
 
-    boolean this_present_opt_value = true && this.isSetOpt_value();
-    boolean that_present_opt_value = true && that.isSetOpt_value();
-    if (this_present_opt_value || that_present_opt_value) {
-      if (!(this_present_opt_value && that_present_opt_value))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.opt_value, that.opt_value))
-        return false;
-    }
+    if (!TBaseHelper.equalsNobinary(this.isSetOpt_value(), that.isSetOpt_value(), this.opt_value, that.opt_value)) { return false; }
 
-    boolean this_present_value = true;
-    boolean that_present_value = true;
-    if (this_present_value || that_present_value) {
-      if (!(this_present_value && that_present_value))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.value, that.value))
-        return false;
-    }
+    if (!TBaseHelper.equalsNobinary(this.value, that.value)) { return false; }
 
-    boolean this_present_req_value = true;
-    boolean that_present_req_value = true;
-    if (this_present_req_value || that_present_req_value) {
-      if (!(this_present_req_value && that_present_req_value))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.req_value, that.req_value))
-        return false;
-    }
+    if (!TBaseHelper.equalsNobinary(this.req_value, that.req_value)) { return false; }
 
     return true;
   }
 
   @Override
   public int hashCode() {
-    return 0;
+    return Arrays.deepHashCode(new Object[] {opt_value, value, req_value});
   }
 
   @Override
@@ -313,7 +310,7 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(opt_value, other.opt_value);
-    if (lastComparison != 0) {
+    if (lastComparison != 0) { 
       return lastComparison;
     }
     lastComparison = Boolean.valueOf(isSetValue()).compareTo(other.isSetValue());
@@ -321,7 +318,7 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(value, other.value);
-    if (lastComparison != 0) {
+    if (lastComparison != 0) { 
       return lastComparison;
     }
     lastComparison = Boolean.valueOf(isSetReq_value()).compareTo(other.isSetReq_value());
@@ -329,49 +326,49 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(req_value, other.req_value);
-    if (lastComparison != 0) {
+    if (lastComparison != 0) { 
       return lastComparison;
     }
     return 0;
   }
 
   public void read(TProtocol iprot) throws TException {
-    TField field;
+    TField __field;
     iprot.readStructBegin(metaDataMap);
     while (true)
     {
-      field = iprot.readFieldBegin();
-      if (field.type == TType.STOP) { 
+      __field = iprot.readFieldBegin();
+      if (__field.type == TType.STOP) { 
         break;
       }
-      switch (field.id)
+      switch (__field.id)
       {
         case OPT_VALUE:
-          if (field.type == TType.I64) {
+          if (__field.type == TType.I64) {
             this.opt_value = iprot.readI64();
             setOpt_valueIsSet(true);
           } else { 
-            TProtocolUtil.skip(iprot, field.type);
+            TProtocolUtil.skip(iprot, __field.type);
           }
           break;
         case VALUE:
-          if (field.type == TType.I64) {
+          if (__field.type == TType.I64) {
             this.value = iprot.readI64();
             setValueIsSet(true);
           } else { 
-            TProtocolUtil.skip(iprot, field.type);
+            TProtocolUtil.skip(iprot, __field.type);
           }
           break;
         case REQ_VALUE:
-          if (field.type == TType.I64) {
+          if (__field.type == TType.I64) {
             this.req_value = iprot.readI64();
             setReq_valueIsSet(true);
           } else { 
-            TProtocolUtil.skip(iprot, field.type);
+            TProtocolUtil.skip(iprot, __field.type);
           }
           break;
         default:
-          TProtocolUtil.skip(iprot, field.type);
+          TProtocolUtil.skip(iprot, __field.type);
           break;
       }
       iprot.readFieldEnd();
@@ -407,19 +404,14 @@ public class MyField implements TBase, java.io.Serializable, Cloneable, Comparab
 
   @Override
   public String toString() {
-    return toString(DEFAULT_PRETTY_PRINT);
-  }
-
-  @Override
-  public String toString(boolean prettyPrint) {
-    return toString(1, prettyPrint);
+    return toString(1, true);
   }
 
   @Override
   public String toString(int indent, boolean prettyPrint) {
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
-String space = prettyPrint ? " " : "";
+    String space = prettyPrint ? " " : "";
     StringBuilder sb = new StringBuilder("MyField");
     sb.append(space);
     sb.append("(");
@@ -432,7 +424,7 @@ String space = prettyPrint ? " " : "";
       sb.append("opt_value");
       sb.append(space);
       sb.append(":").append(space);
-      sb.append(TBaseHelper.toString(this. getOpt_value(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this.getOpt_value(), indent + 1, prettyPrint));
       first = false;
     }
     if (!first) sb.append("," + newLine);
@@ -440,14 +432,14 @@ String space = prettyPrint ? " " : "";
     sb.append("value");
     sb.append(space);
     sb.append(":").append(space);
-    sb.append(TBaseHelper.toString(this. getValue(), indent + 1, prettyPrint));
+    sb.append(TBaseHelper.toString(this.getValue(), indent + 1, prettyPrint));
     first = false;
     if (!first) sb.append("," + newLine);
     sb.append(indentStr);
     sb.append("req_value");
     sb.append(space);
     sb.append(":").append(space);
-    sb.append(TBaseHelper.toString(this. getReq_value(), indent + 1, prettyPrint));
+    sb.append(TBaseHelper.toString(this.getReq_value(), indent + 1, prettyPrint));
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
     sb.append(")");
@@ -457,7 +449,6 @@ String space = prettyPrint ? " " : "";
   public void validate() throws TException {
     // check for required fields
     // alas, we cannot check 'req_value' because it's a primitive and you chose the non-beans generator.
-    // check that fields of type enum have valid values
   }
 
 }

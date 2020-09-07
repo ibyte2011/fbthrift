@@ -6,11 +6,23 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct fieldA;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_fieldA
+#define APACHE_THRIFT_ACCESSOR_fieldA
+APACHE_THRIFT_DEFINE_ACCESSOR(fieldA);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 
@@ -29,34 +41,87 @@ class ReflectionStruct;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class ReflectionStruct final : private apache::thrift::detail::st::ComparisonOperators<ReflectionStruct> {
+class ReflectionStruct final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = true;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = ReflectionStruct;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   ReflectionStruct() :
       fieldA(5) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   ReflectionStruct(apache::thrift::FragileConstructor, int32_t fieldA__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    fieldA = arg.extract();
-    __isset.fieldA = true;
-  }
 
   ReflectionStruct(ReflectionStruct&&) = default;
 
   ReflectionStruct(const ReflectionStruct&) = default;
 
+
   ReflectionStruct& operator=(ReflectionStruct&&) = default;
 
   ReflectionStruct& operator=(const ReflectionStruct&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t fieldA;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool fieldA;
   } __isset = {};
   bool operator==(const ReflectionStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const ReflectionStruct& __x, const ReflectionStruct& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const ReflectionStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const ReflectionStruct& __x, const ReflectionStruct& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const ReflectionStruct& __x, const ReflectionStruct& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const ReflectionStruct& __x, const ReflectionStruct& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> fieldA_ref() const& {
+    return {this->fieldA, __isset.fieldA};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> fieldA_ref() const&& {
+    return {std::move(this->fieldA), __isset.fieldA};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> fieldA_ref() & {
+    return {this->fieldA, __isset.fieldA};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> fieldA_ref() && {
+    return {std::move(this->fieldA), __isset.fieldA};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_fieldA() const {
     return fieldA;
@@ -64,7 +129,9 @@ class ReflectionStruct final : private apache::thrift::detail::st::ComparisonOpe
 
   int32_t& set_fieldA(int32_t fieldA_) {
     fieldA = fieldA_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.fieldA = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return fieldA;
   }
 
@@ -82,54 +149,14 @@ class ReflectionStruct final : private apache::thrift::detail::st::ComparisonOpe
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< ReflectionStruct >;
+  friend void swap(ReflectionStruct& a, ReflectionStruct& b);
 };
-
-void swap(ReflectionStruct& a, ReflectionStruct& b);
-extern template void ReflectionStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t ReflectionStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void ReflectionStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t ReflectionStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template void ReflectionStruct::readNoXfer<>(apache::thrift::SimpleJSONProtocolReader*);
-extern template uint32_t ReflectionStruct::write<>(apache::thrift::SimpleJSONProtocolWriter*) const;
-extern template uint32_t ReflectionStruct::serializedSize<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
-extern template uint32_t ReflectionStruct::serializedSizeZC<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t ReflectionStruct::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::ReflectionStruct>::clear( ::cpp2::ReflectionStruct* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::ReflectionStruct>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::ReflectionStruct>::write(Protocol* proto,  ::cpp2::ReflectionStruct const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::ReflectionStruct>::read(Protocol* proto,  ::cpp2::ReflectionStruct* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::ReflectionStruct>::serializedSize(Protocol const* proto,  ::cpp2::ReflectionStruct const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::ReflectionStruct>::serializedSizeZC(Protocol const* proto,  ::cpp2::ReflectionStruct const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift

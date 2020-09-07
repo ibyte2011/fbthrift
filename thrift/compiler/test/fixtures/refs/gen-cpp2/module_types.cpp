@@ -4,263 +4,100 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/module_types.h"
-#include "src/gen-cpp2/module_types.tcc"
+#include "thrift/compiler/test/fixtures/refs/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/refs/gen-cpp2/module_types.tcc"
 
-#include <algorithm>
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_types_cpp.h>
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/refs/gen-cpp2/module_data.h"
 
-namespace cpp2 {
 
-const _TypedEnum_EnumMapFactory::ValuesToNamesMapType _TypedEnum_VALUES_TO_NAMES = _TypedEnum_EnumMapFactory::makeValuesToNamesMap();
-const _TypedEnum_EnumMapFactory::NamesToValuesMapType _TypedEnum_NAMES_TO_VALUES = _TypedEnum_EnumMapFactory::makeNamesToValuesMap();
-
-} // cpp2
-namespace std {
-
-} // std
 namespace apache { namespace thrift {
 
-template <> const std::size_t TEnumTraits< ::cpp2::TypedEnum>::size = 2;
-template <> const folly::Range<const  ::cpp2::TypedEnum*> TEnumTraits< ::cpp2::TypedEnum>::values = folly::range( ::cpp2::_TypedEnumEnumDataStorage::values);
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::TypedEnum>::names = folly::range( ::cpp2::_TypedEnumEnumDataStorage::names);
-template <> const char* TEnumTraits< ::cpp2::TypedEnum>::findName( ::cpp2::TypedEnum value) {
-  static auto const map = folly::Indestructible< ::cpp2::_TypedEnum_EnumMapFactory::ValuesToNamesMapType>{ ::cpp2::_TypedEnum_EnumMapFactory::makeValuesToNamesMap()};
-  return findName(*map, value);
+constexpr std::size_t const TEnumTraits<::cpp2::TypedEnum>::size;
+folly::Range<::cpp2::TypedEnum const*> const TEnumTraits<::cpp2::TypedEnum>::values = folly::range(TEnumDataStorage<::cpp2::TypedEnum>::values);
+folly::Range<folly::StringPiece const*> const TEnumTraits<::cpp2::TypedEnum>::names = folly::range(TEnumDataStorage<::cpp2::TypedEnum>::names);
+
+char const* TEnumTraits<::cpp2::TypedEnum>::findName(type value) {
+  using factory = ::cpp2::_TypedEnum_EnumMapFactory;
+  static folly::Indestructible<factory::ValuesToNamesMapType> const map{
+      factory::makeValuesToNamesMap()};
+  auto found = map->find(value);
+  return found == map->end() ? nullptr : found->second;
 }
 
-template <> bool TEnumTraits< ::cpp2::TypedEnum>::findValue(const char* name,  ::cpp2::TypedEnum* outValue) {
-  static auto const map = folly::Indestructible< ::cpp2::_TypedEnum_EnumMapFactory::NamesToValuesMapType>{ ::cpp2::_TypedEnum_EnumMapFactory::makeNamesToValuesMap()};
-  return findValue(*map, name, outValue);
+bool TEnumTraits<::cpp2::TypedEnum>::findValue(char const* name, type* out) {
+  using factory = ::cpp2::_TypedEnum_EnumMapFactory;
+  static folly::Indestructible<factory::NamesToValuesMapType> const map{
+      factory::makeNamesToValuesMap()};
+  auto found = map->find(name);
+  return found == map->end() ? false : (*out = found->second, true);
 }
 
 }} // apache::thrift
+
+namespace cpp2 {
+FOLLY_PUSH_WARNING
+FOLLY_GNU_DISABLE_WARNING("-Wdeprecated-declarations")
+const _TypedEnum_EnumMapFactory::ValuesToNamesMapType _TypedEnum_VALUES_TO_NAMES = _TypedEnum_EnumMapFactory::makeValuesToNamesMap();
+const _TypedEnum_EnumMapFactory::NamesToValuesMapType _TypedEnum_NAMES_TO_VALUES = _TypedEnum_EnumMapFactory::makeNamesToValuesMap();
+FOLLY_POP_WARNING
+
+} // cpp2
 
 namespace apache {
 namespace thrift {
 namespace detail {
 
-void TccStructTraits< ::cpp2::MyUnion>::translateFieldName(
+void TccStructTraits<::cpp2::MyUnion>::translateFieldName(
     FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
     FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "anInteger") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_I32;
-  }
-  else if (_fname == "aString") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRING;
-  }
-}
-void TccStructTraits< ::cpp2::MyField>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "opt_value") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_I64;
-  }
-  else if (_fname == "value") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_I64;
-  }
-  else if (_fname == "req_value") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_I64;
-  }
-}
-void TccStructTraits< ::cpp2::MyStruct>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "opt_ref") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "ref") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_ref") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithUnion>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "u") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "aDouble") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_DOUBLE;
-  }
-  else if (_fname == "f") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::RecursiveStruct>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "mes") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_LIST;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithContainers>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "list_ref") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_LIST;
-  }
-  else if (_fname == "set_ref") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_SET;
-  }
-  else if (_fname == "map_ref") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_MAP;
-  }
-  else if (_fname == "list_ref_unique") {
-    fid = 4;
-    _ftype = apache::thrift::protocol::T_LIST;
-  }
-  else if (_fname == "set_ref_shared") {
-    fid = 5;
-    _ftype = apache::thrift::protocol::T_SET;
-  }
-  else if (_fname == "list_ref_shared_const") {
-    fid = 6;
-    _ftype = apache::thrift::protocol::T_LIST;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithSharedConst>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "opt_shared_const") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "shared_const") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_shared_const") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::Empty>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-}
-void TccStructTraits< ::cpp2::StructWithRef>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "def_field") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "opt_field") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_field") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithRefTypeUnique>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "def_field") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "opt_field") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_field") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithRefTypeShared>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "def_field") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "opt_field") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_field") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithRefTypeSharedConst>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "def_field") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "opt_field") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "req_field") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-}
-void TccStructTraits< ::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "def_field") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 2;
+  static constexpr folly::StringPiece _names[] = {
+    "anInteger",
+    "aString",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+  };
+  static constexpr TType _types[] = {
+    TType::T_I32,
+    TType::T_STRING,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
 }
 
 } // namespace detail
 } // namespace thrift
 } // namespace apache
 
+namespace apache { namespace thrift {
+
+constexpr std::size_t const TEnumTraits<::cpp2::MyUnion::Type>::size;
+folly::Range<::cpp2::MyUnion::Type const*> const TEnumTraits<::cpp2::MyUnion::Type>::values = folly::range(TEnumDataStorage<::cpp2::MyUnion::Type>::values);
+folly::Range<folly::StringPiece const*> const TEnumTraits<::cpp2::MyUnion::Type>::names = folly::range(TEnumDataStorage<::cpp2::MyUnion::Type>::names);
+
+char const* TEnumTraits<::cpp2::MyUnion::Type>::findName(type value) {
+  using factory = detail::TEnumMapFactory<::cpp2::MyUnion::Type>;
+  static folly::Indestructible<factory::ValuesToNamesMapType> const map{
+      factory::makeValuesToNamesMap()};
+  auto found = map->find(value);
+  return found == map->end() ? nullptr : found->second;
+}
+
+bool TEnumTraits<::cpp2::MyUnion::Type>::findValue(char const* name, type* out) {
+  using factory = detail::TEnumMapFactory<::cpp2::MyUnion::Type>;
+  static folly::Indestructible<factory::NamesToValuesMapType> const map{
+      factory::makeNamesToValuesMap()};
+  auto found = map->find(name);
+  return found == map->end() ? false : (*out = found->second, true);
+}
+}} // apache::thrift
 namespace cpp2 {
 
 void MyUnion::__clear() {
@@ -336,9 +173,46 @@ template uint32_t MyUnion::write<>(apache::thrift::CompactProtocolWriter*) const
 template uint32_t MyUnion::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t MyUnion::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::MyField>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "opt_value",
+    "value",
+    "req_value",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_I64,
+    TType::T_I64,
+    TType::T_I64,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 MyField::MyField(apache::thrift::FragileConstructor, int64_t opt_value__arg, int64_t value__arg, int64_t req_value__arg) :
     opt_value(std::move(opt_value__arg)),
     value(std::move(value__arg)),
@@ -346,26 +220,23 @@ MyField::MyField(apache::thrift::FragileConstructor, int64_t opt_value__arg, int
   __isset.opt_value = true;
   __isset.value = true;
 }
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void MyField::__clear() {
   // clear all fields
   opt_value = 0;
   value = 0;
   req_value = 0;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset = {};
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 bool MyField::operator==(const MyField& rhs) const {
   (void)rhs;
   auto& lhs = *this;
   (void)lhs;
-  if (lhs.__isset.opt_value != rhs.__isset.opt_value) {
+  if (lhs.opt_value_ref() != rhs.opt_value_ref()) {
     return false;
-  }
-  if (lhs.__isset.opt_value) {
-    if (!(lhs.opt_value == rhs.opt_value)) {
-      return false;
-    }
   }
   if (!(lhs.value == rhs.value)) {
     return false;
@@ -380,13 +251,8 @@ bool MyField::operator<(const MyField& rhs) const {
   (void)rhs;
   auto& lhs = *this;
   (void)lhs;
-  if (lhs.__isset.opt_value != rhs.__isset.opt_value) {
-    return lhs.__isset.opt_value < rhs.__isset.opt_value;
-  }
-  if (lhs.__isset.opt_value) {
-    if (!(lhs.opt_value == rhs.opt_value)) {
-      return lhs.opt_value < rhs.opt_value;
-    }
+  if (lhs.opt_value_ref() != rhs.opt_value_ref()) {
+    return lhs.opt_value_ref() < rhs.opt_value_ref();
   }
   if (!(lhs.value == rhs.value)) {
     return lhs.value < rhs.value;
@@ -400,10 +266,12 @@ bool MyField::operator<(const MyField& rhs) const {
 
 void swap(MyField& a, MyField& b) {
   using ::std::swap;
-  swap(a.opt_value, b.opt_value);
-  swap(a.value, b.value);
-  swap(a.req_value, b.req_value);
+  swap(a.opt_value_ref().value_unchecked(), b.opt_value_ref().value_unchecked());
+  swap(a.value_ref().value(), b.value_ref().value());
+  swap(a.req_value_ref().value(), b.req_value_ref().value());
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   swap(a.__isset, b.__isset);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 template void MyField::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
@@ -415,7 +283,43 @@ template uint32_t MyField::write<>(apache::thrift::CompactProtocolWriter*) const
 template uint32_t MyField::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t MyField::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::MyStruct>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "opt_ref",
+    "ref",
+    "req_ref",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 MyStruct::MyStruct(const MyStruct& srcObj) {
@@ -430,11 +334,12 @@ MyStruct& MyStruct::operator=(const MyStruct& src) {
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 MyStruct::MyStruct(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::MyField> opt_ref__arg, std::unique_ptr< ::cpp2::MyField> ref__arg, std::unique_ptr< ::cpp2::MyField> req_ref__arg) :
     opt_ref(std::move(opt_ref__arg)),
     ref(std::move(ref__arg)),
     req_ref(std::move(req_ref__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void MyStruct::__clear() {
   // clear all fields
   opt_ref.reset();
@@ -521,15 +426,91 @@ template uint32_t MyStruct::write<>(apache::thrift::CompactProtocolWriter*) cons
 template uint32_t MyStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithUnion>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "u",
+    "aDouble",
+    "f",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_DOUBLE,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 StructWithUnion::StructWithUnion(const StructWithUnion& srcObj) {
   if (srcObj.u) u.reset(new  ::cpp2::MyUnion(*srcObj.u));
   aDouble = srcObj.aDouble;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset.aDouble = srcObj.__isset.aDouble;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   f = srcObj.f;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset.f = srcObj.__isset.f;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 StructWithUnion& StructWithUnion::operator=(const StructWithUnion& src) {
@@ -538,6 +519,7 @@ StructWithUnion& StructWithUnion::operator=(const StructWithUnion& src) {
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithUnion::StructWithUnion(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::MyUnion> u__arg, double aDouble__arg,  ::cpp2::MyField f__arg) :
     u(std::move(u__arg)),
     aDouble(std::move(aDouble__arg)),
@@ -545,13 +527,15 @@ StructWithUnion::StructWithUnion(apache::thrift::FragileConstructor, std::unique
   __isset.aDouble = true;
   __isset.f = true;
 }
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithUnion::__clear() {
   // clear all fields
   if (u) ::apache::thrift::Cpp2Ops<  ::cpp2::MyUnion>::clear(u.get());
   aDouble = 0;
   ::apache::thrift::Cpp2Ops<  ::cpp2::MyField>::clear(&f);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset = {};
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 bool StructWithUnion::operator==(const StructWithUnion& rhs) const {
@@ -608,9 +592,11 @@ const  ::cpp2::MyField& StructWithUnion::get_f() const& {
 void swap(StructWithUnion& a, StructWithUnion& b) {
   using ::std::swap;
   swap(a.u, b.u);
-  swap(a.aDouble, b.aDouble);
-  swap(a.f, b.f);
+  swap(a.aDouble_ref().value(), b.aDouble_ref().value());
+  swap(a.f_ref().value(), b.f_ref().value());
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   swap(a.__isset, b.__isset);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 template void StructWithUnion::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
@@ -622,31 +608,83 @@ template uint32_t StructWithUnion::write<>(apache::thrift::CompactProtocolWriter
 template uint32_t StructWithUnion::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithUnion::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithUnion,
+        ::apache::thrift::type_class::variant,
+         ::cpp2::MyUnion>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithUnion,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithUnion,
+        ::apache::thrift::type_class::variant,
+         ::cpp2::MyUnion>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithUnion,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::RecursiveStruct>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 1;
+  static constexpr folly::StringPiece _names[] = {
+    "mes",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+  };
+  static constexpr TType _types[] = {
+    TType::T_LIST,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
-RecursiveStruct::RecursiveStruct(apache::thrift::FragileConstructor, std::vector< ::cpp2::RecursiveStruct> mes__arg) :
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+RecursiveStruct::RecursiveStruct(apache::thrift::FragileConstructor, ::std::vector< ::cpp2::RecursiveStruct> mes__arg) :
     mes(std::move(mes__arg)) {
   __isset.mes = true;
 }
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void RecursiveStruct::__clear() {
   // clear all fields
   mes.clear();
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset = {};
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 bool RecursiveStruct::operator==(const RecursiveStruct& rhs) const {
   (void)rhs;
   auto& lhs = *this;
   (void)lhs;
-  if (lhs.__isset.mes != rhs.__isset.mes) {
+  if (lhs.mes_ref() != rhs.mes_ref()) {
     return false;
-  }
-  if (lhs.__isset.mes) {
-    if (!(lhs.mes == rhs.mes)) {
-      return false;
-    }
   }
   return true;
 }
@@ -655,30 +693,27 @@ bool RecursiveStruct::operator<(const RecursiveStruct& rhs) const {
   (void)rhs;
   auto& lhs = *this;
   (void)lhs;
-  if (lhs.__isset.mes != rhs.__isset.mes) {
-    return lhs.__isset.mes < rhs.__isset.mes;
-  }
-  if (lhs.__isset.mes) {
-    if (!(lhs.mes == rhs.mes)) {
-      return lhs.mes < rhs.mes;
-    }
+  if (lhs.mes_ref() != rhs.mes_ref()) {
+    return lhs.mes_ref() < rhs.mes_ref();
   }
   return false;
 }
 
-const std::vector< ::cpp2::RecursiveStruct>* RecursiveStruct::get_mes() const& {
-  return __isset.mes ? std::addressof(mes) : nullptr;
+const ::std::vector< ::cpp2::RecursiveStruct>* RecursiveStruct::get_mes() const& {
+  return mes_ref().has_value() ? std::addressof(mes) : nullptr;
 }
 
-std::vector< ::cpp2::RecursiveStruct>* RecursiveStruct::get_mes() & {
-  return __isset.mes ? std::addressof(mes) : nullptr;
+::std::vector< ::cpp2::RecursiveStruct>* RecursiveStruct::get_mes() & {
+  return mes_ref().has_value() ? std::addressof(mes) : nullptr;
 }
 
 
 void swap(RecursiveStruct& a, RecursiveStruct& b) {
   using ::std::swap;
-  swap(a.mes, b.mes);
+  swap(a.mes_ref().value_unchecked(), b.mes_ref().value_unchecked());
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   swap(a.__isset, b.__isset);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 template void RecursiveStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
@@ -690,14 +725,59 @@ template uint32_t RecursiveStruct::write<>(apache::thrift::CompactProtocolWriter
 template uint32_t RecursiveStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t RecursiveStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithContainers>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 6;
+  static constexpr folly::StringPiece _names[] = {
+    "list_ref",
+    "set_ref",
+    "map_ref",
+    "list_ref_unique",
+    "set_ref_shared",
+    "list_ref_shared_const",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+  };
+  static constexpr TType _types[] = {
+    TType::T_LIST,
+    TType::T_SET,
+    TType::T_MAP,
+    TType::T_LIST,
+    TType::T_SET,
+    TType::T_LIST,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 StructWithContainers::StructWithContainers(const StructWithContainers& srcObj) {
-  if (srcObj.list_ref) list_ref.reset(new std::vector<int32_t>(*srcObj.list_ref));
-  if (srcObj.set_ref) set_ref.reset(new std::set<int32_t>(*srcObj.set_ref));
-  if (srcObj.map_ref) map_ref.reset(new std::map<int32_t, int32_t>(*srcObj.map_ref));
-  if (srcObj.list_ref_unique) list_ref_unique.reset(new std::vector<int32_t>(*srcObj.list_ref_unique));
+  if (srcObj.list_ref) list_ref.reset(new ::std::vector<int32_t>(*srcObj.list_ref));
+  if (srcObj.set_ref) set_ref.reset(new ::std::set<int32_t>(*srcObj.set_ref));
+  if (srcObj.map_ref) map_ref.reset(new ::std::map<int32_t, int32_t>(*srcObj.map_ref));
+  if (srcObj.list_ref_unique) list_ref_unique.reset(new ::std::vector<int32_t>(*srcObj.list_ref_unique));
   set_ref_shared = srcObj.set_ref_shared;
   list_ref_shared_const = srcObj.list_ref_shared_const;
 }
@@ -708,25 +788,28 @@ StructWithContainers& StructWithContainers::operator=(const StructWithContainers
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithContainers::StructWithContainers() :
-      list_ref(std::make_unique<std::vector<int32_t>>()),
-      set_ref(std::make_unique<std::set<int32_t>>()),
-      map_ref(std::make_unique<std::map<int32_t, int32_t>>()),
-      list_ref_unique(std::make_unique<std::vector<int32_t>>()),
-      set_ref_shared(std::make_shared<std::set<int32_t>>()),
-      list_ref_shared_const(std::make_shared<std::vector<int32_t>>()) {}
+      list_ref(std::make_unique<::std::vector<int32_t>>()),
+      set_ref(std::make_unique<::std::set<int32_t>>()),
+      map_ref(std::make_unique<::std::map<int32_t, int32_t>>()),
+      list_ref_unique(std::make_unique<::std::vector<int32_t>>()),
+      set_ref_shared(std::make_shared<::std::set<int32_t>>()),
+      list_ref_shared_const(std::make_shared<::std::vector<int32_t>>()) {}
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
 
 StructWithContainers::~StructWithContainers() {}
 
-StructWithContainers::StructWithContainers(apache::thrift::FragileConstructor, std::unique_ptr<std::vector<int32_t>> list_ref__arg, std::unique_ptr<std::set<int32_t>> set_ref__arg, std::unique_ptr<std::map<int32_t, int32_t>> map_ref__arg, std::unique_ptr<std::vector<int32_t>> list_ref_unique__arg, std::shared_ptr<std::set<int32_t>> set_ref_shared__arg, std::shared_ptr<const std::vector<int32_t>> list_ref_shared_const__arg) :
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+StructWithContainers::StructWithContainers(apache::thrift::FragileConstructor, std::unique_ptr<::std::vector<int32_t>> list_ref__arg, std::unique_ptr<::std::set<int32_t>> set_ref__arg, std::unique_ptr<::std::map<int32_t, int32_t>> map_ref__arg, std::unique_ptr<::std::vector<int32_t>> list_ref_unique__arg, std::shared_ptr<::std::set<int32_t>> set_ref_shared__arg, std::shared_ptr<const ::std::vector<int32_t>> list_ref_shared_const__arg) :
     list_ref(std::move(list_ref__arg)),
     set_ref(std::move(set_ref__arg)),
     map_ref(std::move(map_ref__arg)),
     list_ref_unique(std::move(list_ref_unique__arg)),
     set_ref_shared(std::move(set_ref_shared__arg)),
     list_ref_shared_const(std::move(list_ref_shared_const__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithContainers::__clear() {
   // clear all fields
   list_ref.reset(new typename decltype(list_ref)::element_type());
@@ -867,14 +950,51 @@ template uint32_t StructWithContainers::write<>(apache::thrift::CompactProtocolW
 template uint32_t StructWithContainers::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithContainers::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithSharedConst>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "opt_shared_const",
+    "shared_const",
+    "req_shared_const",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithSharedConst::StructWithSharedConst(apache::thrift::FragileConstructor, std::shared_ptr<const  ::cpp2::MyField> opt_shared_const__arg, std::shared_ptr<const  ::cpp2::MyField> shared_const__arg, std::shared_ptr<const  ::cpp2::MyField> req_shared_const__arg) :
     opt_shared_const(std::move(opt_shared_const__arg)),
     shared_const(std::move(shared_const__arg)),
     req_shared_const(std::move(req_shared_const__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithSharedConst::__clear() {
   // clear all fields
   opt_shared_const.reset();
@@ -961,11 +1081,64 @@ template uint32_t StructWithSharedConst::write<>(apache::thrift::CompactProtocol
 template uint32_t StructWithSharedConst::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithSharedConst::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::MyField>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::Empty>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 Empty::Empty(apache::thrift::FragileConstructor) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void Empty::__clear() {
   // clear all fields
 }
@@ -1000,7 +1173,43 @@ template uint32_t Empty::write<>(apache::thrift::CompactProtocolWriter*) const;
 template uint32_t Empty::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t Empty::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithRef>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "def_field",
+    "opt_field",
+    "req_field",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 StructWithRef::StructWithRef(const StructWithRef& srcObj) {
@@ -1015,11 +1224,12 @@ StructWithRef& StructWithRef::operator=(const StructWithRef& src) {
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithRef::StructWithRef(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg, std::unique_ptr< ::cpp2::Empty> opt_field__arg, std::unique_ptr< ::cpp2::Empty> req_field__arg) :
     def_field(std::move(def_field__arg)),
     opt_field(std::move(opt_field__arg)),
     req_field(std::move(req_field__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithRef::__clear() {
   // clear all fields
 }
@@ -1103,7 +1313,79 @@ template uint32_t StructWithRef::write<>(apache::thrift::CompactProtocolWriter*)
 template uint32_t StructWithRef::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithRef::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRef,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithRefTypeUnique>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "def_field",
+    "opt_field",
+    "req_field",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 StructWithRefTypeUnique::StructWithRefTypeUnique(const StructWithRefTypeUnique& srcObj) {
@@ -1118,11 +1400,12 @@ StructWithRefTypeUnique& StructWithRefTypeUnique::operator=(const StructWithRefT
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithRefTypeUnique::StructWithRefTypeUnique(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg, std::unique_ptr< ::cpp2::Empty> opt_field__arg, std::unique_ptr< ::cpp2::Empty> req_field__arg) :
     def_field(std::move(def_field__arg)),
     opt_field(std::move(opt_field__arg)),
     req_field(std::move(req_field__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithRefTypeUnique::__clear() {
   // clear all fields
 }
@@ -1206,14 +1489,87 @@ template uint32_t StructWithRefTypeUnique::write<>(apache::thrift::CompactProtoc
 template uint32_t StructWithRefTypeUnique::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithRefTypeUnique::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeUnique,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithRefTypeShared>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "def_field",
+    "opt_field",
+    "req_field",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithRefTypeShared::StructWithRefTypeShared(apache::thrift::FragileConstructor, std::shared_ptr< ::cpp2::Empty> def_field__arg, std::shared_ptr< ::cpp2::Empty> opt_field__arg, std::shared_ptr< ::cpp2::Empty> req_field__arg) :
     def_field(std::move(def_field__arg)),
     opt_field(std::move(opt_field__arg)),
     req_field(std::move(req_field__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithRefTypeShared::__clear() {
   // clear all fields
 }
@@ -1297,14 +1653,87 @@ template uint32_t StructWithRefTypeShared::write<>(apache::thrift::CompactProtoc
 template uint32_t StructWithRefTypeShared::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithRefTypeShared::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeShared,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithRefTypeSharedConst>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "def_field",
+    "opt_field",
+    "req_field",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithRefTypeSharedConst::StructWithRefTypeSharedConst(apache::thrift::FragileConstructor, std::shared_ptr<const  ::cpp2::Empty> def_field__arg, std::shared_ptr<const  ::cpp2::Empty> opt_field__arg, std::shared_ptr<const  ::cpp2::Empty> req_field__arg) :
     def_field(std::move(def_field__arg)),
     opt_field(std::move(opt_field__arg)),
     req_field(std::move(req_field__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithRefTypeSharedConst::__clear() {
   // clear all fields
 }
@@ -1388,7 +1817,73 @@ template uint32_t StructWithRefTypeSharedConst::write<>(apache::thrift::CompactP
 template uint32_t StructWithRefTypeSharedConst::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithRefTypeSharedConst::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefTypeSharedConst,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::StructWithRefAndAnnotCppNoexceptMoveCtor>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 1;
+  static constexpr folly::StringPiece _names[] = {
+    "def_field",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
 namespace cpp2 {
 
 StructWithRefAndAnnotCppNoexceptMoveCtor::StructWithRefAndAnnotCppNoexceptMoveCtor(const StructWithRefAndAnnotCppNoexceptMoveCtor& srcObj) {
@@ -1401,9 +1896,10 @@ StructWithRefAndAnnotCppNoexceptMoveCtor& StructWithRefAndAnnotCppNoexceptMoveCt
   return *this;
 }
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 StructWithRefAndAnnotCppNoexceptMoveCtor::StructWithRefAndAnnotCppNoexceptMoveCtor(apache::thrift::FragileConstructor, std::unique_ptr< ::cpp2::Empty> def_field__arg) :
     def_field(std::move(def_field__arg)) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void StructWithRefAndAnnotCppNoexceptMoveCtor::__clear() {
   // clear all fields
 }
@@ -1452,5 +1948,19 @@ template void StructWithRefAndAnnotCppNoexceptMoveCtor::readNoXfer<>(apache::thr
 template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::write<>(apache::thrift::CompactProtocolWriter*) const;
 template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t StructWithRefAndAnnotCppNoexceptMoveCtor::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        StructWithRefAndAnnotCppNoexceptMoveCtor,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        StructWithRefAndAnnotCppNoexceptMoveCtor,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Empty>,
+    "inconsistent use of nimble option");
 
 } // cpp2

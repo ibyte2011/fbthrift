@@ -1,7 +1,26 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace cpp2 py3.simple
 
+typedef binary (cpp2.type = "std::unique_ptr<folly::IOBuf>") IOBufPtr
+typedef binary (cpp2.type = "folly::IOBuf") IOBuf
+
 enum AnEnum {
-  None = 0 (py3.rename = "NOTSET"),
+  None = 0 (py3.name = "NOTSET"),
   ONE = 1,
   TWO = 2,
   THREE = 3,
@@ -17,6 +36,10 @@ enum Flags {
 
 exception SimpleException {
   1: i16 err_code
+}
+
+struct OptionalRefStruct {
+  1: optional IOBufPtr optional_blob
 }
 
 struct SimpleStruct {
@@ -38,10 +61,18 @@ struct ComplexStruct {
   4: string name
   5: AnEnum an_enum
   6: binary some_bytes
-  7: string from (py3.rename = "sender")
+  7: string from (py3.name = "sender")
   8: string cdef
   9: foo_bar bytes_with_cpp_type
 }
+
+union BinaryUnion {
+  1: IOBuf iobuf_val
+} (cpp2.noncomparable)
+
+struct BinaryUnionStruct {
+  1: BinaryUnion u
+} (cpp2.noncomparable)
 
 const bool A_BOOL = true
 const byte A_BYTE = 8
@@ -120,11 +151,12 @@ service SimpleService {
   binary retrieve_binary(1: binary something)
   set<binary> contain_binary(1: list<binary> binaries)
   list<AnEnum> contain_enum(1:list<AnEnum> the_enum)
+  BinaryUnionStruct get_binary_union_struct(1:BinaryUnion u)
 }
 
 service DerivedService extends SimpleService {
   i32 get_six()
-}
+} (foo='"""', bar)
 
 service RederivedService extends DerivedService {
   i32 get_seven()

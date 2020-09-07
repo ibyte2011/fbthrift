@@ -5,36 +5,38 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/constants/gen-cpp2/module_data.h"
 
-namespace cpp2 {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _EmptyEnumEnumDataStorage::size;
-constexpr const std::array<EmptyEnum, 0> _EmptyEnumEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 0> _EmptyEnumEnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-} // cpp2
-namespace apache { namespace thrift {
 
-}} // apache::thrift
-namespace cpp2 {
+constexpr const std::size_t TEnumDataStorage<::cpp2::EmptyEnum>::size;
+constexpr const std::array<::cpp2::EmptyEnum, 0> TEnumDataStorage<::cpp2::EmptyEnum>::values;
+constexpr const std::array<folly::StringPiece, 0> TEnumDataStorage<::cpp2::EmptyEnum>::names;
 
-constexpr const std::size_t _CityEnumDataStorage::size;
-constexpr const std::array<City, 4> _CityEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 4> _CityEnumDataStorage::names;
 
-} // cpp2
-namespace apache { namespace thrift {
+constexpr const std::size_t TEnumDataStorage<::cpp2::City>::size;
+constexpr const std::array<::cpp2::City, 4> TEnumDataStorage<::cpp2::City>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::cpp2::City>::names;
 
-}} // apache::thrift
-namespace cpp2 {
 
-constexpr const std::size_t _CompanyEnumDataStorage::size;
-constexpr const std::array<Company, 4> _CompanyEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 4> _CompanyEnumDataStorage::names;
+constexpr const std::size_t TEnumDataStorage<::cpp2::Company>::size;
+constexpr const std::array<::cpp2::Company, 4> TEnumDataStorage<::cpp2::Company>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::cpp2::Company>::names;
 
-} // cpp2
-namespace apache { namespace thrift {
 
-}} // apache::thrift
+constexpr const std::size_t TEnumDataStorage<::cpp2::union1::Type>::size;
+constexpr const std::array<::cpp2::union1::Type, 2> TEnumDataStorage<::cpp2::union1::Type>::values;
+constexpr const std::array<folly::StringPiece, 2> TEnumDataStorage<::cpp2::union1::Type>::names;
 
+
+constexpr const std::size_t TEnumDataStorage<::cpp2::union2::Type>::size;
+constexpr const std::array<::cpp2::union2::Type, 4> TEnumDataStorage<::cpp2::union2::Type>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::cpp2::union2::Type>::names;
+
+
+} // namespace thrift
+} // namespace apache

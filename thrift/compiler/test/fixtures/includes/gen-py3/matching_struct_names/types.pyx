@@ -4,50 +4,56 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 cimport module.types as _module_types
 import module.types as _module_types
 
+cimport matching_struct_names.types_reflection as _types_reflection
 
-cdef cMyStruct _MyStruct_defaults = cMyStruct()
 
+
+@__cython.auto_pickle(False)
 cdef class MyStruct(thrift.py3.types.Struct):
 
     def __init__(
         MyStruct self, *,
         str field=None
     ):
-        self._cpp_obj = move(MyStruct._make_instance(
+        self._cpp_obj = __fbthrift_move(MyStruct._make_instance(
+          NULL,
           NULL,
           field,
         ))
@@ -56,28 +62,38 @@ cdef class MyStruct(thrift.py3.types.Struct):
         MyStruct self,
         field=__NOTSET
     ):
-        changes = any((
-            field is not __NOTSET,
-        ))
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[1] __isNOTSET  # so make_instance is typed
 
-        if not changes:
+        __fbthrift_changed = False
+        if field is ___NOTSET:
+            __isNOTSET[0] = True
+            field = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not field is not __NOTSET:
+        if field is not None:
             if not isinstance(field, str):
                 raise TypeError(f'field is not a { str !r}.')
 
-        inst = <MyStruct>MyStruct.__new__(MyStruct)
-        inst._cpp_obj = move(MyStruct._make_instance(
+        __fbthrift_inst = <MyStruct>MyStruct.__new__(MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(MyStruct._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           field,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cMyStruct] _make_instance(
         cMyStruct* base_instance,
-        object field
+        bint* __isNOTSET,
+        str field 
     ) except *:
         cdef unique_ptr[cMyStruct] c_inst
         if base_instance:
@@ -87,19 +103,23 @@ cdef class MyStruct(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if field is None:
-                deref(c_inst).field = _MyStruct_defaults.field
+            if not __isNOTSET[0] and field is None:
+                deref(c_inst).field_ref().assign(default_inst[cMyStruct]().field_ref().value())
                 deref(c_inst).__isset.field = False
                 pass
-            elif field is __NOTSET:
-                field = None
 
         if field is not None:
-            deref(c_inst).field = field.encode('UTF-8')
+            deref(c_inst).field_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(field.encode('utf-8'))))
             deref(c_inst).__isset.field = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("MyStruct", {
+          "field": cpp_obj.field_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'field', self.field
@@ -109,14 +129,14 @@ cdef class MyStruct(thrift.py3.types.Struct):
 
     @staticmethod
     cdef create(shared_ptr[cMyStruct] cpp_obj):
-        inst = <MyStruct>MyStruct.__new__(MyStruct)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <MyStruct>MyStruct.__new__(MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def field(self):
 
-        return (<bytes>deref(self._cpp_obj).field).decode('UTF-8')
+        return (<bytes>deref(self._cpp_obj).field_ref().value()).decode('UTF-8')
 
 
     def __hash__(MyStruct self):
@@ -132,7 +152,7 @@ cdef class MyStruct(thrift.py3.types.Struct):
         cdef shared_ptr[cMyStruct] cpp_obj = make_shared[cMyStruct](
             deref(self._cpp_obj)
         )
-        return MyStruct.create(move_shared(cpp_obj))
+        return MyStruct.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -146,64 +166,43 @@ cdef class MyStruct(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cMyStruct cself = deref((<MyStruct>self)._cpp_obj)
-        cdef cMyStruct cother = deref((<MyStruct>other)._cpp_obj)
+        cdef cMyStruct* cself = (<MyStruct>self)._cpp_obj.get()
+        cdef cMyStruct* cother = (<MyStruct>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(MyStruct self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cMyStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cMyStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cMyStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cMyStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cMyStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__MyStruct()
 
-    cdef uint32_t _deserialize(MyStruct self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(MyStruct self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cMyStruct](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(MyStruct self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cMyStruct]()
-        cdef cMyStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cMyStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cMyStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cMyStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cMyStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cMyStruct](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
         return (deserialize, (MyStruct, serialize(self)))
 
 
-cdef cCombo _Combo_defaults = cCombo()
-
+@__cython.auto_pickle(False)
 cdef class Combo(thrift.py3.types.Struct):
 
     def __init__(
@@ -213,7 +212,8 @@ cdef class Combo(thrift.py3.types.Struct):
         ourMyStructList=None,
         listOfTheirMyStructList=None
     ):
-        self._cpp_obj = move(Combo._make_instance(
+        self._cpp_obj = __fbthrift_move(Combo._make_instance(
+          NULL,
           NULL,
           listOfOurMyStructLists,
           theirMyStructList,
@@ -228,36 +228,61 @@ cdef class Combo(thrift.py3.types.Struct):
         ourMyStructList=__NOTSET,
         listOfTheirMyStructList=__NOTSET
     ):
-        changes = any((
-            listOfOurMyStructLists is not __NOTSET,
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[4] __isNOTSET  # so make_instance is typed
 
-            theirMyStructList is not __NOTSET,
+        __fbthrift_changed = False
+        if listOfOurMyStructLists is ___NOTSET:
+            __isNOTSET[0] = True
+            listOfOurMyStructLists = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
 
-            ourMyStructList is not __NOTSET,
+        if theirMyStructList is ___NOTSET:
+            __isNOTSET[1] = True
+            theirMyStructList = None
+        else:
+            __isNOTSET[1] = False
+            __fbthrift_changed = True
 
-            listOfTheirMyStructList is not __NOTSET,
-        ))
+        if ourMyStructList is ___NOTSET:
+            __isNOTSET[2] = True
+            ourMyStructList = None
+        else:
+            __isNOTSET[2] = False
+            __fbthrift_changed = True
 
-        if not changes:
+        if listOfTheirMyStructList is ___NOTSET:
+            __isNOTSET[3] = True
+            listOfTheirMyStructList = None
+        else:
+            __isNOTSET[3] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        inst = <Combo>Combo.__new__(Combo)
-        inst._cpp_obj = move(Combo._make_instance(
+        __fbthrift_inst = <Combo>Combo.__new__(Combo)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(Combo._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           listOfOurMyStructLists,
           theirMyStructList,
           ourMyStructList,
           listOfTheirMyStructList,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cCombo] _make_instance(
         cCombo* base_instance,
-        object listOfOurMyStructLists,
-        object theirMyStructList,
-        object ourMyStructList,
-        object listOfTheirMyStructList
+        bint* __isNOTSET,
+        object listOfOurMyStructLists ,
+        object theirMyStructList ,
+        object ourMyStructList ,
+        object listOfTheirMyStructList 
     ) except *:
         cdef unique_ptr[cCombo] c_inst
         if base_instance:
@@ -267,49 +292,50 @@ cdef class Combo(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if listOfOurMyStructLists is None:
-                deref(c_inst).listOfOurMyStructLists = _Combo_defaults.listOfOurMyStructLists
+            if not __isNOTSET[0] and listOfOurMyStructLists is None:
+                deref(c_inst).listOfOurMyStructLists_ref().assign(default_inst[cCombo]().listOfOurMyStructLists_ref().value())
                 deref(c_inst).__isset.listOfOurMyStructLists = False
                 pass
-            elif listOfOurMyStructLists is __NOTSET:
-                listOfOurMyStructLists = None
 
-            if theirMyStructList is None:
-                deref(c_inst).theirMyStructList = _Combo_defaults.theirMyStructList
+            if not __isNOTSET[1] and theirMyStructList is None:
+                deref(c_inst).theirMyStructList_ref().assign(default_inst[cCombo]().theirMyStructList_ref().value())
                 deref(c_inst).__isset.theirMyStructList = False
                 pass
-            elif theirMyStructList is __NOTSET:
-                theirMyStructList = None
 
-            if ourMyStructList is None:
-                deref(c_inst).ourMyStructList = _Combo_defaults.ourMyStructList
+            if not __isNOTSET[2] and ourMyStructList is None:
+                deref(c_inst).ourMyStructList_ref().assign(default_inst[cCombo]().ourMyStructList_ref().value())
                 deref(c_inst).__isset.ourMyStructList = False
                 pass
-            elif ourMyStructList is __NOTSET:
-                ourMyStructList = None
 
-            if listOfTheirMyStructList is None:
-                deref(c_inst).listOfTheirMyStructList = _Combo_defaults.listOfTheirMyStructList
+            if not __isNOTSET[3] and listOfTheirMyStructList is None:
+                deref(c_inst).listOfTheirMyStructList_ref().assign(default_inst[cCombo]().listOfTheirMyStructList_ref().value())
                 deref(c_inst).__isset.listOfTheirMyStructList = False
                 pass
-            elif listOfTheirMyStructList is __NOTSET:
-                listOfTheirMyStructList = None
 
         if listOfOurMyStructLists is not None:
-            deref(c_inst).listOfOurMyStructLists = deref(List__List__MyStruct(listOfOurMyStructLists)._cpp_obj)
+            deref(c_inst).listOfOurMyStructLists_ref().assign(deref(List__List__MyStruct(listOfOurMyStructLists)._cpp_obj))
             deref(c_inst).__isset.listOfOurMyStructLists = True
         if theirMyStructList is not None:
-            deref(c_inst).theirMyStructList = deref(List__module_MyStruct(theirMyStructList)._cpp_obj)
+            deref(c_inst).theirMyStructList_ref().assign(deref(List__module_MyStruct(theirMyStructList)._cpp_obj))
             deref(c_inst).__isset.theirMyStructList = True
         if ourMyStructList is not None:
-            deref(c_inst).ourMyStructList = deref(List__MyStruct(ourMyStructList)._cpp_obj)
+            deref(c_inst).ourMyStructList_ref().assign(deref(List__MyStruct(ourMyStructList)._cpp_obj))
             deref(c_inst).__isset.ourMyStructList = True
         if listOfTheirMyStructList is not None:
-            deref(c_inst).listOfTheirMyStructList = deref(List__List__module_MyStruct(listOfTheirMyStructList)._cpp_obj)
+            deref(c_inst).listOfTheirMyStructList_ref().assign(deref(List__List__module_MyStruct(listOfTheirMyStructList)._cpp_obj))
             deref(c_inst).__isset.listOfTheirMyStructList = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Combo", {
+          "listOfOurMyStructLists": cpp_obj.listOfOurMyStructLists_ref().has_value(),
+          "theirMyStructList": cpp_obj.theirMyStructList_ref().has_value(),
+          "ourMyStructList": cpp_obj.ourMyStructList_ref().has_value(),
+          "listOfTheirMyStructList": cpp_obj.listOfTheirMyStructList_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'listOfOurMyStructLists', self.listOfOurMyStructLists
@@ -318,41 +344,41 @@ cdef class Combo(thrift.py3.types.Struct):
         yield 'listOfTheirMyStructList', self.listOfTheirMyStructList
 
     def __bool__(self):
-        return True or True or True or True
+        return True
 
     @staticmethod
     cdef create(shared_ptr[cCombo] cpp_obj):
-        inst = <Combo>Combo.__new__(Combo)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <Combo>Combo.__new__(Combo)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def listOfOurMyStructLists(self):
 
-        if self.__listOfOurMyStructLists is None:
-            self.__listOfOurMyStructLists = List__List__MyStruct.create(reference_shared_ptr_listOfOurMyStructLists(self._cpp_obj, deref(self._cpp_obj).listOfOurMyStructLists))
-        return self.__listOfOurMyStructLists
+        if self.__field_listOfOurMyStructLists is None:
+            self.__field_listOfOurMyStructLists = List__List__MyStruct.create(reference_shared_ptr_listOfOurMyStructLists(self._cpp_obj, deref(self._cpp_obj).listOfOurMyStructLists_ref().value()))
+        return self.__field_listOfOurMyStructLists
 
     @property
     def theirMyStructList(self):
 
-        if self.__theirMyStructList is None:
-            self.__theirMyStructList = List__module_MyStruct.create(reference_shared_ptr_theirMyStructList(self._cpp_obj, deref(self._cpp_obj).theirMyStructList))
-        return self.__theirMyStructList
+        if self.__field_theirMyStructList is None:
+            self.__field_theirMyStructList = List__module_MyStruct.create(reference_shared_ptr_theirMyStructList(self._cpp_obj, deref(self._cpp_obj).theirMyStructList_ref().value()))
+        return self.__field_theirMyStructList
 
     @property
     def ourMyStructList(self):
 
-        if self.__ourMyStructList is None:
-            self.__ourMyStructList = List__MyStruct.create(reference_shared_ptr_ourMyStructList(self._cpp_obj, deref(self._cpp_obj).ourMyStructList))
-        return self.__ourMyStructList
+        if self.__field_ourMyStructList is None:
+            self.__field_ourMyStructList = List__MyStruct.create(reference_shared_ptr_ourMyStructList(self._cpp_obj, deref(self._cpp_obj).ourMyStructList_ref().value()))
+        return self.__field_ourMyStructList
 
     @property
     def listOfTheirMyStructList(self):
 
-        if self.__listOfTheirMyStructList is None:
-            self.__listOfTheirMyStructList = List__List__module_MyStruct.create(reference_shared_ptr_listOfTheirMyStructList(self._cpp_obj, deref(self._cpp_obj).listOfTheirMyStructList))
-        return self.__listOfTheirMyStructList
+        if self.__field_listOfTheirMyStructList is None:
+            self.__field_listOfTheirMyStructList = List__List__module_MyStruct.create(reference_shared_ptr_listOfTheirMyStructList(self._cpp_obj, deref(self._cpp_obj).listOfTheirMyStructList_ref().value()))
+        return self.__field_listOfTheirMyStructList
 
 
     def __hash__(Combo self):
@@ -371,7 +397,7 @@ cdef class Combo(thrift.py3.types.Struct):
         cdef shared_ptr[cCombo] cpp_obj = make_shared[cCombo](
             deref(self._cpp_obj)
         )
-        return Combo.create(move_shared(cpp_obj))
+        return Combo.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -385,63 +411,44 @@ cdef class Combo(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cCombo cself = deref((<Combo>self)._cpp_obj)
-        cdef cCombo cother = deref((<Combo>other)._cpp_obj)
+        cdef cCombo* cself = (<Combo>self)._cpp_obj.get()
+        cdef cCombo* cother = (<Combo>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(Combo self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cCombo* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cCombo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cCombo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cCombo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cCombo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Combo()
 
-    cdef uint32_t _deserialize(Combo self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(Combo self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cCombo](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(Combo self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cCombo]()
-        cdef cCombo* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cCombo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cCombo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cCombo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cCombo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cCombo](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
         return (deserialize, (Combo, serialize(self)))
 
 
-cdef class List__MyStruct:
+@__cython.auto_pickle(False)
+cdef class List__MyStruct(thrift.py3.types.List):
     def __init__(self, items=None):
         if isinstance(items, List__MyStruct):
             self._cpp_obj = (<List__MyStruct> items)._cpp_obj
@@ -450,15 +457,18 @@ cdef class List__MyStruct:
 
     @staticmethod
     cdef create(shared_ptr[vector[cMyStruct]] c_items):
-        inst = <List__MyStruct>List__MyStruct.__new__(List__MyStruct)
-        inst._cpp_obj = move_shared(c_items)
-        return inst
+        __fbthrift_inst = <List__MyStruct>List__MyStruct.__new__(List__MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(c_items)
+        return __fbthrift_inst
 
     def __copy__(List__MyStruct self):
         cdef shared_ptr[vector[cMyStruct]] cpp_obj = make_shared[vector[cMyStruct]](
             deref(self._cpp_obj)
         )
-        return List__MyStruct.create(move_shared(cpp_obj))
+        return List__MyStruct.create(__fbthrift_move_shared(cpp_obj))
+
+    def __len__(self):
+        return deref(self._cpp_obj).size()
 
     @staticmethod
     cdef shared_ptr[vector[cMyStruct]] _make_instance(object items) except *:
@@ -470,9 +480,6 @@ cdef class List__MyStruct:
                 deref(c_inst).push_back(deref((<MyStruct>item)._cpp_obj))
         return c_inst
 
-    def __add__(object self, object other):
-        return type(self)(itertools.chain(self, other))
-
     def __getitem__(self, object index_obj):
         cdef shared_ptr[vector[cMyStruct]] c_inst
         cdef shared_ptr[cMyStruct] citem
@@ -481,7 +488,7 @@ cdef class List__MyStruct:
             sz = deref(self._cpp_obj).size()
             for index in range(*index_obj.indices(sz)):
                 deref(c_inst).push_back(deref(self._cpp_obj)[index])
-            return List__MyStruct.create(move_shared(c_inst))
+            return List__MyStruct.create(__fbthrift_move_shared(c_inst))
         else:
             index = <int?>index_obj
             size = len(self)
@@ -493,34 +500,6 @@ cdef class List__MyStruct:
             citem = reference_shared_ptr_List__MyStruct(self._cpp_obj, deref(self._cpp_obj)[index])
             return MyStruct.create(citem)
 
-    def __len__(self):
-        return deref(self._cpp_obj).size()
-
-    def __eq__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __ne__(self, other):
-        return not thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __lt__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_LT)
-
-    def __gt__(self, other):
-        return thrift.py3.types.list_compare(other, self, Py_LT)
-
-    def __le__(self, other):
-        result = thrift.py3.types.list_compare(other, self, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __ge__(self, other):
-        result = thrift.py3.types.list_compare(self, other, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(tuple(self))
-        return self.__hash
-
     def __contains__(self, item):
         if not self or item is None:
             return False
@@ -530,7 +509,7 @@ cdef class List__MyStruct:
 
     def __iter__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[cMyStruct] citem
         cdef vector[cMyStruct].iterator loc = deref(self._cpp_obj).begin()
         while loc != deref(self._cpp_obj).end():
@@ -538,15 +517,9 @@ cdef class List__MyStruct:
             yield MyStruct.create(citem)
             inc(loc)
 
-
-    def __repr__(self):
-        if not self:
-            return 'i[]'
-        return f'i[{", ".join(map(repr, self))}]'
-
     def __reversed__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[cMyStruct] citem
         cdef vector[cMyStruct].reverse_iterator loc = deref(self._cpp_obj).rbegin()
         while loc != deref(self._cpp_obj).rend():
@@ -579,13 +552,13 @@ cdef class List__MyStruct:
 
         if not isinstance(item, MyStruct):
             raise err
-        cdef vector[cMyStruct].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <int64_t>offset_end)
+        cdef vector[cMyStruct].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <cint64_t>offset_end)
         cdef vector[cMyStruct].iterator loc = std_libcpp.find[vector[cMyStruct].iterator, cMyStruct](
-            std_libcpp.next(deref(self._cpp_obj).begin(), <int64_t>offset_begin),
+            std_libcpp.next(deref(self._cpp_obj).begin(), <cint64_t>offset_begin),
             end,
             deref((<MyStruct>item)._cpp_obj)        )
         if loc != end:
-            return <int64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
+            return <cint64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
         raise err
 
     def count(self, item):
@@ -593,13 +566,18 @@ cdef class List__MyStruct:
             return 0
         if not isinstance(item, MyStruct):
             return 0
-        return <int64_t> std_libcpp.count[vector[cMyStruct].iterator, cMyStruct](
+        return <cint64_t> std_libcpp.count[vector[cMyStruct].iterator, cMyStruct](
             deref(self._cpp_obj).begin(), deref(self._cpp_obj).end(), deref((<MyStruct>item)._cpp_obj))
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__List__MyStruct()
 
 
 Sequence.register(List__MyStruct)
 
-cdef class List__List__MyStruct:
+@__cython.auto_pickle(False)
+cdef class List__List__MyStruct(thrift.py3.types.List):
     def __init__(self, items=None):
         if isinstance(items, List__List__MyStruct):
             self._cpp_obj = (<List__List__MyStruct> items)._cpp_obj
@@ -608,15 +586,18 @@ cdef class List__List__MyStruct:
 
     @staticmethod
     cdef create(shared_ptr[vector[vector[cMyStruct]]] c_items):
-        inst = <List__List__MyStruct>List__List__MyStruct.__new__(List__List__MyStruct)
-        inst._cpp_obj = move_shared(c_items)
-        return inst
+        __fbthrift_inst = <List__List__MyStruct>List__List__MyStruct.__new__(List__List__MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(c_items)
+        return __fbthrift_inst
 
     def __copy__(List__List__MyStruct self):
         cdef shared_ptr[vector[vector[cMyStruct]]] cpp_obj = make_shared[vector[vector[cMyStruct]]](
             deref(self._cpp_obj)
         )
-        return List__List__MyStruct.create(move_shared(cpp_obj))
+        return List__List__MyStruct.create(__fbthrift_move_shared(cpp_obj))
+
+    def __len__(self):
+        return deref(self._cpp_obj).size()
 
     @staticmethod
     cdef shared_ptr[vector[vector[cMyStruct]]] _make_instance(object items) except *:
@@ -630,9 +611,6 @@ cdef class List__List__MyStruct:
                 deref(c_inst).push_back(deref((<List__MyStruct>item)._cpp_obj))
         return c_inst
 
-    def __add__(object self, object other):
-        return type(self)(itertools.chain(self, other))
-
     def __getitem__(self, object index_obj):
         cdef shared_ptr[vector[vector[cMyStruct]]] c_inst
         cdef shared_ptr[vector[cMyStruct]] citem
@@ -641,7 +619,7 @@ cdef class List__List__MyStruct:
             sz = deref(self._cpp_obj).size()
             for index in range(*index_obj.indices(sz)):
                 deref(c_inst).push_back(deref(self._cpp_obj)[index])
-            return List__List__MyStruct.create(move_shared(c_inst))
+            return List__List__MyStruct.create(__fbthrift_move_shared(c_inst))
         else:
             index = <int?>index_obj
             size = len(self)
@@ -652,34 +630,6 @@ cdef class List__List__MyStruct:
                 raise IndexError('list index out of range')
             citem = reference_shared_ptr_List__List__MyStruct(self._cpp_obj, deref(self._cpp_obj)[index])
             return List__MyStruct.create(citem)
-
-    def __len__(self):
-        return deref(self._cpp_obj).size()
-
-    def __eq__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __ne__(self, other):
-        return not thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __lt__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_LT)
-
-    def __gt__(self, other):
-        return thrift.py3.types.list_compare(other, self, Py_LT)
-
-    def __le__(self, other):
-        result = thrift.py3.types.list_compare(other, self, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __ge__(self, other):
-        result = thrift.py3.types.list_compare(self, other, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(tuple(self))
-        return self.__hash
 
     def __contains__(self, item):
         if not self or item is None:
@@ -695,7 +645,7 @@ cdef class List__List__MyStruct:
 
     def __iter__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[vector[cMyStruct]] citem
         cdef vector[vector[cMyStruct]].iterator loc = deref(self._cpp_obj).begin()
         while loc != deref(self._cpp_obj).end():
@@ -703,15 +653,9 @@ cdef class List__List__MyStruct:
             yield List__MyStruct.create(citem)
             inc(loc)
 
-
-    def __repr__(self):
-        if not self:
-            return 'i[]'
-        return f'i[{", ".join(map(repr, self))}]'
-
     def __reversed__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[vector[cMyStruct]] citem
         cdef vector[vector[cMyStruct]].reverse_iterator loc = deref(self._cpp_obj).rbegin()
         while loc != deref(self._cpp_obj).rend():
@@ -749,13 +693,13 @@ cdef class List__List__MyStruct:
             raise err from None
         if not isinstance(item, List__MyStruct):
             raise err
-        cdef vector[vector[cMyStruct]].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <int64_t>offset_end)
+        cdef vector[vector[cMyStruct]].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <cint64_t>offset_end)
         cdef vector[vector[cMyStruct]].iterator loc = std_libcpp.find[vector[vector[cMyStruct]].iterator, vector[cMyStruct]](
-            std_libcpp.next(deref(self._cpp_obj).begin(), <int64_t>offset_begin),
+            std_libcpp.next(deref(self._cpp_obj).begin(), <cint64_t>offset_begin),
             end,
             deref((<List__MyStruct>item)._cpp_obj)        )
         if loc != end:
-            return <int64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
+            return <cint64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
         raise err
 
     def count(self, item):
@@ -768,13 +712,18 @@ cdef class List__List__MyStruct:
             return 0
         if not isinstance(item, List__MyStruct):
             return 0
-        return <int64_t> std_libcpp.count[vector[vector[cMyStruct]].iterator, vector[cMyStruct]](
+        return <cint64_t> std_libcpp.count[vector[vector[cMyStruct]].iterator, vector[cMyStruct]](
             deref(self._cpp_obj).begin(), deref(self._cpp_obj).end(), deref((<List__MyStruct>item)._cpp_obj))
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__List__List__MyStruct()
 
 
 Sequence.register(List__List__MyStruct)
 
-cdef class List__module_MyStruct:
+@__cython.auto_pickle(False)
+cdef class List__module_MyStruct(thrift.py3.types.List):
     def __init__(self, items=None):
         if isinstance(items, List__module_MyStruct):
             self._cpp_obj = (<List__module_MyStruct> items)._cpp_obj
@@ -783,15 +732,18 @@ cdef class List__module_MyStruct:
 
     @staticmethod
     cdef create(shared_ptr[vector[_module_types.cMyStruct]] c_items):
-        inst = <List__module_MyStruct>List__module_MyStruct.__new__(List__module_MyStruct)
-        inst._cpp_obj = move_shared(c_items)
-        return inst
+        __fbthrift_inst = <List__module_MyStruct>List__module_MyStruct.__new__(List__module_MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(c_items)
+        return __fbthrift_inst
 
     def __copy__(List__module_MyStruct self):
         cdef shared_ptr[vector[_module_types.cMyStruct]] cpp_obj = make_shared[vector[_module_types.cMyStruct]](
             deref(self._cpp_obj)
         )
-        return List__module_MyStruct.create(move_shared(cpp_obj))
+        return List__module_MyStruct.create(__fbthrift_move_shared(cpp_obj))
+
+    def __len__(self):
+        return deref(self._cpp_obj).size()
 
     @staticmethod
     cdef shared_ptr[vector[_module_types.cMyStruct]] _make_instance(object items) except *:
@@ -803,9 +755,6 @@ cdef class List__module_MyStruct:
                 deref(c_inst).push_back(deref((<_module_types.MyStruct>item)._cpp_obj))
         return c_inst
 
-    def __add__(object self, object other):
-        return type(self)(itertools.chain(self, other))
-
     def __getitem__(self, object index_obj):
         cdef shared_ptr[vector[_module_types.cMyStruct]] c_inst
         cdef shared_ptr[_module_types.cMyStruct] citem
@@ -814,7 +763,7 @@ cdef class List__module_MyStruct:
             sz = deref(self._cpp_obj).size()
             for index in range(*index_obj.indices(sz)):
                 deref(c_inst).push_back(deref(self._cpp_obj)[index])
-            return List__module_MyStruct.create(move_shared(c_inst))
+            return List__module_MyStruct.create(__fbthrift_move_shared(c_inst))
         else:
             index = <int?>index_obj
             size = len(self)
@@ -826,34 +775,6 @@ cdef class List__module_MyStruct:
             citem = reference_shared_ptr_List__module_MyStruct(self._cpp_obj, deref(self._cpp_obj)[index])
             return _module_types.MyStruct.create(citem)
 
-    def __len__(self):
-        return deref(self._cpp_obj).size()
-
-    def __eq__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __ne__(self, other):
-        return not thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __lt__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_LT)
-
-    def __gt__(self, other):
-        return thrift.py3.types.list_compare(other, self, Py_LT)
-
-    def __le__(self, other):
-        result = thrift.py3.types.list_compare(other, self, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __ge__(self, other):
-        result = thrift.py3.types.list_compare(self, other, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(tuple(self))
-        return self.__hash
-
     def __contains__(self, item):
         if not self or item is None:
             return False
@@ -863,7 +784,7 @@ cdef class List__module_MyStruct:
 
     def __iter__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[_module_types.cMyStruct] citem
         cdef vector[_module_types.cMyStruct].iterator loc = deref(self._cpp_obj).begin()
         while loc != deref(self._cpp_obj).end():
@@ -871,15 +792,9 @@ cdef class List__module_MyStruct:
             yield _module_types.MyStruct.create(citem)
             inc(loc)
 
-
-    def __repr__(self):
-        if not self:
-            return 'i[]'
-        return f'i[{", ".join(map(repr, self))}]'
-
     def __reversed__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[_module_types.cMyStruct] citem
         cdef vector[_module_types.cMyStruct].reverse_iterator loc = deref(self._cpp_obj).rbegin()
         while loc != deref(self._cpp_obj).rend():
@@ -912,13 +827,13 @@ cdef class List__module_MyStruct:
 
         if not isinstance(item, _module_types.MyStruct):
             raise err
-        cdef vector[_module_types.cMyStruct].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <int64_t>offset_end)
+        cdef vector[_module_types.cMyStruct].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <cint64_t>offset_end)
         cdef vector[_module_types.cMyStruct].iterator loc = std_libcpp.find[vector[_module_types.cMyStruct].iterator, _module_types.cMyStruct](
-            std_libcpp.next(deref(self._cpp_obj).begin(), <int64_t>offset_begin),
+            std_libcpp.next(deref(self._cpp_obj).begin(), <cint64_t>offset_begin),
             end,
             deref((<_module_types.MyStruct>item)._cpp_obj)        )
         if loc != end:
-            return <int64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
+            return <cint64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
         raise err
 
     def count(self, item):
@@ -926,13 +841,18 @@ cdef class List__module_MyStruct:
             return 0
         if not isinstance(item, _module_types.MyStruct):
             return 0
-        return <int64_t> std_libcpp.count[vector[_module_types.cMyStruct].iterator, _module_types.cMyStruct](
+        return <cint64_t> std_libcpp.count[vector[_module_types.cMyStruct].iterator, _module_types.cMyStruct](
             deref(self._cpp_obj).begin(), deref(self._cpp_obj).end(), deref((<_module_types.MyStruct>item)._cpp_obj))
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__List__module_MyStruct()
 
 
 Sequence.register(List__module_MyStruct)
 
-cdef class List__List__module_MyStruct:
+@__cython.auto_pickle(False)
+cdef class List__List__module_MyStruct(thrift.py3.types.List):
     def __init__(self, items=None):
         if isinstance(items, List__List__module_MyStruct):
             self._cpp_obj = (<List__List__module_MyStruct> items)._cpp_obj
@@ -941,15 +861,18 @@ cdef class List__List__module_MyStruct:
 
     @staticmethod
     cdef create(shared_ptr[vector[vector[_module_types.cMyStruct]]] c_items):
-        inst = <List__List__module_MyStruct>List__List__module_MyStruct.__new__(List__List__module_MyStruct)
-        inst._cpp_obj = move_shared(c_items)
-        return inst
+        __fbthrift_inst = <List__List__module_MyStruct>List__List__module_MyStruct.__new__(List__List__module_MyStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(c_items)
+        return __fbthrift_inst
 
     def __copy__(List__List__module_MyStruct self):
         cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] cpp_obj = make_shared[vector[vector[_module_types.cMyStruct]]](
             deref(self._cpp_obj)
         )
-        return List__List__module_MyStruct.create(move_shared(cpp_obj))
+        return List__List__module_MyStruct.create(__fbthrift_move_shared(cpp_obj))
+
+    def __len__(self):
+        return deref(self._cpp_obj).size()
 
     @staticmethod
     cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] _make_instance(object items) except *:
@@ -963,9 +886,6 @@ cdef class List__List__module_MyStruct:
                 deref(c_inst).push_back(deref((<List__module_MyStruct>item)._cpp_obj))
         return c_inst
 
-    def __add__(object self, object other):
-        return type(self)(itertools.chain(self, other))
-
     def __getitem__(self, object index_obj):
         cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] c_inst
         cdef shared_ptr[vector[_module_types.cMyStruct]] citem
@@ -974,7 +894,7 @@ cdef class List__List__module_MyStruct:
             sz = deref(self._cpp_obj).size()
             for index in range(*index_obj.indices(sz)):
                 deref(c_inst).push_back(deref(self._cpp_obj)[index])
-            return List__List__module_MyStruct.create(move_shared(c_inst))
+            return List__List__module_MyStruct.create(__fbthrift_move_shared(c_inst))
         else:
             index = <int?>index_obj
             size = len(self)
@@ -985,34 +905,6 @@ cdef class List__List__module_MyStruct:
                 raise IndexError('list index out of range')
             citem = reference_shared_ptr_List__List__module_MyStruct(self._cpp_obj, deref(self._cpp_obj)[index])
             return List__module_MyStruct.create(citem)
-
-    def __len__(self):
-        return deref(self._cpp_obj).size()
-
-    def __eq__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __ne__(self, other):
-        return not thrift.py3.types.list_compare(self, other, Py_EQ)
-
-    def __lt__(self, other):
-        return thrift.py3.types.list_compare(self, other, Py_LT)
-
-    def __gt__(self, other):
-        return thrift.py3.types.list_compare(other, self, Py_LT)
-
-    def __le__(self, other):
-        result = thrift.py3.types.list_compare(other, self, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __ge__(self, other):
-        result = thrift.py3.types.list_compare(self, other, Py_LT)
-        return not result if result is not NotImplemented else NotImplemented
-
-    def __hash__(self):
-        if not self.__hash:
-            self.__hash = hash(tuple(self))
-        return self.__hash
 
     def __contains__(self, item):
         if not self or item is None:
@@ -1028,7 +920,7 @@ cdef class List__List__module_MyStruct:
 
     def __iter__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[vector[_module_types.cMyStruct]] citem
         cdef vector[vector[_module_types.cMyStruct]].iterator loc = deref(self._cpp_obj).begin()
         while loc != deref(self._cpp_obj).end():
@@ -1036,15 +928,9 @@ cdef class List__List__module_MyStruct:
             yield List__module_MyStruct.create(citem)
             inc(loc)
 
-
-    def __repr__(self):
-        if not self:
-            return 'i[]'
-        return f'i[{", ".join(map(repr, self))}]'
-
     def __reversed__(self):
         if not self:
-            raise StopIteration
+            return
         cdef shared_ptr[vector[_module_types.cMyStruct]] citem
         cdef vector[vector[_module_types.cMyStruct]].reverse_iterator loc = deref(self._cpp_obj).rbegin()
         while loc != deref(self._cpp_obj).rend():
@@ -1082,13 +968,13 @@ cdef class List__List__module_MyStruct:
             raise err from None
         if not isinstance(item, List__module_MyStruct):
             raise err
-        cdef vector[vector[_module_types.cMyStruct]].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <int64_t>offset_end)
+        cdef vector[vector[_module_types.cMyStruct]].iterator end = std_libcpp.prev(deref(self._cpp_obj).end(), <cint64_t>offset_end)
         cdef vector[vector[_module_types.cMyStruct]].iterator loc = std_libcpp.find[vector[vector[_module_types.cMyStruct]].iterator, vector[_module_types.cMyStruct]](
-            std_libcpp.next(deref(self._cpp_obj).begin(), <int64_t>offset_begin),
+            std_libcpp.next(deref(self._cpp_obj).begin(), <cint64_t>offset_begin),
             end,
             deref((<List__module_MyStruct>item)._cpp_obj)        )
         if loc != end:
-            return <int64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
+            return <cint64_t> std_libcpp.distance(deref(self._cpp_obj).begin(), loc)
         raise err
 
     def count(self, item):
@@ -1101,8 +987,12 @@ cdef class List__List__module_MyStruct:
             return 0
         if not isinstance(item, List__module_MyStruct):
             return 0
-        return <int64_t> std_libcpp.count[vector[vector[_module_types.cMyStruct]].iterator, vector[_module_types.cMyStruct]](
+        return <cint64_t> std_libcpp.count[vector[vector[_module_types.cMyStruct]].iterator, vector[_module_types.cMyStruct]](
             deref(self._cpp_obj).begin(), deref(self._cpp_obj).end(), deref((<List__module_MyStruct>item)._cpp_obj))
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__List__List__module_MyStruct()
 
 
 Sequence.register(List__List__module_MyStruct)

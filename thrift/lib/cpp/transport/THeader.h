@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,15 +23,14 @@
 
 #include <folly/Optional.h>
 #include <folly/String.h>
+#include <folly/Utility.h>
 #include <folly/portability/Unistd.h>
 #include <thrift/lib/cpp/concurrency/Thread.h>
 #include <thrift/lib/cpp/protocol/TProtocolTypes.h>
+#include <thrift/lib/thrift/gen-cpp2/RpcMetadata_types.h>
 
 #include <bitset>
 #include <chrono>
-
-// Don't include the unknown client.
-#define CLIENT_TYPES_LEN 7
 
 // These are local to this build and never appear on the wire.
 enum CLIENT_TYPE {
@@ -41,18 +40,20 @@ enum CLIENT_TYPE {
   THRIFT_HTTP_SERVER_TYPE = 3,
   THRIFT_HTTP_CLIENT_TYPE = 4,
   THRIFT_FRAMED_COMPACT = 5,
-  THRIFT_HEADER_SASL_CLIENT_TYPE = 6,
+  THRIFT_ROCKET_CLIENT_TYPE = 6,
   THRIFT_HTTP_GET_CLIENT_TYPE = 7,
-  THRIFT_UNKNOWN_CLIENT_TYPE = 8,
-  THRIFT_UNFRAMED_COMPACT_DEPRECATED = 9,
+  THRIFT_UNFRAMED_COMPACT_DEPRECATED = 8,
+  // This MUST always be last and have the largest value!
+  THRIFT_UNKNOWN_CLIENT_TYPE = 9,
 };
+
+#define CLIENT_TYPES_LEN THRIFT_UNKNOWN_CLIENT_TYPE
 
 // These appear on the wire.
 enum HEADER_FLAGS {
   HEADER_FLAG_SUPPORT_OUT_OF_ORDER = 0x01,
   // Set for reverse messages (server->client requests, client->server replies)
   HEADER_FLAG_DUPLEX_REVERSE = 0x08,
-  HEADER_FLAG_SASL = 0x10,
 };
 
 namespace folly {
@@ -166,15 +167,15 @@ class THeader {
   static std::unique_ptr<folly::IOBuf> transform(
       std::unique_ptr<folly::IOBuf>,
       std::vector<uint16_t>& writeTrans,
-      size_t minCompressBytes);
+      size_t minCompressBytes = 0);
 
   /**
-   * Clone a new THeader. Metadata is copied, but not headers.
+   * Copy metadata, but not headers.
    */
-  std::unique_ptr<THeader> clone();
+  void copyMetadataFrom(const THeader& src);
 
   static uint16_t getNumTransforms(const std::vector<uint16_t>& transforms) {
-    return transforms.size();
+    return folly::to_narrow(transforms.size());
   }
 
   void setTransform(uint16_t transId) {
@@ -184,6 +185,15 @@ class THeader {
       }
     }
     writeTrans_.push_back(transId);
+  }
+
+  void setReadTransform(uint16_t transId) {
+    for (auto& trans : readTrans_) {
+      if (trans == transId) {
+        return;
+      }
+    }
+    readTrans_.push_back(transId);
   }
 
   void setTransforms(const std::vector<uint16_t>& trans) {
@@ -210,9 +220,21 @@ class THeader {
     return writeHeaders_.empty();
   }
 
-  StringToStringMap&& releaseWriteHeaders() {
+  StringToStringMap& mutableWriteHeaders() {
+    return writeHeaders_;
+  }
+  StringToStringMap releaseWriteHeaders() {
     return std::move(writeHeaders_);
   }
+
+  StringToStringMap extractAllWriteHeaders() {
+    auto headers = std::move(writeHeaders_);
+    if (extraWriteHeaders_ != nullptr) {
+      headers.insert(extraWriteHeaders_->begin(), extraWriteHeaders_->end());
+    }
+    return headers;
+  }
+
   const StringToStringMap& getWriteHeaders() const {
     return writeHeaders_;
   }
@@ -297,12 +319,20 @@ class THeader {
       size_t& needed,
       StringToStringMap& persistentReadHeaders);
 
-  void setMinCompressBytes(uint32_t bytes) {
-    minCompressBytes_ = bytes;
+  void setDesiredCompressionConfig(CompressionConfig compressionConfig) {
+    compressionConfig_ = compressionConfig;
   }
 
-  uint32_t getMinCompressBytes() {
-    return minCompressBytes_;
+  folly::Optional<CompressionConfig> getDesiredCompressionConfig() {
+    return compressionConfig_;
+  }
+
+  void setCrc32c(folly::Optional<uint32_t> crc32c) {
+    crc32c_ = crc32c;
+  }
+
+  folly::Optional<uint32_t> getCrc32c() {
+    return crc32c_;
   }
 
   apache::thrift::concurrency::PRIORITY getCallPriority();
@@ -341,6 +371,7 @@ class THeader {
   static const std::string PRIORITY_HEADER;
   static const std::string& CLIENT_TIMEOUT_HEADER;
   static const std::string QUEUE_TIMEOUT_HEADER;
+  static const std::string QUERY_LOAD_HEADER;
 
  protected:
   bool isFramed(CLIENT_TYPE clientType);
@@ -370,8 +401,6 @@ class THeader {
   std::unique_ptr<folly::IOBuf> removeFramed(
       uint32_t sz,
       folly::IOBufQueue* queue);
-
-  std::unique_ptr<folly::IOBufQueue> queue_;
 
   // Http client parser
   std::shared_ptr<apache::thrift::util::THttpClientParser> httpClientParser_;
@@ -404,8 +433,8 @@ class THeader {
   static const std::string ID_VERSION_HEADER;
   static const std::string ID_VERSION;
 
-  uint32_t minCompressBytes_;
   bool allowBigFrames_;
+  folly::Optional<CompressionConfig> compressionConfig_;
 
   /**
    * Returns the maximum number of bytes that write k/v headers can take
@@ -428,6 +457,9 @@ class THeader {
       END // signal the end of infoIds we can handle
     };
   };
+
+  // CRC32C of message payload for checksum.
+  folly::Optional<uint32_t> crc32c_;
 };
 
 } // namespace transport

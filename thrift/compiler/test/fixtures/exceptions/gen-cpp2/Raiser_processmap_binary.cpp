@@ -5,11 +5,8 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/Raiser.h"
-#include "src/gen-cpp2/Raiser.tcc"
+#include "thrift/compiler/test/fixtures/exceptions/gen-cpp2/Raiser.h"
+#include "thrift/compiler/test/fixtures/exceptions/gen-cpp2/Raiser.tcc"
 
 namespace cpp2 {
 } // cpp2
-namespace apache { namespace thrift {
-
-}} // apache::thrift

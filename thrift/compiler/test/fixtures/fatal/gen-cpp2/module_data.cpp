@@ -5,46 +5,58 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/fatal/gen-cpp2/module_data.h"
 
-namespace test_cpp2 { namespace cpp_reflection {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _enum1EnumDataStorage::size;
-constexpr const std::array<enum1, 3> _enum1EnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 3> _enum1EnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
 
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::enum1>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::enum1, 3> TEnumDataStorage<::test_cpp2::cpp_reflection::enum1>::values;
+constexpr const std::array<folly::StringPiece, 3> TEnumDataStorage<::test_cpp2::cpp_reflection::enum1>::names;
 
-constexpr const std::size_t _enum2EnumDataStorage::size;
-constexpr const std::array<enum2, 3> _enum2EnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 3> _enum2EnumDataStorage::names;
 
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::enum2>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::enum2, 3> TEnumDataStorage<::test_cpp2::cpp_reflection::enum2>::values;
+constexpr const std::array<folly::StringPiece, 3> TEnumDataStorage<::test_cpp2::cpp_reflection::enum2>::names;
 
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
 
-constexpr const std::size_t _enum3EnumDataStorage::size;
-constexpr const std::array<enum3, 3> _enum3EnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 3> _enum3EnumDataStorage::names;
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::enum3>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::enum3, 2> TEnumDataStorage<::test_cpp2::cpp_reflection::enum3>::values;
+constexpr const std::array<folly::StringPiece, 2> TEnumDataStorage<::test_cpp2::cpp_reflection::enum3>::names;
 
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
 
-}} // apache::thrift
-namespace test_cpp2 { namespace cpp_reflection {
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::enum_with_special_names>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::enum_with_special_names, 28> TEnumDataStorage<::test_cpp2::cpp_reflection::enum_with_special_names>::values;
+constexpr const std::array<folly::StringPiece, 28> TEnumDataStorage<::test_cpp2::cpp_reflection::enum_with_special_names>::names;
 
-constexpr const std::size_t _enum_with_special_namesEnumDataStorage::size;
-constexpr const std::array<enum_with_special_names, 28> _enum_with_special_namesEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 28> _enum_with_special_namesEnumDataStorage::names;
 
-}} // test_cpp2::cpp_reflection
-namespace apache { namespace thrift {
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::union1::Type>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::union1::Type, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union1::Type>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union1::Type>::names;
 
-}} // apache::thrift
 
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::union2::Type>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::union2::Type, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union2::Type>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union2::Type>::names;
+
+
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::union3::Type>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::union3::Type, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union3::Type>::values;
+constexpr const std::array<folly::StringPiece, 4> TEnumDataStorage<::test_cpp2::cpp_reflection::union3::Type>::names;
+
+
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::unionA::Type>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::unionA::Type, 5> TEnumDataStorage<::test_cpp2::cpp_reflection::unionA::Type>::values;
+constexpr const std::array<folly::StringPiece, 5> TEnumDataStorage<::test_cpp2::cpp_reflection::unionA::Type>::names;
+
+
+constexpr const std::size_t TEnumDataStorage<::test_cpp2::cpp_reflection::union_with_special_names::Type>::size;
+constexpr const std::array<::test_cpp2::cpp_reflection::union_with_special_names::Type, 28> TEnumDataStorage<::test_cpp2::cpp_reflection::union_with_special_names::Type>::values;
+constexpr const std::array<folly::StringPiece, 28> TEnumDataStorage<::test_cpp2::cpp_reflection::union_with_special_names::Type>::names;
+
+
+} // namespace thrift
+} // namespace apache

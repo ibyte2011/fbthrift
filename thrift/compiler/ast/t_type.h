@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,7 +55,9 @@ struct t_types {
     TYPE_SERVICE,
     TYPE_PROGRAM,
     TYPE_FLOAT,
+    TYPE_SINK,
     TYPE_STREAM,
+    TYPE_BINARY,
   };
 
   static constexpr size_t kTypeBits = 5;
@@ -136,6 +138,9 @@ class t_type : public t_annotated {
   virtual bool is_struct() const {
     return false;
   }
+  virtual bool is_union() const {
+    return false;
+  }
   virtual bool is_xception() const {
     return false;
   }
@@ -151,22 +156,19 @@ class t_type : public t_annotated {
   virtual bool is_map() const {
     return false;
   }
-  virtual bool is_stream() const {
-    return false;
-  }
-  virtual bool is_pubsub_stream() const {
+  virtual bool is_sink() const {
     return false;
   }
   virtual bool is_streamresponse() const {
-    return false;
-  }
-  virtual bool has_extratype() const {
     return false;
   }
   virtual bool is_service() const {
     return false;
   }
   virtual bool is_binary() const {
+    return false;
+  }
+  virtual bool is_string_or_binary() const {
     return false;
   }
 

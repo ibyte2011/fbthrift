@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <folly/Function.h>
 #include <folly/io/IOBufQueue.h>
@@ -57,7 +57,7 @@ class CoreTestFixture : public testing::Test {
   // Receive the deserialized integer that results from 'sumTwoNumbers'
   static int32_t deserializeSumTwoNumbers(folly::IOBuf* buf);
 
-  static std::unique_ptr<RequestRpcMetadata> makeMetadata(
+  static RequestRpcMetadata makeMetadata(
       std::string name,
       int32_t seqId = 0,
       RpcKind kind = RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE);

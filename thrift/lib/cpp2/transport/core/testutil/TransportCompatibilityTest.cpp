@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gflags/gflags.h>
+
+#include <folly/Conv.h>
+#include <folly/portability/GFlags.h>
+#include <folly/portability/GTest.h>
+
 #include <glog/logging.h>
-#include <gtest/gtest.h>
 
 #include <folly/ScopeGuard.h>
+#include <folly/io/async/AsyncSocket.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <folly/synchronization/Baton.h>
 #include <thrift/lib/cpp/async/TAsyncSSLSocket.h>
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
-#include <thrift/lib/cpp/async/TAsyncTransport.h>
+#include <thrift/lib/cpp/transport/THeader.h>
 #include <thrift/lib/cpp2/async/HTTPClientChannel.h>
 #include <thrift/lib/cpp2/async/HeaderClientChannel.h>
 #include <thrift/lib/cpp2/async/PooledRequestChannel.h>
-#include <thrift/lib/cpp2/async/RSocketClientChannel.h>
+#include <thrift/lib/cpp2/async/RocketClientChannel.h>
 #include <thrift/lib/cpp2/transport/core/ThriftClient.h>
 #include <thrift/lib/cpp2/transport/core/ThriftClientCallback.h>
 #include <thrift/lib/cpp2/transport/core/testutil/MockCallback.h>
+#include <thrift/lib/cpp2/transport/core/testutil/TAsyncSocketIntercepted.h>
 #include <thrift/lib/cpp2/transport/core/testutil/TransportCompatibilityTest.h>
 #include <thrift/lib/cpp2/transport/core/testutil/gen-cpp2/TestService.h>
 #include <thrift/lib/cpp2/transport/util/ConnectionManager.h>
@@ -129,6 +133,8 @@ void SampleServer<Service>::setupServer() {
   server_->setNumIOWorkerThreads(numIOThreads_);
   server_->setNumCPUWorkerThreads(numWorkerThreads_);
   server_->setProcessorFactory(cpp2PFac);
+  server_->setGetLoad(
+      [](const std::string& metric) { return metric.empty() ? 123 : -1; });
 }
 
 template <typename Service>
@@ -187,22 +193,23 @@ void SampleServer<Service>::connectToServer(
   ASSERT_GT(port_, 0) << "Check if the server has started already";
   if (transport == "header") {
     auto addr = folly::SocketAddress(FLAGS_host, port_);
-    TAsyncSocket::UniquePtr sock(
-        new TAsyncSocket(folly::EventBaseManager::get()->getEventBase(), addr));
+    folly::AsyncSocket::UniquePtr sock(new TAsyncSocketIntercepted(
+        folly::EventBaseManager::get()->getEventBase(), addr));
     auto chan = HeaderClientChannel::newChannel(std::move(sock));
     chan->setProtocolId(apache::thrift::protocol::T_COMPACT_PROTOCOL);
     callMe(std::move(chan), nullptr);
-  } else if (transport == "rsocket") {
-    std::shared_ptr<RSocketClientChannel> channel;
+  } else if (transport == "rocket") {
+    std::shared_ptr<RocketClientChannel> channel;
     evbThread_.getEventBase()->runInEventBaseThreadAndWait([&]() {
-      channel = RSocketClientChannel::newChannel(TAsyncSocket::UniquePtr(
-          new TAsyncSocket(evbThread_.getEventBase(), FLAGS_host, port_)));
+      channel = RocketClientChannel::newChannel(
+          folly::AsyncSocket::UniquePtr(new TAsyncSocketIntercepted(
+              evbThread_.getEventBase(), FLAGS_host, port_)));
     });
     auto channelPtr = channel.get();
-    std::shared_ptr<RSocketClientChannel> destroyInEvbChannel(
+    std::shared_ptr<RocketClientChannel> destroyInEvbChannel(
         channelPtr,
         [channel_ = std::move(channel),
-         eventBase = evbThread_.getEventBase()](RSocketClientChannel*) mutable {
+         eventBase = evbThread_.getEventBase()](RocketClientChannel*) mutable {
           eventBase->runImmediatelyOrRunInEventBaseThreadAndWait(
               [channel__ = std::move(channel_)] {});
         });
@@ -213,16 +220,14 @@ void SampleServer<Service>::connectToServer(
     auto executor = std::make_shared<folly::ScopedEventBaseThread>();
     auto eventBase = executor->getEventBase();
     auto channel = PooledRequestChannel::newChannel(
-        eventBase,
-        std::move(executor),
-        [port = std::move(port_)](folly::EventBase& evb) {
-          TAsyncSocket::UniquePtr socket(
-              new TAsyncSocket(&evb, FLAGS_host, port));
+        eventBase, executor, [port = std::move(port_)](folly::EventBase& evb) {
+          folly::AsyncSocket::UniquePtr socket(
+              new TAsyncSocketIntercepted(&evb, FLAGS_host, port));
           if (FLAGS_use_ssl) {
             auto sslContext = std::make_shared<folly::SSLContext>();
             sslContext->setAdvertisedNextProtocols({"h2", "http"});
             auto sslSocket = new TAsyncSSLSocket(
-                sslContext, &evb, socket->detachFd(), false);
+                sslContext, &evb, socket->detachNetworkSocket(), false);
             sslSocket->sslConn(nullptr);
             socket.reset(sslSocket);
           }
@@ -252,6 +257,7 @@ void TransportCompatibilityTest::callSleep(
 void TransportCompatibilityTest::TestConnectionStats() {
   connectToServer([this](std::unique_ptr<TestServiceAsyncClient> client) {
     EXPECT_EQ(0, server_->observer_->connAccepted_);
+    EXPECT_EQ(0, server_->observer_->connClosed_);
     EXPECT_EQ(0, server_->observer_->activeConns_);
 
     EXPECT_CALL(*handler_.get(), sumTwoNumbers_(1, 2)).Times(1);
@@ -259,6 +265,20 @@ void TransportCompatibilityTest::TestConnectionStats() {
 
     EXPECT_EQ(1, server_->observer_->connAccepted_);
     EXPECT_EQ(server_->numIOThreads_, server_->observer_->activeConns_);
+
+    folly::Baton<> connCloseBaton;
+    server_->observer_->connClosedNotifBaton = &connCloseBaton;
+
+    // Close the connection to trigger connClosed event on the server.
+    auto* channel = client->getChannel();
+    auto* evb = channel->getEventBase();
+    evb->runInEventBaseThread([client = std::move(client)] {
+      dynamic_cast<ClientChannel*>(client->getChannel())->closeNow();
+    });
+
+    ASSERT_TRUE(connCloseBaton.try_wait_for(std::chrono::seconds(10)));
+
+    EXPECT_EQ(1, server_->observer_->connClosed_);
   });
 }
 
@@ -282,6 +302,9 @@ void TransportCompatibilityTest::TestObserverSendReceiveRequests() {
     // Now check the stats
     EXPECT_EQ(5, server_->observer_->sentReply_);
     EXPECT_EQ(5, server_->observer_->receivedRequest_);
+    if (FLAGS_transport != "http2") {
+      EXPECT_EQ(5, server_->observer_->callCompleted_);
+    }
   });
 }
 
@@ -290,7 +313,7 @@ void TransportCompatibilityTest::TestConnectionContext() {
     auto channel = dynamic_cast<ClientChannel*>(client->getChannel());
     int32_t port{0};
     channel->getEventBase()->runInEventBaseThreadAndWait([&] {
-      auto socket = dynamic_cast<TAsyncSocket*>(channel->getTransport());
+      auto socket = dynamic_cast<folly::AsyncSocket*>(channel->getTransport());
       folly::SocketAddress localAddress;
       socket->getLocalAddress(&localAddress);
       port = localAddress.getPort();
@@ -305,9 +328,8 @@ void TransportCompatibilityTest::TestConnectionContext() {
 void TransportCompatibilityTest::TestClientIdentityHook() {
   bool flag{false};
   auto hook = [&flag](
-                  const folly::AsyncTransportWrapper* /* unused */,
+                  const folly::AsyncTransport* /* unused */,
                   const X509* /* unused */,
-                  const SaslServer* /* unused */,
                   const folly::SocketAddress& /* unused */) {
     flag = true;
     return std::unique_ptr<void, void (*)(void*)>(nullptr, [](void*) {});
@@ -337,6 +359,9 @@ void TransportCompatibilityTest::TestRequestResponse_Simple() {
 
     EXPECT_EQ(3, client->future_sumTwoNumbers(1, 2).get());
     EXPECT_EQ(8, client->future_add(5).get());
+    if (FLAGS_transport != "http2") {
+      EXPECT_EQ(5, server_->observer_->callCompleted_);
+    }
   });
 }
 
@@ -402,7 +427,7 @@ void TransportCompatibilityTest::TestRequestResponse_MultipleClients() {
       promise.setValue();
     });
   }
-  folly::collectAllSemiFuture(futures).get();
+  folly::collectAll(futures).get();
   threads.clear();
 }
 
@@ -445,12 +470,17 @@ void TransportCompatibilityTest::TestRequestResponse_Timeout() {
     callSleep(client.get(), 2000, 500);
     /* sleep override */
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (FLAGS_transport == "rocket") {
+      EXPECT_EQ(5, server_->observer_->activeRequests_);
+    }
     callSleep(client.get(), 100, 1000);
     callSleep(client.get(), 200, 0);
     /* Sleep to give time for all callbacks to be completed */
     /* sleep override */
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
+    if (FLAGS_transport == "rocket") {
+      EXPECT_EQ(2, server_->observer_->activeRequests_);
+    }
     EXPECT_EQ(3, server_->observer_->taskTimeout_);
     EXPECT_EQ(0, server_->observer_->queueTimeout_);
   });
@@ -492,6 +522,21 @@ void TransportCompatibilityTest::TestRequestResponse_Header() {
   });
 }
 
+void TransportCompatibilityTest::TestRequestResponse_Header_Load() {
+  connectToServer([](std::unique_ptr<TestServiceAsyncClient> client) {
+    RpcOptions rpcOptions;
+    rpcOptions.setWriteHeader("header_from_client", "2");
+    rpcOptions.setWriteHeader(THeader::QUERY_LOAD_HEADER, {});
+    auto resultAndHeaders = client->header_future_headers(rpcOptions).get();
+    const auto readHeaders =
+        std::move(resultAndHeaders.second)->releaseHeaders();
+    EXPECT_NE(readHeaders.end(), readHeaders.find("header_from_server"));
+    const auto loadIt = readHeaders.find(THeader::QUERY_LOAD_HEADER);
+    ASSERT_NE(readHeaders.end(), loadIt);
+    EXPECT_EQ(123, folly::to<int64_t>(loadIt->second));
+  });
+}
+
 void TransportCompatibilityTest::
     TestRequestResponse_Header_ExpectedException() {
   connectToServer([](std::unique_ptr<TestServiceAsyncClient> client) {
@@ -501,7 +546,7 @@ void TransportCompatibilityTest::
       rpcOptions.setWriteHeader("expected_exception", "1");
       auto future = client->header_future_headers(rpcOptions);
       auto& waited = future.wait();
-      auto& ftry = waited.getTry();
+      auto& ftry = waited.result();
       EXPECT_TRUE(ftry.hasException());
       EXPECT_THAT(
           ftry.tryGetExceptionObject()->what(),
@@ -571,12 +616,31 @@ void TransportCompatibilityTest::TestRequestResponse_Saturation() {
 
     connection->getEventBase()->runInEventBaseThreadAndWait(
         [&]() { connection->setMaxPendingRequests(0u); });
-    EXPECT_THROW(client->sync_add(5), TTransportException);
+    EXPECT_THROW(client->semifuture_add(5).get(), TTransportException);
 
     connection->getEventBase()->runInEventBaseThreadAndWait(
         [&]() { connection->setMaxPendingRequests(1u); });
-    EXPECT_EQ(3, client->sync_add(3));
-    EXPECT_EQ(6, client->sync_add(3));
+    EXPECT_EQ(3, client->semifuture_add(3).get());
+    EXPECT_EQ(6, client->semifuture_add(3).get());
+  });
+}
+
+void TransportCompatibilityTest::TestRequestResponse_IsOverloaded() {
+  // make sure server is overloaded
+  server_->getServer()->setIsOverloaded(
+      [](const transport::THeader::StringToStringMap*, const std::string*) {
+        return true;
+      });
+  connectToServer([this](std::unique_ptr<TestServiceAsyncClient> client) {
+    try {
+      RpcOptions rpcOptions;
+      auto resultAndHeaders = client->header_future_headers(rpcOptions).get();
+      EXPECT_TRUE(false) << "header_future_headers should have thrown";
+    } catch (TApplicationException& ex) {
+      EXPECT_EQ(TApplicationException::LOADSHEDDING, ex.getType());
+      EXPECT_EQ(1, server_->observer_->serverOverloaded_);
+      EXPECT_EQ(0, server_->observer_->taskKilled_);
+    }
   });
 }
 
@@ -617,7 +681,7 @@ void TransportCompatibilityTest::TestRequestResponse_ServerQueueTimeout() {
     int successCount = 0;
     for (auto& future : futures) {
       auto& waitedFuture = future.wait();
-      auto& triedFuture = waitedFuture.getTry();
+      auto& triedFuture = waitedFuture.result();
       if (triedFuture.withException([](TApplicationException& ex) {
             EXPECT_EQ(
                 TApplicationException::TApplicationExceptionType::TIMEOUT,
@@ -642,7 +706,7 @@ void TransportCompatibilityTest::TestRequestResponse_ServerQueueTimeout() {
     taskTimeoutCount = 0;
     for (auto& future : futures) {
       auto& waitedFuture = future.wait();
-      auto& triedFuture = waitedFuture.getTry();
+      auto& triedFuture = waitedFuture.result();
       if (triedFuture.withException([](TApplicationException& ex) {
             EXPECT_EQ(
                 TApplicationException::TApplicationExceptionType::TIMEOUT,
@@ -674,6 +738,57 @@ void TransportCompatibilityTest::TestRequestResponse_ResponseSizeTooBig() {
   });
 }
 
+void TransportCompatibilityTest::TestRequestResponse_Checksumming() {
+  connectToServer([this](std::unique_ptr<TestServiceAsyncClient> client) {
+    enum class CorruptionType : int {
+      NONE = 0,
+      REQUESTS = 1,
+      RESPONSES = 2,
+    };
+    EXPECT_CALL(*handler_.get(), echo_(_)).Times(2);
+
+    auto setCorruption = [&](CorruptionType corruptionType) {
+      auto channel = static_cast<ClientChannel*>(client->getChannel());
+      channel->getEventBase()->runInEventBaseThreadAndWait([&]() {
+        auto p = std::make_shared<TAsyncSocketIntercepted::Params>();
+        p->corruptLastWriteByte_ = corruptionType == CorruptionType::REQUESTS;
+        p->corruptLastReadByte_ = corruptionType == CorruptionType::RESPONSES;
+        p->corruptLastReadByteMinSize_ = 1 << 10;
+        dynamic_cast<TAsyncSocketIntercepted*>(channel->getTransport())
+            ->setParams(p);
+      });
+    };
+
+    for (CorruptionType testType : {CorruptionType::NONE,
+                                    CorruptionType::REQUESTS,
+                                    CorruptionType::RESPONSES}) {
+      static const int kSize = 32 << 10;
+      std::string asString(kSize, 'a');
+      std::unique_ptr<folly::IOBuf> payload =
+          folly::IOBuf::copyBuffer(asString);
+      setCorruption(testType);
+
+      auto future =
+          client->future_echo(RpcOptions().setEnableChecksum(true), *payload);
+
+      if (testType == CorruptionType::NONE) {
+        EXPECT_EQ(asString, std::move(future).get());
+      } else {
+        bool didThrow = false;
+        try {
+          auto res = std::move(future).get();
+        } catch (TApplicationException& ex) {
+          EXPECT_EQ(TApplicationException::CHECKSUM_MISMATCH, ex.getType());
+          didThrow = true;
+          EXPECT_EQ(1, server_->observer_->taskKilled_);
+        }
+        EXPECT_TRUE(didThrow);
+      }
+    }
+    setCorruption(CorruptionType::NONE);
+  });
+}
+
 void TransportCompatibilityTest::TestOneway_Simple() {
   connectToServer([this](std::unique_ptr<TestServiceAsyncClient> client) {
     EXPECT_CALL(*handler_.get(), add_(0));
@@ -684,6 +799,12 @@ void TransportCompatibilityTest::TestOneway_Simple() {
     /* sleep override */
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     EXPECT_EQ(5, client->future_add(0).get());
+    // test stats
+    EXPECT_EQ(2, server_->observer_->receivedRequest_);
+    EXPECT_EQ(1, server_->observer_->sentReply_);
+    if (FLAGS_transport != "http2") {
+      EXPECT_EQ(1, server_->observer_->callCompleted_);
+    }
   });
 }
 
@@ -712,11 +833,12 @@ void TransportCompatibilityTest::TestOneway_Saturation() {
 
     connection->getEventBase()->runInEventBaseThreadAndWait(
         [&]() { connection->setMaxPendingRequests(0u); });
-    client->sync_addAfterDelay(0, 5);
+    EXPECT_THROW(
+        client->semifuture_addAfterDelay(0, 5).get(), TTransportException);
 
     connection->getEventBase()->runInEventBaseThreadAndWait(
         [&]() { connection->setMaxPendingRequests(1u); });
-    EXPECT_EQ(3, client->sync_add(3));
+    EXPECT_EQ(3, client->semifuture_add(3).get());
   });
 }
 
@@ -772,6 +894,43 @@ void TransportCompatibilityTest::TestOneway_ServerQueueTimeout() {
       });
 }
 
+void TransportCompatibilityTest::TestOneway_Checksumming() {
+  connectToServer([this](std::unique_ptr<TestServiceAsyncClient> client) {
+    EXPECT_CALL(*handler_.get(), onewayLogBlob_(_));
+
+    auto setCorruption = [&](bool val) {
+      auto channel = static_cast<ClientChannel*>(client->getChannel());
+      channel->getEventBase()->runInEventBaseThreadAndWait([&]() {
+        auto p = std::make_shared<TAsyncSocketIntercepted::Params>();
+        p->corruptLastWriteByte_ = val;
+        dynamic_cast<TAsyncSocketIntercepted*>(channel->getTransport())
+            ->setParams(p);
+      });
+    };
+
+    for (bool shouldCorrupt : {false, true}) {
+      static const int kSize = 32 << 10; // > IOBuf buf sharing thresh
+      std::string asString(kSize, 'a');
+
+      setCorruption(shouldCorrupt);
+
+      auto payload = folly::IOBuf::copyBuffer(asString);
+      client
+          ->future_onewayLogBlob(RpcOptions().setEnableChecksum(true), *payload)
+          .get();
+      // Unlike request/response case, no exception is thrown here for
+      // a one-way RPC.
+      /* sleep override */
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+      if (shouldCorrupt) {
+        EXPECT_EQ(1, server_->observer_->taskKilled_);
+      }
+    }
+    setCorruption(false);
+  });
+}
+
 void TransportCompatibilityTest::TestRequestContextIsPreserved() {
   EXPECT_CALL(*handler_.get(), add_(5)).Times(1);
 
@@ -800,28 +959,54 @@ void TransportCompatibilityTest::TestRequestContextIsPreserved() {
 
 void TransportCompatibilityTest::TestBadPayload() {
   connectToServer([](std::unique_ptr<TestServiceAsyncClient> client) {
-    auto cb = std::make_unique<MockCallback>(true, false);
     auto channel = static_cast<ClientChannel*>(client->getChannel());
     channel->getEventBase()->runInEventBaseThreadAndWait([&]() {
-      auto metadata = std::make_unique<RequestRpcMetadata>();
-      metadata->set_clientTimeoutMs(10000);
-      metadata->set_kind(RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE);
-      metadata->set_name("name");
-      metadata->set_seqId(0);
-      metadata->set_protocol(ProtocolId::BINARY);
+      RequestRpcMetadata metadata;
+      metadata.clientTimeoutMs_ref() = 10000;
+      metadata.kind_ref() = RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE;
+      metadata.name_ref() = "name";
+      metadata.seqId_ref() = 0;
+      metadata.protocol_ref() = ProtocolId::BINARY;
 
       // Put a bad payload!
       auto payload = std::make_unique<folly::IOBuf>();
 
       RpcOptions rpcOptions;
-      auto ctx = std::make_unique<ContextStack>("temp");
       auto header = std::make_shared<THeader>();
-      channel->sendRequest(
-          rpcOptions,
-          std::move(cb),
-          std::move(ctx),
-          std::move(payload),
-          std::move(header));
+      class ErrorCallback : public apache::thrift::RequestClientCallback {
+       public:
+        static apache::thrift::RequestClientCallback::Ptr create() {
+          static folly::Indestructible<ErrorCallback> instance;
+          return apache::thrift::RequestClientCallback::Ptr(instance.get());
+        }
+
+        void onRequestSent() noexcept override {
+          ADD_FAILURE();
+        }
+        void onResponse(
+            apache::thrift::ClientReceiveState&&) noexcept override {
+          ADD_FAILURE();
+        }
+        void onResponseError(folly::exception_wrapper) noexcept override {}
+      };
+
+      if (auto envelopeAndRequest =
+              apache::thrift::EnvelopeUtil::stripRequestEnvelope(
+                  std::move(payload))) {
+        channel->sendRequestResponse(
+            rpcOptions,
+            envelopeAndRequest->first.methodName,
+            apache::thrift::SerializedRequest(
+                std::move(envelopeAndRequest->second)),
+            std::move(header),
+            ErrorCallback::create());
+      } else {
+        ErrorCallback::create().release()->onResponseError(
+            folly::make_exception_wrapper<
+                apache::thrift::transport::TTransportException>(
+                apache::thrift::transport::TTransportException::CORRUPTED_DATA,
+                "Unexpected problem stripping envelope"));
+      }
     });
   });
 }
@@ -932,6 +1117,123 @@ void TransportCompatibilityTest::TestCloseCallback() {
     evb->runInEventBaseThreadAndWait([&]() { channel->closeNow(); });
     EXPECT_TRUE(closeCb->isClosed());
   });
+}
+
+void TransportCompatibilityTest::TestCustomAsyncProcessor() {
+  class TestSendCallback : public MessageChannel::SendCallback {
+   public:
+    explicit TestSendCallback(MessageChannel::SendCallback* cb) : cb_(cb) {}
+    void sendQueued() override {
+      if (cb_) {
+        cb_->sendQueued();
+      }
+    }
+
+    void messageSent() override {
+      if (cb_) {
+        cb_->messageSent();
+      }
+      delete this;
+    }
+
+    void messageSendError(folly::exception_wrapper&& ex) override {
+      if (cb_) {
+        cb_->messageSendError(std::move(ex));
+      }
+      delete this;
+    }
+
+   private:
+    MessageChannel::SendCallback* cb_;
+  };
+
+  class TestResponseChannelRequest
+      : public apache::thrift::ResponseChannelRequest {
+   public:
+    explicit TestResponseChannelRequest(
+        apache::thrift::ResponseChannelRequest::UniquePtr req)
+        : req_(std::move(req)) {}
+
+    bool isActive() const override {
+      return req_->isActive();
+    }
+
+    void cancel() override {
+      return req_->cancel();
+    }
+
+    bool isOneway() const override {
+      return req_->isOneway();
+    }
+
+    void sendReply(
+        std::unique_ptr<folly::IOBuf>&& buf,
+        MessageChannel::SendCallback* cb,
+        folly::Optional<uint32_t> crc32) override {
+      req_->sendReply(std::move(buf), new TestSendCallback(cb), crc32);
+    }
+
+    void sendErrorWrapped(folly::exception_wrapper ex, std::string exCode)
+        override {
+      req_->sendErrorWrapped(std::move(ex), std::move(exCode));
+    }
+
+   private:
+    apache::thrift::ResponseChannelRequest::UniquePtr req_;
+  };
+
+  class TestAsyncProcessor : public apache::thrift::AsyncProcessor {
+   public:
+    TestAsyncProcessor(
+        std::unique_ptr<apache::thrift::AsyncProcessor> processor)
+        : underlyingProcessor_(std::move(processor)) {}
+
+    void processSerializedRequest(
+        apache::thrift::ResponseChannelRequest::UniquePtr req,
+        apache::thrift::SerializedRequest&& serializedRequest,
+        apache::thrift::protocol::PROTOCOL_TYPES protType,
+        apache::thrift::Cpp2RequestContext* context,
+        folly::EventBase* eb,
+        apache::thrift::concurrency::ThreadManager* tm) override {
+      underlyingProcessor_->processSerializedRequest(
+          apache::thrift::ResponseChannelRequest::UniquePtr(
+              new TestResponseChannelRequest(std::move(req))),
+          std::move(serializedRequest),
+          protType,
+          context,
+          eb,
+          tm);
+    }
+
+   private:
+    std::unique_ptr<apache::thrift::AsyncProcessor> underlyingProcessor_;
+  };
+
+  class TestAsyncProcessorFactory
+      : public apache::thrift::AsyncProcessorFactory {
+   public:
+    explicit TestAsyncProcessorFactory(
+        std::shared_ptr<ThriftServerAsyncProcessorFactory<
+            testutil::testservice::TestServiceMock>> fac)
+        : underlyingFac_(std::move(fac)) {}
+    std::unique_ptr<apache::thrift::AsyncProcessor> getProcessor() override {
+      return std::make_unique<TestAsyncProcessor>(
+          underlyingFac_->getProcessor());
+    }
+
+   private:
+    std::shared_ptr<ThriftServerAsyncProcessorFactory<
+        testutil::testservice::TestServiceMock>>
+        underlyingFac_;
+  };
+
+  auto cpp2PFac = std::make_shared<ThriftServerAsyncProcessorFactory<
+      testutil::testservice::TestServiceMock>>(handler_);
+
+  server_->getServer()->setProcessorFactory(
+      std::make_shared<TestAsyncProcessorFactory>(std::move(cpp2PFac)));
+  startServer();
+  TestRequestResponse_Simple();
 }
 
 } // namespace thrift

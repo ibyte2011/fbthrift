@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,32 +15,38 @@
  */
 
 #include <memory>
+#include <string>
+#include <utility>
 
 #include <boost/cast.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <fmt/core.h>
+#include <folly/portability/GMock.h>
+#include <folly/portability/GTest.h>
 
+#include <folly/Conv.h>
+#include <folly/ExceptionWrapper.h>
 #include <folly/Memory.h>
 #include <folly/Optional.h>
 #include <folly/Range.h>
 #include <folly/executors/GlobalExecutor.h>
-#include <folly/fibers/FiberManagerMap.h>
 #include <folly/io/GlobalShutdownSocketSet.h>
 #include <folly/io/async/AsyncServerSocket.h>
+#include <folly/io/async/AsyncSocket.h>
+#include <folly/io/async/AsyncSocketException.h>
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/test/TestSSLServer.h>
 #include <wangle/acceptor/ServerSocketConfig.h>
 
+#include <folly/io/async/AsyncSocket.h>
 #include <proxygen/httpserver/HTTPServerOptions.h>
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
 #include <thrift/lib/cpp/transport/THeader.h>
 #include <thrift/lib/cpp2/async/HTTPClientChannel.h>
 #include <thrift/lib/cpp2/async/HeaderClientChannel.h>
 #include <thrift/lib/cpp2/async/RequestChannel.h>
-#include <thrift/lib/cpp2/async/StubSaslClient.h>
-#include <thrift/lib/cpp2/async/StubSaslServer.h>
+#include <thrift/lib/cpp2/async/RocketClientChannel.h>
 #include <thrift/lib/cpp2/server/Cpp2Connection.h>
 #include <thrift/lib/cpp2/server/ThriftServer.h>
 #include <thrift/lib/cpp2/test/gen-cpp2/TestService.h>
@@ -56,6 +62,7 @@ using namespace apache::thrift::test;
 using namespace apache::thrift::util;
 using namespace apache::thrift::async;
 using namespace apache::thrift::transport;
+using std::string;
 
 DECLARE_int32(thrift_cpp2_protocol_reader_string_limit);
 
@@ -82,7 +89,8 @@ TEST(ThriftServer, H2ClientAddressTest) {
   thriftServer.addRoutingHandler(createHTTP2RoutingHandler(thriftServer));
 
   folly::EventBase base;
-  TAsyncSocket::UniquePtr socket(new TAsyncSocket(&base, runner.getAddress()));
+  folly::AsyncSocket::UniquePtr socket(
+      new folly::AsyncSocket(&base, runner.getAddress()));
   TestServiceAsyncClient client(
       HTTPClientChannel::newHTTP2Channel(std::move(socket)));
   auto channel =
@@ -108,8 +116,8 @@ TEST(ThriftServer, OnewayClientConnectionCloseTest) {
 
   {
     folly::EventBase base;
-    std::shared_ptr<TAsyncSocket> socket(
-        TAsyncSocket::newSocket(&base, *st.getAddress()));
+    std::shared_ptr<folly::AsyncSocket> socket(
+        folly::AsyncSocket::newSocket(&base, *st.getAddress()));
     TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
     client.sync_noResponse(10000);
@@ -138,9 +146,8 @@ TEST(ThriftServer, OnewayDeferredHandlerTest) {
   auto handler = std::make_shared<OnewayTestInterface>();
   ScopedServerInterfaceThread runner(handler);
 
-  folly::EventBase eb;
   handler->done.reset();
-  auto client = runner.newClient<TestServiceAsyncClient>(eb);
+  auto client = runner.newClient<TestServiceAsyncClient>();
   client->sync_noResponse(100);
   ASSERT_TRUE(handler->done.try_wait_for(std::chrono::seconds(1)));
 }
@@ -149,15 +156,14 @@ TEST(ThriftServer, CompressionClientTest) {
   TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
   auto channel =
       boost::polymorphic_downcast<HeaderClientChannel*>(client.getChannel());
   channel->setTransform(apache::thrift::transport::THeader::ZLIB_TRANSFORM);
-  channel->setMinCompressBytes(1);
 
   std::string response;
   client.sync_sendResponse(response, 64);
@@ -173,8 +179,7 @@ TEST(ThriftServer, CompressionClientTest) {
 TEST(ThriftServer, ResponseTooBigTest) {
   ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
   runner.getThriftServer().setMaxResponseSize(4096);
-  folly::EventBase eb;
-  auto client = runner.newClient<TestServiceAsyncClient>(eb);
+  auto client = runner.newClient<TestServiceAsyncClient>();
 
   std::string request(4096, 'a');
   std::string response;
@@ -190,56 +195,30 @@ TEST(ThriftServer, ResponseTooBigTest) {
   }
 }
 
-class ConnCallback : public TAsyncSocket::ConnectCallback {
+class TestConnCallback : public folly::AsyncSocket::ConnectCallback {
  public:
   void connectSuccess() noexcept override {}
 
-  void connectError(
-      const transport::TTransportException& ex) noexcept override {
-    exception.reset(new transport::TTransportException(ex));
+  void connectErr(const folly::AsyncSocketException& ex) noexcept override {
+    exception.reset(new folly::AsyncSocketException(ex));
   }
 
-  std::unique_ptr<transport::TTransportException> exception;
+  std::unique_ptr<folly::AsyncSocketException> exception;
 };
 
 TEST(ThriftServer, SSLClientOnPlaintextServerTest) {
   TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   folly::EventBase base;
-  auto sslCtx = std::make_shared<SSLContext>();
-  std::shared_ptr<TAsyncSocket> socket(
+  auto sslCtx = std::make_shared<folly::SSLContext>();
+  std::shared_ptr<folly::AsyncSocket> socket(
       TAsyncSSLSocket::newSocket(sslCtx, &base));
-  ConnCallback cb;
+  TestConnCallback cb;
   socket->connect(&cb, *sst.getAddress());
   base.loop();
   ASSERT_TRUE(cb.exception);
   auto msg = cb.exception->what();
   EXPECT_NE(nullptr, strstr(msg, "unexpected message"));
-}
-
-TEST(ThriftServer, CompressionServerTest) {
-  /* This tests the boundary condition of uncompressed value being larger
-     than minCompressBytes and compressed value being smaller. We want to ensure
-     this case does not cause corruption */
-  TestThriftServerFactory<TestInterface> factory;
-  factory.minCompressBytes(100);
-  ScopedServerThread sst(factory.create());
-  folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
-
-  TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
-
-  auto channel =
-      boost::polymorphic_downcast<HeaderClientChannel*>(client.getChannel());
-  channel->setTransform(apache::thrift::transport::THeader::ZLIB_TRANSFORM);
-
-  std::string request(55, 'a');
-  std::string response;
-  // The response is slightly more than 100 bytes before compression
-  // and less than 100 bytes after compression
-  client.sync_echoRequest(response, request);
-  EXPECT_EQ(response.size(), 100);
 }
 
 TEST(ThriftServer, DefaultCompressionTest) {
@@ -273,22 +252,15 @@ TEST(ThriftServer, DefaultCompressionTest) {
   };
 
   TestThriftServerFactory<TestInterface> factory;
-  factory.minCompressBytes(1);
-  factory.defaultWriteTransform(
-      apache::thrift::transport::THeader::ZLIB_TRANSFORM);
   auto server = std::static_pointer_cast<ThriftServer>(factory.create());
   ScopedServerThread sst(server);
   folly::EventBase base;
 
-  // First, with minCompressBytes set low, ensure we compress even though the
-  // client did not compress
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  // no compression if client does not compress/send preference
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
-  client.sendResponse(
-      std::make_unique<Callback>(
-          true, apache::thrift::transport::THeader::ZLIB_TRANSFORM),
-      64);
+  client.sendResponse(std::make_unique<Callback>(false, 0), 64);
   base.loop();
 
   // Ensure that client transforms take precedence
@@ -300,15 +272,6 @@ TEST(ThriftServer, DefaultCompressionTest) {
           true, apache::thrift::transport::THeader::SNAPPY_TRANSFORM),
       64);
   base.loop();
-
-  // Ensure that minCompressBytes still works with default transforms. We
-  // Do not expect compression
-  server->setMinCompressBytes(1000);
-  std::shared_ptr<TAsyncSocket> socket2(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
-  TestServiceAsyncClient client2(HeaderClientChannel::newChannel(socket2));
-  client2.sendResponse(std::make_unique<Callback>(false, 0), 64);
-  base.loop();
 }
 
 TEST(ThriftServer, HeaderTest) {
@@ -316,8 +279,8 @@ TEST(ThriftServer, HeaderTest) {
   auto serv = factory.create();
   ScopedServerThread sst(serv);
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -336,64 +299,201 @@ TEST(ThriftServer, HeaderTest) {
   }
 }
 
-TEST(ThriftServer, LoadHeaderTest) {
-  class Callback : public RequestCallback {
-   public:
-    explicit Callback(bool isLoadExpected) : isLoadExpected_(isLoadExpected) {}
+namespace {
+void doLoadHeaderTest(bool isRocket) {
+  static constexpr int kEmptyMetricLoad = 12345;
 
-   private:
-    void requestSent() override {}
-
-    void replyReceived(ClientReceiveState&& state) override {
-      const auto& headers = state.header()->getHeaders();
-      auto loadIter = headers.find(Cpp2Connection::loadHeader);
-      ASSERT_EQ(isLoadExpected_, loadIter != headers.end());
-      if (isLoadExpected_) {
-        auto load = loadIter->second;
-        EXPECT_NE("", load);
-      }
+  auto makeClient = [=](auto& runner) {
+    if (!isRocket) {
+      return runner.template newClient<TestServiceAsyncClient>(
+          nullptr /* executor */, [](auto socket) mutable {
+            return HeaderClientChannel::newChannel(std::move(socket));
+          });
+    } else {
+      return runner.template newClient<TestServiceAsyncClient>(
+          nullptr /* executor */, [](auto socket) mutable {
+            return RocketClientChannel::newChannel(std::move(socket));
+          });
     }
-    void requestError(ClientReceiveState&&) override {
-      ADD_FAILURE() << "The response should not be an error";
-    }
-    bool isLoadExpected_;
   };
 
-  ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto checkLoadHeader = [](const auto& headers,
+                            folly::Optional<std::string> loadMetric) {
+    auto* load = folly::get_ptr(headers, THeader::QUERY_LOAD_HEADER);
+    ASSERT_EQ(loadMetric.hasValue(), load != nullptr);
+
+    if (!loadMetric) {
+      return;
+    }
+
+    folly::StringPiece loadSp(*loadMetric);
+    if (loadSp.removePrefix("custom_load_metric_")) {
+      EXPECT_EQ(loadSp, *load);
+    } else if (loadSp.empty()) {
+      EXPECT_EQ(folly::to<std::string>(kEmptyMetricLoad), *load);
+    } else {
+      FAIL() << "Unexpected load metric";
+    }
+  };
+
+  class BlockInterface : public TestServiceSvIf {
+   public:
+    folly::Optional<folly::Baton<>> block;
+    void voidResponse() override {
+      if (block) {
+        block.value().wait();
+      }
+    }
+  };
+
+  uint32_t nCalls = 0;
+  ScopedServerInterfaceThread runner(
+      std::make_shared<BlockInterface>(), "::1", 0, [&nCalls](auto& server) {
+        server.setGetLoad([](const std::string& metric) {
+          folly::StringPiece metricPiece(metric);
+          if (metricPiece.removePrefix("custom_load_metric_")) {
+            return folly::to<int32_t>(metricPiece.toString());
+          } else if (metricPiece.empty()) {
+            return kEmptyMetricLoad;
+          }
+          ADD_FAILURE() << "Unexpected load metric on request";
+          return -42;
+        });
+
+        server.setIsOverloaded(
+            [&nCalls](const auto*, const std::string* method) {
+              EXPECT_EQ("voidResponse", *method);
+              return ++nCalls == 4;
+            });
+      });
+
+  auto client = makeClient(runner);
 
   {
-    LOG(ERROR) << "========= no load header ==========";
-    client->voidResponse(std::make_unique<Callback>(false));
+    // No load header
+    RpcOptions options;
+    client->sync_voidResponse(options);
+    checkLoadHeader(options.getReadHeaders(), folly::none);
   }
 
   {
-    LOG(ERROR) << "========= empty load header ==========";
-    RpcOptions emptyLoadOptions;
-    emptyLoadOptions.setWriteHeader(Cpp2Connection::loadHeader, "");
-    client->voidResponse(emptyLoadOptions, std::make_unique<Callback>(true));
+    // Empty load header
+    RpcOptions options;
+    const std::string kLoadMetric;
+    options.setWriteHeader(THeader::QUERY_LOAD_HEADER, kLoadMetric);
+    client->sync_voidResponse(options);
+    checkLoadHeader(options.getReadHeaders(), kLoadMetric);
   }
 
   {
-    LOG(ERROR) << "========= foo load header ==========";
-    RpcOptions customLoadOptions;
-    customLoadOptions.setWriteHeader(Cpp2Connection::loadHeader, "foo");
-    client->voidResponse(customLoadOptions, std::make_unique<Callback>(true));
+    // Custom load header
+    RpcOptions options;
+    const std::string kLoadMetric{"custom_load_metric_789"};
+    options.setWriteHeader(THeader::QUERY_LOAD_HEADER, kLoadMetric);
+    client->sync_voidResponse(options);
+    checkLoadHeader(options.getReadHeaders(), kLoadMetric);
   }
 
   {
-    LOG(ERROR) << "========= server overloaded ==========";
-    RpcOptions customLoadOptions;
-    // force overloaded
-    runner.getThriftServer().setIsOverloaded(
-        [](const THeader*) { return true; });
-    runner.getThriftServer().setGetLoad([](const std::string&) { return 1; });
-    customLoadOptions.setWriteHeader(Cpp2Connection::loadHeader, "foo");
-    client->voidResponse(customLoadOptions, std::make_unique<Callback>(true));
+    // Force server overload. Load should still be returned on server overload.
+    RpcOptions options;
+    const std::string kLoadMetric;
+    options.setWriteHeader(THeader::QUERY_LOAD_HEADER, kLoadMetric);
+    auto ew = folly::try_and_catch<std::exception>(
+        [&] { client->sync_voidResponse(options); });
+    // Check that request was actually rejected due to server overload
+    const bool matched =
+        ew.with_exception([](const TApplicationException& tae) {
+          ASSERT_EQ(
+              TApplicationException::TApplicationExceptionType::LOADSHEDDING,
+              tae.getType());
+        });
+    ASSERT_TRUE(matched);
+    checkLoadHeader(options.getReadHeaders(), kLoadMetric);
   }
 
-  base.loop();
+  {
+    // Force queue timeout.
+    // for Rocket: load should still be returned
+    // for Header: load is not returned because of thread safety concerns.
+    auto handler = dynamic_cast<BlockInterface*>(
+        runner.getThriftServer().getProcessorFactory().get());
+    handler->block.emplace();
+    auto fut = client->semifuture_voidResponse();
+    auto guard = folly::makeGuard([&] {
+      handler->block.value().post();
+      std::move(fut).get();
+    });
+    RpcOptions options;
+    const std::string kLoadMetric;
+    options.setWriteHeader(THeader::QUERY_LOAD_HEADER, kLoadMetric);
+    options.setQueueTimeout(std::chrono::milliseconds(10));
+    auto ew = folly::try_and_catch<std::exception>(
+        [&] { client->sync_voidResponse(options); });
+    // Check that request was actually rejected due to queue timeout
+    const bool matched =
+        ew.with_exception([](const TApplicationException& tae) {
+          ASSERT_EQ(TApplicationException::TIMEOUT, tae.getType());
+        });
+    ASSERT_TRUE(matched);
+    if (isRocket) {
+      checkLoadHeader(options.getReadHeaders(), kLoadMetric);
+    } else {
+      checkLoadHeader(options.getReadHeaders(), folly::none);
+    }
+
+    EXPECT_EQ(
+        *folly::get_ptr(options.getReadHeaders(), "ex"),
+        kServerQueueTimeoutErrorCode);
+  }
+
+  {
+    // Force task timeout.
+    // for Rocket: load should still be returned
+    // for Header: load is not returned because of thread safety concerns.
+    auto handler = dynamic_cast<BlockInterface*>(
+        runner.getThriftServer().getProcessorFactory().get());
+    handler->block.emplace();
+
+    RpcOptions options;
+    const std::string kLoadMetric;
+    options.setWriteHeader(THeader::QUERY_LOAD_HEADER, kLoadMetric);
+    options.setTimeout(std::chrono::seconds(1));
+
+    auto prevTaskExpireTime = runner.getThriftServer().getTaskExpireTime();
+    auto prevUseClientTimeout = runner.getThriftServer().getUseClientTimeout();
+    runner.getThriftServer().setTaskExpireTime(std::chrono::milliseconds(100));
+    runner.getThriftServer().setUseClientTimeout(false);
+    auto guard = folly::makeGuard([&] {
+      handler->block.value().post();
+      runner.getThriftServer().setTaskExpireTime(prevTaskExpireTime);
+      runner.getThriftServer().setUseClientTimeout(prevUseClientTimeout);
+    });
+    auto ew = folly::try_and_catch<std::exception>(
+        [&] { client->sync_voidResponse(options); });
+    // Check that request was actually rejected due to task timeout
+    const bool matched =
+        ew.with_exception([](const TApplicationException& tae) {
+          ASSERT_EQ(TApplicationException::TIMEOUT, tae.getType());
+        });
+    ASSERT_TRUE(matched);
+    if (isRocket) {
+      checkLoadHeader(options.getReadHeaders(), kLoadMetric);
+    } else {
+      checkLoadHeader(options.getReadHeaders(), folly::none);
+    }
+
+    EXPECT_EQ(
+        *folly::get_ptr(options.getReadHeaders(), "ex"), kTaskExpiredErrorCode);
+  }
+}
+} // namespace
+
+TEST(ThriftServer, LoadHeaderTest_HeaderClientChannel) {
+  doLoadHeaderTest(false);
+}
+TEST(ThriftServer, LoadHeaderTest_RocketClientChannel) {
+  doLoadHeaderTest(true);
 }
 
 enum LatencyHeaderStatus {
@@ -405,15 +505,12 @@ static void validateLatencyHeaders(
     std::map<std::string, std::string> headers,
     LatencyHeaderStatus status) {
   bool isHeaderExpected = (status == LatencyHeaderStatus::EXPECTED);
-  auto readLatency = folly::get_optional(headers, kReadLatencyHeader.str());
-  ASSERT_EQ(isHeaderExpected, readLatency.has_value());
   auto queueLatency = folly::get_optional(headers, kQueueLatencyHeader.str());
   ASSERT_EQ(isHeaderExpected, queueLatency.has_value());
   auto processLatency =
       folly::get_optional(headers, kProcessLatencyHeader.str());
   ASSERT_EQ(isHeaderExpected, processLatency.has_value());
   if (isHeaderExpected) {
-    EXPECT_GE(folly::to<int64_t>(readLatency.value()), 0);
     EXPECT_GE(folly::to<int64_t>(queueLatency.value()), 0);
     EXPECT_GE(folly::to<int64_t>(processLatency.value()), 0);
   }
@@ -430,34 +527,190 @@ TEST(ThriftServer, LatencyHeader_LoggingDisabled) {
       rpcOptions.getReadHeaders(), LatencyHeaderStatus::NOT_EXPECTED);
 }
 
-TEST(ThriftServer, LatencyHeader_ServerOverloaded) {
-  ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
+namespace {
+enum class TransportType { Header, Rocket };
+enum class Compression { Enabled, Disabled };
+enum class ErrorType { Overload, AppOverload, MethodOverload, Client, Server };
+} // namespace
+
+class OverloadTest : public ::testing::TestWithParam<
+                         std::tuple<TransportType, Compression, ErrorType>> {
+ public:
+  TransportType transport;
+  Compression compression;
+  ErrorType errorType;
+
+  auto makeClient(ScopedServerInterfaceThread& runner, folly::EventBase* evb) {
+    if (transport == TransportType::Header) {
+      return runner.newClient<TestServiceAsyncClient>(
+          evb, [&](auto socket) mutable {
+            auto channel = HeaderClientChannel::newChannel(std::move(socket));
+            if (compression == Compression::Enabled) {
+              channel->setTransform(
+                  apache::thrift::transport::THeader::ZSTD_TRANSFORM);
+            }
+            return channel;
+          });
+    } else {
+      return runner.newClient<TestServiceAsyncClient>(
+          evb, [&](auto socket) mutable {
+            auto channel = RocketClientChannel::newChannel(std::move(socket));
+            return channel;
+          });
+    }
+  }
+
+  bool isCustomError() {
+    return errorType == ErrorType::Client || errorType == ErrorType::Server;
+  }
+
+  LatencyHeaderStatus getLatencyHeaderStatus() {
+    // we currently only report latency headers for Header,
+    // and only when method handler was executed started running.
+    return errorType == ErrorType::MethodOverload &&
+            transport == TransportType::Header
+        ? LatencyHeaderStatus::EXPECTED
+        : LatencyHeaderStatus::NOT_EXPECTED;
+  }
+
+  void validateErrorHeaders(const RpcOptions& rpc) {
+    auto& headers = rpc.getReadHeaders();
+    if (errorType == ErrorType::Client) {
+      EXPECT_EQ(*folly::get_ptr(headers, "ex"), kAppClientErrorCode);
+      EXPECT_EQ(*folly::get_ptr(headers, "uex"), "name");
+      EXPECT_EQ(*folly::get_ptr(headers, "uexw"), "message");
+    } else if (errorType == ErrorType::Server) {
+      EXPECT_EQ(*folly::get_ptr(headers, "uex"), "name");
+      EXPECT_EQ(*folly::get_ptr(headers, "uexw"), "message");
+    } else if (errorType == ErrorType::AppOverload) {
+      EXPECT_EQ(*folly::get_ptr(headers, "ex"), kAppOverloadedErrorCode);
+      EXPECT_EQ(folly::get_ptr(headers, "uex"), nullptr);
+      EXPECT_EQ(folly::get_ptr(headers, "uexw"), nullptr);
+    } else if (errorType == ErrorType::MethodOverload) {
+      EXPECT_EQ(*folly::get_ptr(headers, "ex"), kAppOverloadedErrorCode);
+      EXPECT_EQ(folly::get_ptr(headers, "uex"), nullptr);
+      EXPECT_EQ(folly::get_ptr(headers, "uexw"), nullptr);
+    } else if (errorType == ErrorType::Overload) {
+      EXPECT_EQ(*folly::get_ptr(headers, "ex"), kOverloadedErrorCode);
+      EXPECT_EQ(folly::get_ptr(headers, "uex"), nullptr);
+      EXPECT_EQ(folly::get_ptr(headers, "uexw"), nullptr);
+    } else {
+      FAIL() << "Unknown error type: " << (int)errorType;
+    }
+  }
+
+  void SetUp() override {
+    std::tie(transport, compression, errorType) = GetParam();
+  }
+};
+
+TEST_P(OverloadTest, Test) {
+  class BlockInterface : public TestServiceSvIf {
+   public:
+    folly::Baton<> block;
+    void voidResponse() override {
+      block.wait();
+    }
+
+    void async_eb_eventBaseAsync(
+        std::unique_ptr<HandlerCallback<std::unique_ptr<::std::string>>>
+            callback) override {
+      callback->appOverloadedException("loadshedding request");
+    }
+  };
+
+  ScopedServerInterfaceThread runner(std::make_shared<BlockInterface>());
   folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto client = makeClient(runner, &base);
+
+  runner.getThriftServer().setIsOverloaded(
+      [&](const auto*, const string* method) {
+        if (errorType == ErrorType::AppOverload) {
+          EXPECT_EQ("voidResponse", *method);
+          return true;
+        }
+        return false;
+      });
+
+  runner.getThriftServer().setPreprocess([&](auto, auto) -> PreprocessResult {
+    if (errorType == ErrorType::Client) {
+      return {AppClientException("name", "message")};
+    } else if (errorType == ErrorType::Server) {
+      return {AppServerException("name", "message")};
+    }
+    return {};
+  });
 
   // force overloaded
-  runner.getThriftServer().setIsOverloaded([](const THeader*) { return true; });
+  folly::Function<void()> onExit = [] {};
+  auto guard = folly::makeGuard([&] { onExit(); });
+  if (errorType == ErrorType::Overload) {
+    // Thrift is overloaded on max requests
+    runner.getThriftServer().setMaxRequests(1);
+    auto handler = dynamic_cast<BlockInterface*>(
+        runner.getThriftServer().getProcessorFactory().get());
+    client->semifuture_voidResponse();
+    while (runner.getThriftServer().getActiveRequests() < 1) {
+      std::this_thread::yield();
+    }
+    onExit = [handler] { handler->block.post(); };
+  }
 
   RpcOptions rpcOptions;
   rpcOptions.setWriteHeader(kClientLoggingHeader.str(), "");
-  EXPECT_ANY_THROW(client->sync_voidResponse(rpcOptions));
+  try {
+    if (errorType == ErrorType::MethodOverload) {
+      std::string dummy;
+      client->sync_eventBaseAsync(rpcOptions, dummy);
+    } else {
+      client->sync_voidResponse(rpcOptions);
+    }
+    FAIL() << "Expected that the service call throws TApplicationException";
+  } catch (const apache::thrift::TApplicationException& ex) {
+    auto expectType = isCustomError() ? TApplicationException::UNKNOWN
+                                      : TApplicationException::LOADSHEDDING;
+    EXPECT_EQ(expectType, ex.getType());
+    auto expectMessage = isCustomError() ? "message" : "loadshedding request";
+    EXPECT_EQ(expectMessage, ex.getMessage());
 
-  // Latency headers are NOT set, when server is overloaded
-  validateLatencyHeaders(
-      rpcOptions.getReadHeaders(), LatencyHeaderStatus::NOT_EXPECTED);
+    validateErrorHeaders(rpcOptions);
+
+    // Latency headers are NOT set, when server is overloaded
+    validateLatencyHeaders(
+        rpcOptions.getReadHeaders(), getLatencyHeaderStatus());
+  } catch (...) {
+    FAIL()
+        << "Expected that the service call throws TApplicationException, got "
+        << folly::exceptionStr(std::current_exception());
+  }
 }
 
-TEST(ThriftServer, LatencyHeader_ClientTimeout) {
-  ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+INSTANTIATE_TEST_CASE_P(
+    OverloadTestsFixture,
+    OverloadTest,
+    ::testing::Combine(
+        testing::Values(TransportType::Header, TransportType::Rocket),
+        testing::Values(Compression::Enabled, Compression::Disabled),
+        testing::Values(
+            ErrorType::Overload,
+            ErrorType::MethodOverload,
+            ErrorType::AppOverload,
+            ErrorType::Client,
+            ErrorType::Server)));
 
-  runner.getThriftServer().setUseClientTimeout(
-      LatencyHeaderStatus::NOT_EXPECTED);
+TEST(ThriftServer, LatencyHeader_ClientTimeout) {
+  ScopedServerInterfaceThread runner(
+      std::make_shared<TestInterface>(), "::1", 0, [](auto& server) {
+        server.setUseClientTimeout(false);
+      });
+  auto client =
+      runner.newClient<TestServiceAsyncClient>(nullptr, [](auto socket) {
+        return HeaderClientChannel::newChannel(std::move(socket));
+      });
 
   RpcOptions rpcOptions;
   // Setup client timeout
-  rpcOptions.setTimeout(std::chrono::milliseconds(5));
+  rpcOptions.setTimeout(std::chrono::milliseconds(1));
   rpcOptions.setWriteHeader(kClientLoggingHeader.str(), "");
   std::string response;
   EXPECT_ANY_THROW(client->sync_sendResponse(rpcOptions, response, 20000));
@@ -469,8 +722,10 @@ TEST(ThriftServer, LatencyHeader_ClientTimeout) {
 
 TEST(ThriftServer, LatencyHeader_RequestSuccess) {
   ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto client =
+      runner.newClient<TestServiceAsyncClient>(nullptr, [](auto socket) {
+        return HeaderClientChannel::newChannel(std::move(socket));
+      });
 
   RpcOptions rpcOptions;
   rpcOptions.setWriteHeader(kClientLoggingHeader.str(), "");
@@ -481,8 +736,10 @@ TEST(ThriftServer, LatencyHeader_RequestSuccess) {
 
 TEST(ThriftServer, LatencyHeader_RequestFailed) {
   ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto client =
+      runner.newClient<TestServiceAsyncClient>(nullptr, [](auto socket) {
+        return HeaderClientChannel::newChannel(std::move(socket));
+      });
 
   RpcOptions rpcOptions;
   rpcOptions.setWriteHeader(kClientLoggingHeader.str(), "");
@@ -495,8 +752,10 @@ TEST(ThriftServer, LatencyHeader_RequestFailed) {
 
 TEST(ThriftServer, LatencyHeader_TaskExpiry) {
   ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto client =
+      runner.newClient<TestServiceAsyncClient>(nullptr, [](auto socket) {
+        return HeaderClientChannel::newChannel(std::move(socket));
+      });
 
   // setup task expire timeout.
   runner.getThriftServer().setTaskExpireTime(std::chrono::milliseconds(10));
@@ -514,14 +773,16 @@ TEST(ThriftServer, LatencyHeader_TaskExpiry) {
 
 TEST(ThriftServer, LatencyHeader_QueueTimeout) {
   ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
-  folly::EventBase base;
-  auto client = runner.newClient<TestServiceAsyncClient>(&base);
+  auto client =
+      runner.newStickyClient<TestServiceAsyncClient>(nullptr, [](auto socket) {
+        return HeaderClientChannel::newChannel(std::move(socket));
+      });
 
   // setup timeout
   runner.getThriftServer().setQueueTimeout(std::chrono::milliseconds(5));
 
   // Run a long request.
-  client->future_sendResponse(20000);
+  auto slowRequestFuture = client->semifuture_sendResponse(20000);
 
   RpcOptions rpcOptions;
   rpcOptions.setWriteHeader(kClientLoggingHeader.str(), "");
@@ -531,6 +792,9 @@ TEST(ThriftServer, LatencyHeader_QueueTimeout) {
   // Latency headers are set, when server throws queue timeout
   validateLatencyHeaders(
       rpcOptions.getReadHeaders(), LatencyHeaderStatus::EXPECTED);
+
+  folly::EventBase base;
+  std::move(slowRequestFuture).via(&base).getVia(&base);
 }
 
 TEST(ThriftServer, ClientTimeoutTest) {
@@ -540,8 +804,8 @@ TEST(ThriftServer, ClientTimeoutTest) {
   folly::EventBase base;
 
   auto getClient = [&base, &sst]() {
-    std::shared_ptr<TAsyncSocket> socket(
-        TAsyncSocket::newSocket(&base, *sst.getAddress()));
+    std::shared_ptr<folly::AsyncSocket> socket(
+        folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
     return std::make_shared<TestServiceAsyncClient>(
         HeaderClientChannel::newChannel(socket));
@@ -642,8 +906,8 @@ TEST(ThriftServer, ConnectionIdleTimeoutTest) {
   apache::thrift::util::ScopedServerThread st(server);
 
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *st.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *st.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -653,32 +917,30 @@ TEST(ThriftServer, ConnectionIdleTimeoutTest) {
   base.loop();
 }
 
-namespace {
-class Callback : public RequestCallback {
-  void requestSent() override {
-    ADD_FAILURE();
-  }
-  void replyReceived(ClientReceiveState&&) override {
-    ADD_FAILURE();
-  }
-  void requestError(ClientReceiveState&& state) override {
-    EXPECT_TRUE(state.exception());
-    auto ex =
-        state.exception()
-            .get_exception<apache::thrift::transport::TTransportException>();
-    ASSERT_TRUE(ex);
-    EXPECT_THAT(
-        ex->what(), testing::StartsWith("transport is closed in write()"));
-  }
-};
-} // namespace
-
 TEST(ThriftServer, BadSendTest) {
+  class Callback : public RequestCallback {
+    void requestSent() override {
+      ADD_FAILURE();
+    }
+    void replyReceived(ClientReceiveState&&) override {
+      ADD_FAILURE();
+    }
+    void requestError(ClientReceiveState&& state) override {
+      EXPECT_TRUE(state.exception());
+      auto ex =
+          state.exception()
+              .get_exception<apache::thrift::transport::TTransportException>();
+      ASSERT_TRUE(ex);
+      EXPECT_THAT(
+          ex->what(), testing::StartsWith("transport is closed in write()"));
+    }
+  };
+
   TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -706,8 +968,8 @@ TEST(ThriftServer, ResetStateTest) {
   // the assertion failure was a lost race, which doesn't happen
   // reliably.
   for (int i = 0; i < 1000; ++i) {
-    std::shared_ptr<TAsyncSocket> socket(
-        TAsyncSocket::newSocket(&base, ssock->getAddresses()[0]));
+    std::shared_ptr<folly::AsyncSocket> socket(
+        folly::AsyncSocket::newSocket(&base, ssock->getAddresses()[0]));
 
     // Create a client.
     TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
@@ -742,7 +1004,7 @@ TEST(ThriftServer, FailureInjection) {
       try {
         TestServiceAsyncClient::recv_sendResponse(response, state);
         EXPECT_EQ(NONE, *expected_);
-      } catch (const apache::thrift::TApplicationException& ex) {
+      } catch (const apache::thrift::TApplicationException&) {
         const auto& headers = state.header()->getHeaders();
         EXPECT_TRUE(
             headers.find("ex") != headers.end() &&
@@ -781,8 +1043,8 @@ TEST(ThriftServer, FailureInjection) {
   TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -847,8 +1109,8 @@ TEST(ThriftServer, useExistingSocketAndConnectionIdleTimeout) {
   apache::thrift::util::ScopedServerThread st(server);
 
   folly::EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *st.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *st.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -859,7 +1121,7 @@ TEST(ThriftServer, useExistingSocketAndConnectionIdleTimeout) {
 }
 
 namespace {
-class ReadCallbackTest : public TAsyncTransport::ReadCallback {
+class ReadCallbackTest : public folly::AsyncTransport::ReadCallback {
  public:
   void getReadBuffer(void**, size_t*) override {}
   void readDataAvailable(size_t) noexcept override {}
@@ -867,7 +1129,7 @@ class ReadCallbackTest : public TAsyncTransport::ReadCallback {
     eof = true;
   }
 
-  void readError(const transport::TTransportException&) noexcept override {
+  void readErr(const folly::AsyncSocketException&) noexcept override {
     eof = true;
   }
 
@@ -882,9 +1144,9 @@ TEST(ThriftServer, ShutdownSocketSetTest) {
   folly::EventBase base;
   ReadCallbackTest cb;
 
-  std::shared_ptr<TAsyncSocket> socket2(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
-  socket2->setReadCallback(&cb);
+  std::shared_ptr<folly::AsyncSocket> socket2(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
+  socket2->setReadCB(&cb);
 
   base.tryRunAfterDelay(
       [&]() { folly::tryGetShutdownSocketSet()->shutdownAll(); }, 10);
@@ -919,8 +1181,8 @@ TEST(ThriftServer, ModifyingIOThreadCountLive) {
 
   folly::EventBase base;
 
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly ::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
 
@@ -937,8 +1199,8 @@ TEST(ThriftServer, ModifyingIOThreadCountLive) {
   server->getServeEventBase()->runInEventBaseThreadAndWait(
       [=]() { iothreadpool->setNumThreads(30); });
 
-  std::shared_ptr<TAsyncSocket> socket2(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<folly::AsyncSocket> socket2(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   // Can't reuse client since the channel has gone bad
   TestServiceAsyncClient client2(HeaderClientChannel::newChannel(socket2));
@@ -958,28 +1220,6 @@ TEST(ThriftServer, setIOThreadPool) {
   EXPECT_EQ(1, server->getNumIOWorkerThreads());
 }
 
-namespace {
-class ExtendedTestServiceAsyncProcessor : public TestServiceAsyncProcessor {
- public:
-  explicit ExtendedTestServiceAsyncProcessor(TestServiceSvIf* serviceInterface)
-      : TestServiceAsyncProcessor(serviceInterface) {}
-
-  folly::Optional<std::string> getCacheKeyTest() {
-    folly::IOBuf emptyBuffer;
-    return getCacheKey(
-        &emptyBuffer,
-        apache::thrift::protocol::PROTOCOL_TYPES::T_BINARY_PROTOCOL);
-  }
-};
-} // namespace
-
-TEST(ThriftServer, CacheAnnotation) {
-  // We aren't parsing anything just want this to compile
-  auto testInterface = std::unique_ptr<TestInterface>(new TestInterface);
-  ExtendedTestServiceAsyncProcessor processor(testInterface.get());
-  EXPECT_FALSE(processor.getCacheKeyTest().has_value());
-}
-
 TEST(ThriftServer, IdleServerTimeout) {
   TestThriftServerFactory<TestInterface> factory;
 
@@ -989,34 +1229,6 @@ TEST(ThriftServer, IdleServerTimeout) {
 
   ScopedServerThread scopedServer(server);
   scopedServer.join();
-}
-
-TEST(ThriftServer, LocalIPCheck) {
-  folly::SocketAddress empty;
-  folly::SocketAddress v4Local("127.0.0.1", 1);
-  folly::SocketAddress v4NonLocal1("128.0.0.1", 2);
-  folly::SocketAddress v4NonLocal2("128.0.0.2", 3);
-  folly::SocketAddress v6Local("::1", 4);
-  folly::SocketAddress v6NonLocal1("::2", 5);
-  folly::SocketAddress v6NonLocal2("::3", 6);
-
-  // expect true for client loopback regardless of server
-  EXPECT_TRUE(Cpp2Connection::isClientLocal(v4Local, empty));
-  EXPECT_TRUE(Cpp2Connection::isClientLocal(v6Local, empty));
-
-  // expect false for any empty address
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(empty, v4NonLocal1));
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(v4NonLocal1, empty));
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(empty, v6NonLocal1));
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(v6NonLocal1, empty));
-
-  // expect false for non matching addrs
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(v4NonLocal1, v4NonLocal2));
-  EXPECT_FALSE(Cpp2Connection::isClientLocal(v6NonLocal1, v6NonLocal2));
-
-  // expect true for matches
-  EXPECT_TRUE(Cpp2Connection::isClientLocal(v4NonLocal1, v4NonLocal1));
-  EXPECT_TRUE(Cpp2Connection::isClientLocal(v6NonLocal1, v6NonLocal1));
 }
 
 TEST(ThriftServer, ServerConfigTest) {
@@ -1046,15 +1258,57 @@ TEST(ThriftServer, ServerConfigTest) {
       serverConfig.sslHandshakeTimeout, std::chrono::milliseconds::zero());
 }
 
+TEST(ThriftServer, MultiPort) {
+  class MultiPortThriftServer : public ThriftServer {
+   public:
+    using ServerBootstrap::getSockets;
+  };
+
+  auto server = std::make_shared<MultiPortThriftServer>();
+  server->setInterface(std::make_shared<TestInterface>());
+  server->setNumIOWorkerThreads(1);
+  server->setNumCPUWorkerThreads(1);
+
+  // Add two ports 0 to trigger listening on two random ports.
+  folly::SocketAddress addr;
+  addr.setFromLocalPort(static_cast<uint16_t>(0));
+  server->setAddresses({addr, addr});
+
+  ScopedServerThread t(server);
+
+  auto sockets = server->getSockets();
+  ASSERT_EQ(sockets.size(), 2);
+
+  folly::SocketAddress addr1, addr2;
+  sockets[0]->getAddress(&addr1);
+  sockets[1]->getAddress(&addr2);
+
+  EXPECT_NE(addr1.getPort(), addr2.getPort());
+
+  // Test that we can talk via first port.
+  folly::EventBase base;
+
+  auto testFn = [&](folly::SocketAddress& address) {
+    std::shared_ptr<folly::AsyncSocket> socket(
+        folly::AsyncSocket::newSocket(&base, address));
+    TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+    std::string response;
+    client.sync_sendResponse(response, 42);
+    EXPECT_EQ(response, "test42");
+  };
+
+  testFn(addr1);
+  testFn(addr2);
+}
+
 TEST(ThriftServer, ClientIdentityHook) {
   /* Tests that the server calls the client identity hook when creating a new
      connection context */
 
   std::atomic<bool> flag{false};
   auto hook = [&flag](
-                  const folly::AsyncTransportWrapper* /* unused */,
+                  const folly::AsyncTransport* /* unused */,
                   const X509* /* unused */,
-                  const SaslServer* /* unused */,
                   const folly::SocketAddress& /* unused */) {
     flag = true;
     return std::unique_ptr<void, void (*)(void*)>(nullptr, [](void*) {});
@@ -1066,60 +1320,51 @@ TEST(ThriftServer, ClientIdentityHook) {
   apache::thrift::util::ScopedServerThread st(server);
 
   folly::EventBase base;
-  auto socket = TAsyncSocket::newSocket(&base, *st.getAddress());
-  TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+  auto socket = folly::AsyncSocket::newSocket(&base, *st.getAddress());
+  TestServiceAsyncClient client(
+      HeaderClientChannel::newChannel(std::move(socket)));
   std::string response;
   client.sync_sendResponse(response, 64);
   EXPECT_TRUE(flag);
 }
 
-TEST(ThriftServer, SaslThreadCount) {
-  auto server = std::make_shared<ThriftServer>();
-  server->setNumIOWorkerThreads(10);
-  EXPECT_EQ(server->getNumSaslThreadsToRun(), 10);
-
-  server->setNumCPUWorkerThreads(20);
-  EXPECT_EQ(server->getNumSaslThreadsToRun(), 20);
-
-  server->setNSaslPoolThreads(30);
-  EXPECT_EQ(server->getNumSaslThreadsToRun(), 30);
+namespace {
+void setupServerSSL(ThriftServer& server) {
+  auto sslConfig = std::make_shared<wangle::SSLContextConfig>();
+  sslConfig->setCertificate(folly::kTestCert, folly::kTestKey, "");
+  sslConfig->clientCAFile = folly::kTestCA;
+  sslConfig->sessionContext = "ThriftServerTest";
+  server.setSSLConfig(std::move(sslConfig));
 }
 
-namespace {
+std::shared_ptr<folly::SSLContext> makeClientSslContext() {
+  auto ctx = std::make_shared<folly::SSLContext>();
+  ctx->loadCertificate(folly::kTestCert);
+  ctx->loadPrivateKey(folly::kTestKey);
+  ctx->loadTrustedCertificates(folly::kTestCA);
+  ctx->authenticate(
+      true /* verify server cert */, false /* don't verify server name */);
+  ctx->setVerificationOption(folly::SSLContext::SSLVerifyPeerEnum::VERIFY);
+  return ctx;
+}
+
 void doBadRequestHeaderTest(bool duplex, bool secure) {
   auto server = std::static_pointer_cast<ThriftServer>(
       TestThriftServerFactory<TestInterface>().create());
   server->setDuplex(duplex);
   if (secure) {
-    auto makeSslConfig = []() {
-      auto sslConfig = std::make_shared<wangle::SSLContextConfig>();
-      sslConfig->setCertificate(folly::kTestCert, folly::kTestKey, "");
-      sslConfig->clientCAFile = folly::kTestCA;
-      sslConfig->sessionContext = "ThriftServerTest";
-      return sslConfig;
-    };
-    server->setSSLConfig(makeSslConfig());
+    setupServerSSL(*server);
   }
   ScopedServerThread sst(std::move(server));
 
   folly::EventBase evb;
-  auto makeClientSslContext = []() {
-    auto ctx = std::make_shared<folly::SSLContext>();
-    ctx->loadCertificate(folly::kTestCert);
-    ctx->loadPrivateKey(folly::kTestKey);
-    ctx->loadTrustedCertificates(folly::kTestCA);
-    ctx->authenticate(
-        true /* verify server cert */, false /* don't verify server name */);
-    ctx->setVerificationOption(folly::SSLContext::SSLVerifyPeerEnum::VERIFY);
-    return ctx;
-  };
   folly::AsyncSocket::UniquePtr socket(
       secure ? new folly::AsyncSSLSocket(makeClientSslContext(), &evb)
              : new folly::AsyncSocket(&evb));
   socket->connect(nullptr /* connect callback */, *sst.getAddress());
 
   class RecordWriteSuccessCallback
-      : public folly::AsyncTransportWrapper::WriteCallback {
+      : public folly::AsyncTransport::WriteCallback {
    public:
     void writeSuccess() noexcept override {
       EXPECT_FALSE(success_);
@@ -1142,15 +1387,14 @@ void doBadRequestHeaderTest(bool duplex, bool secure) {
   };
   RecordWriteSuccessCallback recordSuccessWriteCallback;
 
-  class CheckClosedReadCallback
-      : public folly::AsyncTransportWrapper::ReadCallback {
+  class CheckClosedReadCallback : public folly::AsyncTransport::ReadCallback {
    public:
     explicit CheckClosedReadCallback(folly::AsyncSocket& socket)
         : socket_(socket) {
       socket_.setReadCB(this);
     }
 
-    ~CheckClosedReadCallback() {
+    ~CheckClosedReadCallback() override {
       // We expect that the server closed the connection
       EXPECT_TRUE(remoteClosed_);
       socket_.close();
@@ -1208,4 +1452,146 @@ TEST(ThriftServer, BadRequestHeaderNoDuplexSsl) {
 
 TEST(ThriftServer, BadRequestHeaderDuplexSsl) {
   doBadRequestHeaderTest(true /* duplex */, true /* secure */);
+}
+
+TEST(ThriftServer, SSLRequiredRejectsPlaintext) {
+  auto server = std::static_pointer_cast<ThriftServer>(
+      TestThriftServerFactory<TestInterface>().create());
+  server->setSSLPolicy(SSLPolicy::REQUIRED);
+  setupServerSSL(*server);
+  ScopedServerThread sst(std::move(server));
+
+  folly::EventBase base;
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
+  TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+
+  std::string response;
+  EXPECT_THROW(client.sync_sendResponse(response, 64);, TTransportException);
+}
+
+TEST(ThriftServer, SSLRequiredAllowsLocalPlaintext) {
+  auto server = std::static_pointer_cast<ThriftServer>(
+      TestThriftServerFactory<TestInterface>().create());
+  server->setAllowPlaintextOnLoopback(true);
+  server->setSSLPolicy(SSLPolicy::REQUIRED);
+  setupServerSSL(*server);
+  ScopedServerThread sst(std::move(server));
+
+  folly::EventBase base;
+  // ensure that the address is loopback
+  auto port = sst.getAddress()->getPort();
+  folly::SocketAddress loopback("::1", port);
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, loopback));
+  TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+
+  std::string response;
+  client.sync_sendResponse(response, 64);
+  EXPECT_EQ(response, "test64");
+  base.loop();
+}
+
+TEST(ThriftServer, SSLRequiredLoopbackUsesSSL) {
+  auto server = std::static_pointer_cast<ThriftServer>(
+      TestThriftServerFactory<TestInterface>().create());
+  server->setAllowPlaintextOnLoopback(true);
+  server->setSSLPolicy(SSLPolicy::REQUIRED);
+  setupServerSSL(*server);
+  ScopedServerThread sst(std::move(server));
+
+  folly::EventBase base;
+  // ensure that the address is loopback
+  auto port = sst.getAddress()->getPort();
+  folly::SocketAddress loopback("::1", port);
+
+  auto ctx = makeClientSslContext();
+  auto sslSock = TAsyncSSLSocket::newSocket(ctx, &base);
+  sslSock->connect(nullptr /* connect callback */, loopback);
+
+  TestServiceAsyncClient client(HeaderClientChannel::newChannel(sslSock));
+
+  std::string response;
+  client.sync_sendResponse(response, 64);
+  EXPECT_EQ(response, "test64");
+  base.loop();
+}
+
+TEST(ThriftServer, SSLPermittedAcceptsPlaintextAndSSL) {
+  auto server = std::static_pointer_cast<ThriftServer>(
+      TestThriftServerFactory<TestInterface>().create());
+  server->setSSLPolicy(SSLPolicy::PERMITTED);
+  setupServerSSL(*server);
+  ScopedServerThread sst(std::move(server));
+
+  folly::EventBase base;
+  {
+    SCOPED_TRACE("Plaintext");
+    std::shared_ptr<folly::AsyncSocket> socket(
+        folly::AsyncSocket::newSocket(&base, *sst.getAddress()));
+    TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+
+    std::string response;
+    client.sync_sendResponse(response, 64);
+    EXPECT_EQ(response, "test64");
+    base.loop();
+  }
+
+  {
+    SCOPED_TRACE("SSL");
+    auto ctx = makeClientSslContext();
+    auto sslSock = TAsyncSSLSocket::newSocket(ctx, &base);
+    sslSock->connect(nullptr /* connect callback */, *sst.getAddress());
+
+    TestServiceAsyncClient client(HeaderClientChannel::newChannel(sslSock));
+
+    std::string response;
+    client.sync_sendResponse(response, 64);
+    EXPECT_EQ(response, "test64");
+    base.loop();
+  }
+}
+
+TEST(ThriftServer, ClientOnlyTimeouts) {
+  class SendResponseInterface : public TestServiceSvIf {
+    void sendResponse(std::string& _return, int64_t shouldSleepMs) override {
+      auto header = getConnectionContext()->getHeader();
+      if (shouldSleepMs) {
+        usleep(shouldSleepMs * 1000);
+      }
+      _return = fmt::format(
+          "{}:{}",
+          header->getClientTimeout().count(),
+          header->getClientQueueTimeout().count());
+    }
+  };
+  TestThriftServerFactory<SendResponseInterface> factory;
+  ScopedServerThread st(factory.create());
+
+  folly::EventBase base;
+  std::shared_ptr<folly::AsyncSocket> socket(
+      folly::AsyncSocket::newSocket(&base, *st.getAddress()));
+  TestServiceAsyncClient client(HeaderClientChannel::newChannel(socket));
+
+  for (bool clientOnly : {false, true}) {
+    for (bool shouldTimeOut : {true, false}) {
+      std::string response;
+      RpcOptions rpcOpts;
+      rpcOpts.setTimeout(std::chrono::milliseconds(20));
+      rpcOpts.setQueueTimeout(std::chrono::milliseconds(20));
+      rpcOpts.setClientOnlyTimeouts(clientOnly);
+      try {
+        client.sync_sendResponse(rpcOpts, response, shouldTimeOut ? 50 : 0);
+        EXPECT_FALSE(shouldTimeOut);
+        if (clientOnly) {
+          EXPECT_EQ(response, "0:0");
+        } else {
+          EXPECT_EQ(response, "20:20");
+        }
+      } catch (...) {
+        EXPECT_TRUE(shouldTimeOut);
+      }
+    }
+  }
+  base.loop();
 }

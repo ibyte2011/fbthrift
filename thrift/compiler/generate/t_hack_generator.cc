@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <stdlib.h>
 
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -22,13 +24,14 @@
 #include <string>
 #include <vector>
 
-#include <boost/filesystem.hpp>
-
 #include <thrift/compiler/ast/base_types.h>
 #include <thrift/compiler/generate/t_oop_generator.h>
 
 using namespace std;
-using namespace apache::thrift;
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 /**
  * Hack code generator.
@@ -45,48 +48,56 @@ class t_hack_generator : public t_oop_generator {
     std::map<std::string, std::string>::const_iterator iter;
 
     json_ = option_is_specified(parsed_options, "json");
-    rest_ = option_is_specified(parsed_options, "rest");
     phps_ = option_is_specified(parsed_options, "server");
-    oldenum_ = option_is_specified(parsed_options, "oldenum");
     strict_types_ = option_is_specified(parsed_options, "stricttypes");
     arraysets_ = option_is_specified(parsed_options, "arraysets");
     no_nullables_ = option_is_specified(parsed_options, "nonullables");
     map_construct_ = option_is_specified(parsed_options, "mapconstruct");
+    from_map_construct_ =
+        option_is_specified(parsed_options, "frommap_construct");
     struct_trait_ = option_is_specified(parsed_options, "structtrait");
     shapes_ = option_is_specified(parsed_options, "shapes");
     shape_arraykeys_ = option_is_specified(parsed_options, "shape_arraykeys");
-    shape_unsafe_json_ =
-        option_is_specified(parsed_options, "shape_unsafe_json");
+    shapes_allow_unknown_fields_ =
+        option_is_specified(parsed_options, "shapes_allow_unknown_fields");
     lazy_constants_ = option_is_specified(parsed_options, "lazy_constants");
     array_migration_ = option_is_specified(parsed_options, "array_migration");
     arrays_ = option_is_specified(parsed_options, "arrays");
-    generate_legacy_read_write_ =
-        option_is_specified(parsed_options, "generate_legacy_read_write");
     no_use_hack_collections_ =
         option_is_specified(parsed_options, "no_use_hack_collections");
     nullable_everything_ =
         option_is_specified(parsed_options, "nullable_everything");
     const_collections_ =
         option_is_specified(parsed_options, "const_collections");
+    enum_extratype_ = option_is_specified(parsed_options, "enum_extratype");
+    enum_transparenttype_ =
+        option_is_specified(parsed_options, "enum_transparenttype");
+    soft_attribute_ = option_is_specified(parsed_options, "soft_attribute");
+    arrprov_skip_frames_ =
+        option_is_specified(parsed_options, "arrprov_skip_frames");
+    protected_unions_ = option_is_specified(parsed_options, "protected_unions");
+    mangled_services_ = option_is_set(parsed_options, "mangledsvcs", false);
+    has_hack_namespace = !hack_namespace(program).empty();
 
     // no_use_hack_collections_ is only used to migrate away from php gen
     if (no_use_hack_collections_ && strict_types_) {
       throw std::runtime_error(
           "Don't use no_use_hack_collections with strict_types");
-    } else if (shapes_ && no_use_hack_collections_) {
-      throw std::runtime_error("Don't use no_use_hack_collections with shapes");
     } else if (no_use_hack_collections_ && !arraysets_) {
       throw std::runtime_error(
           "Don't use no_use_hack_collections without arraysets");
     } else if (no_use_hack_collections_ && arrays_) {
       throw std::runtime_error(
           "Don't use no_use_hack_collections with arrays. Just use arrays");
+    } else if (mangled_services_ && has_hack_namespace) {
+      throw std::runtime_error("Don't use mangledsvcs with hack namespaces");
+    } else if (from_map_construct_ && !map_construct_) {
+      throw std::runtime_error(
+          "frommap_construct is meant to be used only "
+          "with map_construct for migration, don't use it.");
     }
 
-    mangled_services_ = option_is_set(parsed_options, "mangledsvcs", false);
-
     out_dir_base_ = "gen-hack";
-
     array_keyword_ = array_migration_ ? "darray" : "dict";
   }
 
@@ -108,7 +119,10 @@ class t_hack_generator : public t_oop_generator {
   void generate_xception(t_struct* txception) override;
   void generate_service(t_service* tservice) override;
 
-  std::string render_const_value(t_type* type, const t_const_value* value);
+  std::string render_const_value(
+      t_type* type,
+      const t_const_value* value,
+      bool immutable_collections = false);
   std::string render_default_value(t_type* type);
 
   /**
@@ -128,14 +142,15 @@ class t_hack_generator : public t_oop_generator {
       bool is_xception = false,
       bool is_result = false,
       bool is_args = false);
-  void generate_php_struct_reader(std::ofstream& out, t_struct* tstruct);
-  void generate_php_struct_writer(std::ofstream& out, t_struct* tstruct);
   void generate_php_function_helpers(t_function* tfunction);
 
   void generate_php_union_enum(std::ofstream& out, t_struct* tstruct);
   void generate_php_union_methods(std::ofstream& out, t_struct* tstruct);
 
-  void generate_php_struct_shape_spec(std::ofstream& out, t_struct* tstruct);
+  void generate_php_struct_shape_spec(
+      std::ofstream& out,
+      t_struct* tstruct,
+      bool is_constructor_shape = false);
   void generate_php_struct_shape_collection_value_lambda(
       std::ostream& out,
       t_name_generator& namer,
@@ -148,6 +163,11 @@ class t_hack_generator : public t_oop_generator {
       std::ostream& out,
       t_name_generator& namer,
       t_type* t);
+  void generate_php_struct_from_shape(std::ofstream& out, t_struct* tstruct);
+  void generate_php_struct_from_map(
+      std::ofstream& out,
+      t_struct* tstruct,
+      bool is_exception = false);
   bool type_has_nested_struct(t_type* t);
   bool field_is_nullable(t_struct* tstruct, const t_field* field, string dval);
   void generate_php_struct_shape_json_conversion(
@@ -171,9 +191,13 @@ class t_hack_generator : public t_oop_generator {
    */
 
   void generate_service(t_service* tservice, bool mangle);
-  void generate_service_helpers(t_service* tservice);
-  void generate_service_interface(t_service* tservice, bool mangle, bool async);
-  void generate_service_rest(t_service* tservice, bool mangle);
+  void generate_service_helpers(t_service* tservice, bool mangle);
+  void generate_service_interface(
+      t_service* tservice,
+      bool mangle,
+      bool async,
+      bool rpc_options,
+      bool client);
   void generate_service_client(t_service* tservice, bool mangle);
   void _generate_service_client(
       std::ofstream& out,
@@ -188,7 +212,8 @@ class t_hack_generator : public t_oop_generator {
       std::ofstream& out,
       t_service* tservice,
       bool mangle,
-      bool async);
+      bool async,
+      bool rpc_options);
   void generate_service_processor(t_service* tservice, bool mangle, bool async);
   void generate_process_function(
       t_service* tservice,
@@ -346,12 +371,13 @@ class t_hack_generator : public t_oop_generator {
       bool thrift = false);
   std::string function_signature(
       t_function* tfunction,
-      std::string prefix = "",
-      std::string moreparameters = "",
+      std::string more_head_parameters = "",
+      std::string more_tail_parameters = "",
       std::string typehint = "");
   std::string argument_list(
       t_struct* tstruct,
-      std::string moreparameters = "",
+      std::string more_head_parameters = "",
+      std::string more_tail_parameters = "",
       bool typehints = true,
       bool force_nullable = false);
   std::string type_to_cast(t_type* ttype);
@@ -370,9 +396,14 @@ class t_hack_generator : public t_oop_generator {
   generate_php_docstring_args(ofstream& out, int start_pos, t_struct* arg_list);
   std::string render_string(std::string value);
 
-  std::string
-  type_to_typehint(t_type* ttype, bool nullable = false, bool shape = false);
+  std::string type_to_typehint(
+      t_type* ttype,
+      bool nullable = false,
+      bool shape = false,
+      bool immutable_collections = false);
   std::string type_to_param_typehint(t_type* ttype, bool nullable = false);
+
+  bool is_type_arraykey(t_type* type);
 
   std::string union_enum_name(t_struct* tstruct, bool decl = false) {
     // <StructName>Type
@@ -407,11 +438,10 @@ class t_hack_generator : public t_oop_generator {
   }
 
   std::string php_namespace(const t_program* p) {
-    std::string ns;
-    ns = hack_namespace(p);
+    std::string ns = hack_namespace(p);
     p->get_namespace("hack");
     if (!ns.empty()) {
-      return "";
+      return ns;
     }
     ns = p->get_namespace("php");
     if (!ns.empty()) {
@@ -427,19 +457,16 @@ class t_hack_generator : public t_oop_generator {
 
   string hack_name(string name, const t_program* prog, bool decl = false) {
     string ns;
-    ns = prog->get_namespace("hack");
+    ns = hack_namespace(prog);
     if (!ns.empty()) {
       if (decl) {
         return name;
       }
-      std::replace(ns.begin(), ns.end(), '.', '\\');
-      return '\\' + ns + '\\' + name;
+      return "\\" + ns + "\\" + name;
     }
     ns = prog->get_namespace("php");
-    if (!ns.empty()) {
-      return ns + "_" + name;
-    }
-    return name;
+    return (!decl && has_hack_namespace ? "\\" : "") +
+        (!ns.empty() ? ns + "_" : "") + name;
   }
 
   string hack_name(t_type* t, bool decl = false) {
@@ -472,24 +499,26 @@ class t_hack_generator : public t_oop_generator {
 
   const char* UNION_EMPTY = "_EMPTY_";
 
-  void generate_lazy_init_for_constant(
-      ofstream& out,
-      const std::string& name,
-      const std::string& typehint,
-      const std::string& rendered_value);
-
   std::string generate_array_typehint(
       const std::string& key_type,
       const std::string& value_type);
 
   bool is_base_exception_property(const t_field*);
 
+  std::string render_structured_annotations(
+      const std::vector<std::shared_ptr<t_const>>& annotations);
+
  private:
   /**
    * Generate the namespace mangled string, if necessary
    */
-  std::string php_servicename_mangle(bool mangle, t_service* svc) {
-    return (mangle ? php_namespace(svc) : "") + svc->get_name();
+  std::string
+  php_servicename_mangle(bool mangle, t_service* svc, bool extends = false) {
+    if (extends && !hack_namespace(svc->get_program()).empty()) {
+      return hack_name(svc);
+    }
+    return (extends && has_hack_namespace ? "\\" : "") +
+        (mangle ? php_namespace(svc) : "") + svc->get_name();
   }
 
   /**
@@ -510,6 +539,7 @@ class t_hack_generator : public t_oop_generator {
     }
   }
 
+  bool is_hack_const_type(t_type* type);
   /**
    * File streams
    */
@@ -524,24 +554,19 @@ class t_hack_generator : public t_oop_generator {
   bool json_;
 
   /**
-   * Generate a REST handler class
-   */
-  bool rest_;
-
-  /**
    * Generate stubs for a PHP server
    */
   bool phps_;
 
   /**
-   * * Whether to generate the old style php enums
-   */
-  bool oldenum_;
-
-  /**
-   * * Whether to use collection classes everywhere vs Indexish
+   * * Whether to use collection classes everywhere vs KeyedContainer
    */
   bool strict_types_;
+
+  /**
+   * Whether to generate protected members for thrift unions
+   */
+  bool protected_unions_;
 
   /**
    * Whether to generate array sets or Set objects
@@ -572,6 +597,12 @@ class t_hack_generator : public t_oop_generator {
   bool map_construct_;
 
   /**
+   * True if structs should have a fromMap_DEPRECATED method, only to migrate
+   * away from map_construct
+   */
+  bool from_map_construct_;
+
+  /**
    * True if we should add a "use StructNameTrait" to the generated class
    */
   bool struct_trait_;
@@ -588,9 +619,9 @@ class t_hack_generator : public t_oop_generator {
   bool shape_arraykeys_;
 
   /**
-   * True if we should not validate json when converting to Shapes
+   * True if we should allow implicit subtyping for shapes (i.e. '...')
    */
-  bool shape_unsafe_json_;
+  bool shapes_allow_unknown_fields_;
 
   /**
    * True if we should generate lazy initialization code for constants
@@ -608,11 +639,6 @@ class t_hack_generator : public t_oop_generator {
   bool arrays_;
 
   /**
-   * True to use generate the legacy read and write methods
-   */
-  bool generate_legacy_read_write_;
-
-  /**
    * True to never use hack collection objects. Only used for migrations
    */
   bool no_use_hack_collections_;
@@ -628,7 +654,32 @@ class t_hack_generator : public t_oop_generator {
    */
   bool const_collections_;
 
+  /**
+   * True to generate explicit types for Hack enums: 'type FooType = Foo'
+   */
+  bool enum_extratype_;
+
+  /**
+   * True to use transparent typing for Hack enums: 'enum FooBar: int as int'.
+   */
+  bool enum_transparenttype_;
+
+  /**
+   * True to generate soft typehints as __Soft instead of @
+   */
+  bool soft_attribute_;
+
+  /**
+   * True to add the `__ProvenanceSkipFrame` attribute to applicable methods.
+   * This will allow array provenance (arrprov) instrumentation to pretend that
+   * arrays created inside a given function were "created" at the particular
+   * callsite of said function.
+   */
+  bool arrprov_skip_frames_;
+
   std::string array_keyword_;
+
+  bool has_hack_namespace;
 };
 
 void t_hack_generator::generate_json_enum(
@@ -649,12 +700,12 @@ void t_hack_generator::generate_json_struct(
     const string& prefix_json) {
   string enc = namer("$_tmp");
   indent(out) << enc << " = "
-              << "json_encode(" << prefix_json << ");" << endl;
+              << "json_encode(" << prefix_json << ");\n";
   string tmp = namer("$_tmp");
   t_field felem(tstruct, tmp);
-  indent(out) << declare_field(&felem, true, true, true).substr(1) << endl;
-  indent(out) << tmp << "->readFromJson(" << enc << ");" << endl;
-  indent(out) << prefix_thrift << " = " << tmp << ";" << endl;
+  indent(out) << declare_field(&felem, true, true, true).substr(1) << "\n";
+  indent(out) << tmp << "->readFromJson(" << enc << ");\n";
+  indent(out) << prefix_thrift << " = " << tmp << ";\n";
 }
 
 void t_hack_generator::generate_json_field(
@@ -686,10 +737,12 @@ void t_hack_generator::generate_json_field(
     string number_limit = "";
     switch (tbase) {
       case t_base_type::TYPE_VOID:
-        break;
       case t_base_type::TYPE_STRING:
-        break;
+      case t_base_type::TYPE_BINARY:
       case t_base_type::TYPE_BOOL:
+      case t_base_type::TYPE_I64:
+      case t_base_type::TYPE_DOUBLE:
+      case t_base_type::TYPE_FLOAT:
         break;
       case t_base_type::TYPE_BYTE:
         number_limit = "0x7f";
@@ -703,34 +756,27 @@ void t_hack_generator::generate_json_field(
         number_limit = "0x7fffffff";
         typeConversionString = "(int)";
         break;
-      case t_base_type::TYPE_I64:
-        break;
-      case t_base_type::TYPE_DOUBLE:
-        break;
-      case t_base_type::TYPE_FLOAT:
-        break;
       default:
         throw "compiler error: no PHP reader for base type " +
             t_base_type::t_base_name(tbase) + name;
     }
 
     if (number_limit.empty()) {
-      indent(out) << name << " = " << typeConversionString << prefix_json << ";"
-                  << endl;
+      indent(out) << name << " = " << typeConversionString << prefix_json
+                  << ";\n";
     } else {
       string temp = namer("$_tmp");
-      indent(out) << temp << " = (int)" << prefix_json << ";" << endl;
-      indent(out) << "if (" << temp << " > " << number_limit << ") {" << endl;
+      indent(out) << temp << " = (int)" << prefix_json << ";\n";
+      indent(out) << "if (" << temp << " > " << number_limit << ") {\n";
       indent_up();
       indent(out) << "throw new \\TProtocolException(\"number exceeds "
-                  << "limit in field\");" << endl;
+                  << "limit in field\");\n";
       indent_down();
-      indent(out) << "} else {" << endl;
+      indent(out) << "} else {\n";
       indent_up();
-      indent(out) << name << " = " << typeConversionString << temp << ";"
-                  << endl;
+      indent(out) << name << " = " << typeConversionString << temp << ";\n";
       indent_down();
-      indent(out) << "}" << endl;
+      indent(out) << "}\n";
     }
   }
 }
@@ -741,41 +787,40 @@ void t_hack_generator::generate_json_container(
     t_type* ttype,
     const string& prefix_thrift,
     const string& prefix_json) {
-  t_container* tcontainer = (t_container*)ttype;
   string size = namer("$_size");
   string key = namer("$_key");
   string value = namer("$_value");
   string json = namer("$_json");
   string container = namer("$_container");
 
-  indent(out) << json << " = " << prefix_json << ";" << endl;
+  indent(out) << json << " = " << prefix_json << ";\n";
   if (ttype->is_map()) {
     if (arrays_) {
-      indent(out) << container << " = dict[];" << endl;
+      indent(out) << container << " = dict[];\n";
     } else if (no_use_hack_collections_) {
-      indent(out) << container << " = darray[];" << endl;
+      indent(out) << container << " = darray[];\n";
     } else {
-      indent(out) << container << " = Map {};" << endl;
+      indent(out) << container << " = Map {};\n";
     }
   } else if (ttype->is_list()) {
     if (arrays_) {
-      indent(out) << container << " = vec[];" << endl;
+      indent(out) << container << " = vec[];\n";
     } else if (no_use_hack_collections_) {
-      indent(out) << container << " = varray[];" << endl;
+      indent(out) << container << " = varray[];\n";
     } else {
-      indent(out) << container << " = Vector {};" << endl;
+      indent(out) << container << " = Vector {};\n";
     }
   } else if (ttype->is_set()) {
     if (arrays_) {
-      indent(out) << container << " = keyset[];" << endl;
+      indent(out) << container << " = keyset[];\n";
     } else if (arraysets_) {
-      indent(out) << container << " = " << array_keyword_ << "[];" << endl;
+      indent(out) << container << " = " << array_keyword_ << "[];\n";
     } else {
-      indent(out) << container << " = Set {};" << endl;
+      indent(out) << container << " = Set {};\n";
     }
   }
-  indent(out) << "foreach(" << json << " as " << key << " => " << value << ") {"
-              << endl;
+  indent(out) << "foreach(/* HH_FIXME[4110] */ " << json << " as " << key
+              << " => " << value << ") {\n";
   indent_up();
 
   if (ttype->is_list()) {
@@ -788,8 +833,8 @@ void t_hack_generator::generate_json_container(
     throw "compiler error: no PHP reader for this type.";
   }
   indent_down();
-  indent(out) << "}" << endl;
-  indent(out) << prefix_thrift << " = " << container << ";" << endl;
+  indent(out) << "}\n";
+  indent(out) << prefix_thrift << " = " << container << ";\n";
 }
 
 void t_hack_generator::generate_json_list_element(
@@ -800,9 +845,9 @@ void t_hack_generator::generate_json_list_element(
     const string& prefix_thrift) {
   string elem = namer("$_elem");
   t_field felem(tlist->get_elem_type(), elem);
-  indent(out) << declare_field(&felem, true, true, true).substr(1) << endl;
+  indent(out) << declare_field(&felem, true, true, true).substr(1) << "\n";
   generate_json_field(out, namer, &felem, "", "", value);
-  indent(out) << prefix_thrift << " []= " << elem << ";" << endl;
+  indent(out) << prefix_thrift << " []= " << elem << ";\n";
 }
 
 void t_hack_generator::generate_json_set_element(
@@ -813,14 +858,14 @@ void t_hack_generator::generate_json_set_element(
     const string& prefix_thrift) {
   string elem = namer("$_elem");
   t_field felem(tset->get_elem_type(), elem);
-  indent(out) << declare_field(&felem, true, true, true).substr(1) << endl;
+  indent(out) << declare_field(&felem, true, true, true).substr(1) << "\n";
   generate_json_field(out, namer, &felem, "", "", value);
   if (arrays_) {
-    indent(out) << prefix_thrift << " []= " << elem << ";" << endl;
+    indent(out) << prefix_thrift << " []= " << elem << ";\n";
   } else if (arraysets_) {
-    indent(out) << prefix_thrift << "[" << elem << "] = true;" << endl;
+    indent(out) << prefix_thrift << "[" << elem << "] = true;\n";
   } else {
-    indent(out) << prefix_thrift << "->add(" << elem << ");" << endl;
+    indent(out) << prefix_thrift << "->add(" << elem << ");\n";
   }
 }
 
@@ -832,7 +877,6 @@ void t_hack_generator::generate_json_map_element(
     const string& value,
     const string& prefix_thrift) {
   t_type* keytype = tmap->get_key_type()->get_true_type();
-  bool succ = true;
   string error_msg =
       "compiler error: Thrift Hack compiler"
       "does not support complex types as the key of a map.";
@@ -853,9 +897,9 @@ void t_hack_generator::generate_json_map_element(
   }
   string _value = namer("$_value");
   t_field vfelem(tmap->get_val_type(), _value);
-  indent(out) << declare_field(&vfelem, true, true, true).substr(1) << endl;
+  indent(out) << declare_field(&vfelem, true, true, true).substr(1) << "\n";
   generate_json_field(out, namer, &vfelem, "", "", value);
-  indent(out) << prefix_thrift << "[" << key << "] = " << _value << ";" << endl;
+  indent(out) << prefix_thrift << "[" << key << "] = " << _value << ";\n";
 }
 
 void t_hack_generator::generate_json_reader(ofstream& out, t_struct* tstruct) {
@@ -867,46 +911,50 @@ void t_hack_generator::generate_json_reader(ofstream& out, t_struct* tstruct) {
   t_name_generator namer;
 
   string name = tstruct->get_name();
-  indent(out) << "public function readFromJson(string $jsonText): void {"
-              << endl;
+  indent(out) << "public function readFromJson(string $jsonText): void {\n";
   indent_up();
   if (tstruct->is_union()) {
     indent(out) << "$this->_type = " << union_field_to_enum(tstruct, nullptr)
-                << ";" << endl;
+                << ";\n";
   }
-  indent(out) << "$parsed = json_decode($jsonText, true);" << endl << endl;
+  indent(out) << "$parsed = json_decode($jsonText, true);\n\n";
 
-  indent(out) << "if ($parsed === null || !is_array($parsed)) {" << endl;
+  indent(out)
+      << "if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {\n";
   indent_up();
   indent(out) << "throw new \\TProtocolException(\"Cannot parse the given json"
-              << " string.\");" << endl;
+              << " string.\");\n";
   indent_down();
-  indent(out) << "}" << endl << endl;
+  indent(out) << "}\n\n";
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
     t_field* tf = *f_iter;
-    indent(out) << "if (idx($parsed, '" << tf->get_name() << "') !== null) {"
-                << endl;
+    indent(out) << "if (idx($parsed, '" << tf->get_name() << "') !== null) {\n";
     indent_up();
     generate_json_field(
-        out, namer, tf, "$this->", "", "$parsed['" + tf->get_name() + "']");
+        out,
+        namer,
+        tf,
+        "$this->",
+        "",
+        "/* HH_FIXME[4110] */ $parsed['" + tf->get_name() + "']");
     if (tstruct->is_union()) {
       indent(out) << "$this->_type = " << union_field_to_enum(tstruct, tf)
-                  << ";" << endl;
+                  << ";\n";
     }
     indent_down();
     indent(out) << "}";
     if (tf->get_req() == t_field::T_REQUIRED) {
-      out << " else {" << endl;
+      out << " else {\n";
       indent_up();
       indent(out) << "throw new \\TProtocolException(\"Required field "
-                  << tf->get_name() << " cannot be found.\");" << endl;
+                  << tf->get_name() << " cannot be found.\");\n";
       indent_down();
       indent(out) << "}";
     }
-    indent(out) << endl;
+    indent(out) << "\n";
   }
   indent_down();
-  indent(out) << "}" << endl << endl;
+  indent(out) << "}\n\n";
 }
 
 /**
@@ -925,11 +973,11 @@ void t_hack_generator::init_generator() {
   record_genfile(f_types_name);
 
   // Print header
-  f_types_ << "<?hh // strict" << endl << autogen_comment() << endl;
+  f_types_ << "<?hh // strict\n" << autogen_comment() << "\n";
 
   string hack_ns = hack_namespace(program_);
   if (!hack_ns.empty()) {
-    f_types_ << "namespace " << hack_ns << ";" << endl << endl;
+    f_types_ << "namespace " << hack_ns << ";\n\n";
   }
 
   // Print header
@@ -937,17 +985,18 @@ void t_hack_generator::init_generator() {
     string f_consts_name = get_out_dir() + program_name_ + "_constants.php";
     f_consts_.open(f_consts_name.c_str());
     record_genfile(f_consts_name);
-    f_consts_ << "<?hh // strict" << endl << autogen_comment();
+    f_consts_ << "<?hh // strict\n" << autogen_comment();
     constants_values_.clear();
     string const_namespace = php_namespace(program_);
     if (const_namespace != "") {
-      f_consts_ << "class " << const_namespace << "CONSTANTS {" << endl;
+      f_consts_ << "class " << const_namespace << "CONSTANTS ";
     } else {
       if (!hack_ns.empty()) {
-        f_consts_ << "namespace " << hack_ns << ";" << endl << endl;
+        f_consts_ << "namespace " << hack_ns << ";\n\n";
       }
-      f_consts_ << "class " << program_name_ << "_CONSTANTS {" << endl;
+      f_consts_ << "class " << program_name_ << "_CONSTANTS ";
     }
+    f_consts_ << "implements \\IThriftConstants {\n";
   }
 }
 
@@ -961,19 +1010,19 @@ void t_hack_generator::close_generator() {
   if (!program_->get_consts().empty()) {
     // write out the values array
     indent_up();
-    f_consts_ << endl;
+    f_consts_ << "\n";
     if (!lazy_constants_) {
       indent(f_consts_) << "public static "
                         << generate_array_typehint("string", "mixed")
-                        << " $__values = " << array_keyword_ << "[" << endl;
+                        << " $__values = " << array_keyword_ << "[\n";
       std::copy(
           constants_values_.begin(),
           constants_values_.end(),
           std::ostream_iterator<string>(f_consts_, ",\n"));
-      indent(f_consts_) << "];" << endl;
+      indent(f_consts_) << "];\n";
     } else {
       stringstream oss(stringstream::out);
-      oss << array_keyword_ << "[" << endl;
+      oss << array_keyword_ << "[\n";
       std::copy(
           constants_values_.begin(),
           constants_values_.end(),
@@ -981,15 +1030,27 @@ void t_hack_generator::close_generator() {
       indent(oss) << "    ]";
 
       string rendered_value = oss.str();
-      generate_lazy_init_for_constant(
-          f_consts_,
-          "__values",
-          generate_array_typehint("string", "mixed"),
-          rendered_value);
+    }
+    // write structured annotations
+    f_consts_ << indent()
+              << "public static function getAllStructuredAnnotations(): "
+                 "dict<string, dict<string, \\IThriftStruct>> {\n";
+    indent_up();
+    f_consts_ << indent() << "return dict[\n";
+    indent_up();
+    for (const auto& tconst : program_->get_consts()) {
+      f_consts_ << indent() << "'" << tconst->get_name() << "' => "
+                << render_structured_annotations(
+                       tconst->structured_annotations_)
+                << ",\n";
     }
     indent_down();
+    f_consts_ << indent() << "];\n";
+    indent_down();
+    f_consts_ << indent() << "}\n";
+    indent_down();
     // close constants class
-    f_consts_ << "}" << endl << endl;
+    f_consts_ << "}\n\n";
     f_consts_.close();
   }
 }
@@ -1016,25 +1077,17 @@ void t_hack_generator::generate_enum(t_enum* tenum) {
   bool hack_enum = false;
   if (is_bitmask_enum(tenum)) {
     typehint = "int";
-    f_types_ << "final class " << hack_name(tenum, true) << " extends Flags {"
-             << endl;
-  } else if (oldenum_) {
-    typehint = hack_name(tenum, true) + "Type";
-    f_types_ << "newtype " << typehint << " as arraykey = int;" << endl;
-    std::string const* attributes = get_hack_annotation(tenum, "attributes");
-    if (attributes) {
-      f_types_ << "<<" << *attributes << ">>" << endl;
-    }
-    f_types_ << "final class " << hack_name(tenum, true) << " extends Enum<"
-             << typehint << "> {" << endl;
+    f_types_ << "final class " << hack_name(tenum, true)
+             << " extends \\Flags {\n";
   } else {
     hack_enum = true;
     typehint = hack_name(tenum, true);
     std::string const* attributes = get_hack_annotation(tenum, "attributes");
     if (attributes) {
-      f_types_ << "<<" << *attributes << ">>" << endl;
+      f_types_ << "<<" << *attributes << ">>\n";
     }
-    f_types_ << "enum " << hack_name(tenum, true) << " : int {" << endl;
+    f_types_ << "enum " << hack_name(tenum, true) << ": int"
+             << (enum_transparenttype_ ? " as int" : "") << " {\n";
   }
 
   indent_up();
@@ -1046,40 +1099,15 @@ void t_hack_generator::generate_enum(t_enum* tenum) {
     if (!hack_enum) {
       indent(f_types_) << "const " << typehint << " ";
     }
-    indent(f_types_) << (*c_iter)->get_name() << " = " << value << ";" << endl;
-  }
-
-  if (oldenum_) {
-    // names
-    indent(f_types_) << "public static "
-                     << generate_array_typehint("int", "string")
-                     << " $__names = " << array_keyword_ << "[" << endl;
-    for (c_iter = constants.begin(); c_iter != constants.end(); ++c_iter) {
-      int32_t value = (*c_iter)->get_value();
-
-      indent(f_types_) << "  " << value << " => '" << (*c_iter)->get_name()
-                       << "'," << endl;
-    }
-    indent(f_types_) << "];" << endl;
-    // values
-    indent(f_types_) << "public static "
-                     << generate_array_typehint("string", "int")
-                     << " $__values = " << array_keyword_ << "[" << endl;
-    for (c_iter = constants.begin(); c_iter != constants.end(); ++c_iter) {
-      int32_t value = (*c_iter)->get_value();
-
-      indent(f_types_) << "  '" << (*c_iter)->get_name() << "' => " << value
-                       << "," << endl;
-    }
-    indent(f_types_) << "];" << endl;
+    indent(f_types_) << (*c_iter)->get_name() << " = " << value << ";\n";
   }
 
   indent_down();
-  f_types_ << "}" << endl;
-  if (hack_enum) {
-    f_types_ << "type " << typehint << "Type = " << typehint << ";" << endl;
+  f_types_ << "}\n";
+  if (hack_enum && enum_extratype_) {
+    f_types_ << "type " << typehint << "Type = " << typehint << ";\n";
   }
-  f_types_ << endl;
+  f_types_ << "\n";
 }
 
 /**
@@ -1092,7 +1120,28 @@ void t_hack_generator::generate_const(t_const* tconst) {
 
   indent_up();
   generate_php_docstring(f_consts_, tconst);
-  if (!lazy_constants_) {
+  if (lazy_constants_) {
+    bool is_hack_const = is_hack_const_type(type);
+    f_consts_ << indent();
+    // for base hack types, use const (guarantees optimization in hphp)
+    if (is_hack_const) {
+      f_consts_ << "const " << type_to_typehint(type) << " " << name << " = ";
+      // cannot use const for objects (incl arrays). use static
+    } else {
+      f_consts_ << "<<__Memoize>>\n"
+                << indent() << "public static function " << name
+                << "(): " << type_to_typehint(type, false, false, true)
+                << "{\n";
+      indent_up();
+      f_consts_ << indent() << "return ";
+    }
+    f_consts_ << render_const_value(type, value, true) << ";\n";
+    if (!is_hack_const) {
+      indent_down();
+      f_consts_ << indent() << "}\n";
+    }
+    f_consts_ << "\n";
+  } else {
     // for base php types, use const (guarantees optimization in hphp)
     if (type->is_base_type()) {
       indent(f_consts_) << "const " << type_to_typehint(type) << " " << name
@@ -1105,7 +1154,7 @@ void t_hack_generator::generate_const(t_const* tconst) {
     indent_up();
     f_consts_ << render_const_value(type, value);
     indent_down();
-    f_consts_ << ";" << endl;
+    f_consts_ << ";\n";
 
     // add the definitions to a values array as well
     // indent up cause we're going to be in an array definition
@@ -1118,54 +1167,26 @@ void t_hack_generator::generate_const(t_const* tconst) {
     indent_down();
     indent_down();
     constants_values_.push_back(oss.str());
-  } else {
-    // generate rendered value with right number of identations (2)
-    indent_up();
-    indent_up();
-    stringstream val(stringstream::out);
-    val << render_const_value(type, value);
-    indent_down();
-    indent_down();
-
-    string rendered_value = val.str();
-    generate_lazy_init_for_constant(
-        f_consts_, name, type_to_typehint(type), rendered_value);
-
-    // add the definitions to a values array as well
-    // indent up 3 times cause we're going to be 2 levels deeper
-    // than in non lazy case
-    indent_up();
-    indent_up();
-    indent_up();
-    stringstream oss(stringstream::out);
-    indent(oss) << render_string(name) << " => ";
-    oss << render_const_value(type, value);
-    indent_down();
-    indent_down();
-    indent_down();
-
-    constants_values_.push_back(oss.str());
   }
 
   indent_down();
 }
 
-void t_hack_generator::generate_lazy_init_for_constant(
-    ofstream& out,
-    const std::string& name,
-    const std::string& typehint,
-    const std::string& rendered_value) {
-  string name_internal = "__" + name;
-  indent(out) << "private static ?" << typehint << " $" << name_internal
-              << " = null;" << endl;
-  indent(out) << "public static function " << name << "(): " << typehint << " {"
-              << endl;
-  indent(out) << "  if (self::$" << name_internal << " === null) {" << endl;
-  indent(out) << "    self::$" << name_internal << " = " << rendered_value
-              << ";" << endl;
-  indent(out) << "  }" << endl;
-  indent(out) << "  return self::$" << name_internal << ";" << endl;
-  indent(out) << "}" << endl << endl;
+bool t_hack_generator::is_hack_const_type(t_type* type) {
+  type = type->get_true_type();
+  if (type->is_base_type() || type->is_enum()) {
+    return true;
+  } else if (arrays_ && type->is_container()) {
+    if (type->is_list()) {
+      return is_hack_const_type(((t_list*)type)->get_elem_type());
+    } else if (type->is_set()) {
+      return is_hack_const_type(((t_set*)type)->get_elem_type());
+    } else if (type->is_map()) {
+      return is_hack_const_type(((t_map*)type)->get_key_type()) &&
+          is_hack_const_type(((t_map*)type)->get_val_type());
+    }
+  }
+  return false;
 }
 
 std::string t_hack_generator::generate_array_typehint(
@@ -1194,13 +1215,15 @@ string t_hack_generator::render_string(string value) {
  */
 string t_hack_generator::render_const_value(
     t_type* type,
-    const t_const_value* value) {
+    const t_const_value* value,
+    bool immutable_collections) {
   std::ostringstream out;
   type = type->get_true_type();
   if (type->is_base_type()) {
     t_base_type::t_base tbase = ((t_base_type*)type)->get_base();
     switch (tbase) {
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         out << render_string(value->get_string());
         break;
       case t_base_type::TYPE_BOOL:
@@ -1219,8 +1242,8 @@ string t_hack_generator::render_const_value(
         } else {
           out << value->get_double();
         }
-        if (out.str().find(".") == string::npos &&
-            out.str().find("e") == string::npos) {
+        if (out.str().find('.') == string::npos &&
+            out.str().find('e') == string::npos) {
           out << ".0";
         }
         break;
@@ -1237,18 +1260,11 @@ string t_hack_generator::render_const_value(
       out << hack_name(tenum) << "::coerce(" << value->get_integer() << ")";
     }
   } else if (type->is_struct() || type->is_xception()) {
-    out << "new " << hack_name(type) << "(" << endl;
+    out << hack_name(type) << "::fromShape(\n";
     indent_up();
-    if (map_construct_) {
-      if (arrays_) {
-        out << indent() << "dict[" << endl;
-      } else if (no_use_hack_collections_) {
-        out << indent() << "darray[" << endl;
-      } else {
-        out << indent() << "Map {" << endl;
-      }
-      indent_up();
-    }
+    indent(out) << "shape(\n";
+    indent_up();
+
     const vector<t_field*>& fields = ((t_struct*)type)->get_members();
     vector<t_field*>::const_iterator f_iter;
     const vector<pair<t_const_value*, t_const_value*>>& val = value->get_map();
@@ -1274,52 +1290,34 @@ string t_hack_generator::render_const_value(
           v = v_iter->second;
         }
       }
-      out << indent();
-      if (map_construct_) {
-        if (v != nullptr) {
-          out << render_const_value(string_type(), k);
-          out << " => ";
-          out << render_const_value((*f_iter)->get_type(), v);
-          out << "," << endl;
-        }
-      } else {
-        if (v == nullptr) {
-          out << "null," << endl;
-        } else {
-          out << render_const_value((*f_iter)->get_type(), v);
-          out << "," << endl;
-        }
+      if (v != nullptr) {
+        indent(out) << render_const_value(string_type(), k) << " => "
+                    << render_const_value((*f_iter)->get_type(), v) << ",\n";
       }
     }
-    if (map_construct_) {
-      indent_down();
-      if (arrays_ || no_use_hack_collections_) {
-        out << indent() << "]" << endl;
-      } else {
-        out << indent() << "}" << endl;
-      }
-    }
+    indent_down();
+    indent(out) << ")\n";
     indent_down();
     indent(out) << ")";
   } else if (type->is_map()) {
     t_type* ktype = ((t_map*)type)->get_key_type();
     t_type* vtype = ((t_map*)type)->get_val_type();
     if (arrays_) {
-      out << "dict[" << endl;
+      out << "dict[\n";
     } else if (no_use_hack_collections_) {
-      out << "darray[" << endl;
+      out << "darray[\n";
     } else {
-      out << "Map {" << endl;
+      out << (immutable_collections ? "Imm" : "") << "Map {\n";
     }
     indent_up();
     const vector<pair<t_const_value*, t_const_value*>>& val = value->get_map();
     vector<pair<t_const_value*, t_const_value*>>::const_iterator v_iter;
     for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
       out << indent();
-      out << render_const_value(ktype, v_iter->first);
+      out << render_const_value(ktype, v_iter->first, immutable_collections);
       out << " => ";
-      out << render_const_value(vtype, v_iter->second);
-      out << "," << endl;
+      out << render_const_value(vtype, v_iter->second, immutable_collections);
+      out << ",\n";
     }
     indent_down();
     if (arrays_ || no_use_hack_collections_) {
@@ -1330,19 +1328,19 @@ string t_hack_generator::render_const_value(
   } else if (type->is_list()) {
     t_type* etype = ((t_list*)type)->get_elem_type();
     if (arrays_) {
-      out << "vec[" << endl;
+      out << "vec[\n";
     } else if (no_use_hack_collections_) {
-      out << "varray[" << endl;
+      out << "varray[\n";
     } else {
-      out << "Vector {" << endl;
+      out << (immutable_collections ? "Imm" : "") << "Vector {\n";
     }
     indent_up();
     const vector<t_const_value*>& val = value->get_list();
     vector<t_const_value*>::const_iterator v_iter;
     for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
       out << indent();
-      out << render_const_value(etype, *v_iter);
-      out << "," << endl;
+      out << render_const_value(etype, *v_iter, immutable_collections);
+      out << ",\n";
     }
     indent_down();
     if (arrays_ || no_use_hack_collections_) {
@@ -1356,30 +1354,30 @@ string t_hack_generator::render_const_value(
     const vector<t_const_value*>& val = value->get_list();
     vector<t_const_value*>::const_iterator v_iter;
     if (arrays_) {
-      out << "keyset[" << endl;
+      out << "keyset[\n";
       for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
         out << indent();
-        out << render_const_value(etype, *v_iter);
-        out << "," << endl;
+        out << render_const_value(etype, *v_iter, immutable_collections);
+        out << ",\n";
       }
       indent_down();
       indent(out) << "]";
     } else if (arraysets_) {
-      out << array_keyword_ << "[" << endl;
+      out << array_keyword_ << "[\n";
       for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
         out << indent();
-        out << render_const_value(etype, *v_iter);
+        out << render_const_value(etype, *v_iter, immutable_collections);
         out << " => true";
-        out << "," << endl;
+        out << ",\n";
       }
       indent_down();
       indent(out) << "]";
     } else {
-      out << "Set {" << endl;
+      out << (immutable_collections ? "Imm" : "") << "Set {\n";
       for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
         out << indent();
-        out << render_const_value(etype, *v_iter);
-        out << "," << endl;
+        out << render_const_value(etype, *v_iter, immutable_collections);
+        out << ",\n";
       }
       indent_down();
       indent(out) << "}";
@@ -1395,6 +1393,7 @@ string t_hack_generator::render_default_value(t_type* type) {
     t_base_type::t_base tbase = ((t_base_type*)type)->get_base();
     switch (tbase) {
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         dval = "''";
         break;
       case t_base_type::TYPE_BOOL:
@@ -1415,7 +1414,6 @@ string t_hack_generator::render_default_value(t_type* type) {
             t_base_type::t_base_name(tbase);
     }
   } else if (type->is_enum()) {
-    t_enum* tenum = (t_enum*)type;
     dval = "null";
   } else if (type->is_struct() || type->is_xception()) {
     t_struct* tstruct = (t_struct*)type;
@@ -1480,67 +1478,66 @@ void t_hack_generator::generate_php_struct(
 
 void t_hack_generator::generate_php_type_spec(ofstream& out, t_type* t) {
   t = t->get_true_type();
-  indent(out) << "'type' => " << type_to_enum(t) << "," << endl;
+  indent(out) << "'type' => " << type_to_enum(t) << ",\n";
 
   if (t->is_base_type()) {
     // Noop, type is all we need
   } else if (t->is_enum()) {
-    t_enum* tenum = (t_enum*)t;
-    indent(out) << "'enum' => '" << hack_name(t) << "'," << endl;
+    indent(out) << "'enum' => " << hack_name(t) << "::class,\n";
   } else if (t->is_struct() || t->is_xception()) {
-    indent(out) << "'class' => '" << hack_name(t) << "'," << endl;
+    indent(out) << "'class' => " << hack_name(t) << "::class,\n";
   } else if (t->is_map()) {
     t_type* ktype = ((t_map*)t)->get_key_type()->get_true_type();
     t_type* vtype = ((t_map*)t)->get_val_type()->get_true_type();
-    indent(out) << "'ktype' => " << type_to_enum(ktype) << "," << endl;
-    indent(out) << "'vtype' => " << type_to_enum(vtype) << "," << endl;
-    indent(out) << "'key' => " << array_keyword_ << "[" << endl;
+    indent(out) << "'ktype' => " << type_to_enum(ktype) << ",\n";
+    indent(out) << "'vtype' => " << type_to_enum(vtype) << ",\n";
+    indent(out) << "'key' => shape(\n";
     indent_up();
     generate_php_type_spec(out, ktype);
     indent_down();
-    indent(out) << "]," << endl;
-    indent(out) << "'val' => " << array_keyword_ << "[" << endl;
+    indent(out) << "),\n";
+    indent(out) << "'val' => shape(\n";
     indent_up();
     generate_php_type_spec(out, vtype);
-    indent(out) << "]," << endl;
-    if (arrays_) {
-      indent(out) << "'format' => 'harray'," << endl;
-    } else if (no_use_hack_collections_) {
-      indent(out) << "'format' => 'array'," << endl;
-    } else {
-      indent(out) << "'format' => 'collection'," << endl;
-    }
     indent_down();
+    indent(out) << "),\n";
+    if (arrays_) {
+      indent(out) << "'format' => 'harray',\n";
+    } else if (no_use_hack_collections_) {
+      indent(out) << "'format' => 'array',\n";
+    } else {
+      indent(out) << "'format' => 'collection',\n";
+    }
   } else if (t->is_list()) {
     t_type* etype = ((t_list*)t)->get_elem_type()->get_true_type();
-    indent(out) << "'etype' => " << type_to_enum(etype) << "," << endl;
-    indent(out) << "'elem' => " << array_keyword_ << "[" << endl;
+    indent(out) << "'etype' => " << type_to_enum(etype) << ",\n";
+    indent(out) << "'elem' => shape(\n";
     indent_up();
     generate_php_type_spec(out, etype);
-    indent(out) << "]," << endl;
-    if (arrays_) {
-      indent(out) << "'format' => 'harray'," << endl;
-    } else if (no_use_hack_collections_) {
-      indent(out) << "'format' => 'array'," << endl;
-    } else {
-      indent(out) << "'format' => 'collection'," << endl;
-    }
     indent_down();
+    indent(out) << "),\n";
+    if (arrays_) {
+      indent(out) << "'format' => 'harray',\n";
+    } else if (no_use_hack_collections_) {
+      indent(out) << "'format' => 'array',\n";
+    } else {
+      indent(out) << "'format' => 'collection',\n";
+    }
   } else if (t->is_set()) {
     t_type* etype = ((t_set*)t)->get_elem_type()->get_true_type();
-    indent(out) << "'etype' => " << type_to_enum(etype) << "," << endl;
-    indent(out) << "'elem' => " << array_keyword_ << "[" << endl;
+    indent(out) << "'etype' => " << type_to_enum(etype) << ",\n";
+    indent(out) << "'elem' => shape(\n";
     indent_up();
     generate_php_type_spec(out, etype);
-    indent(out) << "]," << endl;
-    if (arrays_) {
-      indent(out) << "'format' => 'harray'," << endl;
-    } else if (arraysets_) {
-      indent(out) << "'format' => 'array'," << endl;
-    } else {
-      indent(out) << "'format' => 'collection'," << endl;
-    }
     indent_down();
+    indent(out) << "),\n";
+    if (arrays_) {
+      indent(out) << "'format' => 'harray',\n";
+    } else if (arraysets_) {
+      indent(out) << "'format' => 'array',\n";
+    } else {
+      indent(out) << "'format' => 'collection',\n";
+    }
   } else {
     throw "compiler error: no type for php struct spec field";
   }
@@ -1553,44 +1550,39 @@ void t_hack_generator::generate_php_type_spec(ofstream& out, t_type* t) {
 void t_hack_generator::generate_php_struct_spec(
     ofstream& out,
     t_struct* tstruct) {
-  indent(out) << "public static "
-              << generate_array_typehint(
-                     "int", generate_array_typehint("string", "mixed"))
-              << " $_TSPEC = " << array_keyword_ << "[" << endl;
-  indent_up();
-
   const vector<t_field*>& members = tstruct->get_members();
   vector<t_field*>::const_iterator m_iter;
+
+  indent(out) << "const dict<int, this::TFieldSpec> SPEC = dict[\n";
+  indent_up();
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
     t_type* t = (*m_iter)->get_type()->get_true_type();
-    indent(out) << (*m_iter)->get_key() << " => " << array_keyword_ << "["
-                << endl;
+    indent(out) << (*m_iter)->get_key() << " => shape(\n";
     indent_up();
-    out << indent() << "'var' => '" << (*m_iter)->get_name() << "'," << endl;
+    out << indent() << "'var' => '" << (*m_iter)->get_name() << "',\n";
     if (tstruct->is_union()) {
       // Optimally, we shouldn't set this per field but rather per struct.
-      // However, the tspec is a field_id => data array, and if we set it at
-      // the top level people might think the 'union' key is a field id, which
-      // isn't cool. It's safer and more bc to instead set this key on all
-      // fields.
-      out << indent() << "'union' => true," << endl;
+      // However, the tspec is a field_id => data array, and if we set it
+      // at the top level people might think the 'union' key is a field
+      // id, which isn't cool. It's safer and more bc to instead set this
+      // key on all fields.
+      out << indent() << "'union' => true,\n";
     }
     generate_php_type_spec(out, t);
-    indent(out) << "]," << endl;
     indent_down();
+    indent(out) << "),\n";
   }
-
   indent_down();
-  indent(out) << "  ];" << endl;
+  indent(out) << "];\n";
 
-  indent(out) << "public static " << (const_collections_ ? "Const" : "")
-              << "Map<string, int> $_TFIELDMAP = Map {" << endl;
+  indent(out) << "const dict<string, int> FIELDMAP = dict[\n";
+  indent_up();
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-    t_type* t = (*m_iter)->get_type()->get_true_type();
-    indent(out) << "  '" << (*m_iter)->get_name() << "' => "
-                << (*m_iter)->get_key() << "," << endl;
+    indent(out) << "'" << (*m_iter)->get_name() << "' => "
+                << (*m_iter)->get_key() << ",\n";
   }
-  indent(out) << "};" << endl;
+  indent_down();
+  indent(out) << "];\n";
 }
 
 void t_hack_generator::generate_php_struct_struct_trait(
@@ -1609,14 +1601,17 @@ void t_hack_generator::generate_php_struct_struct_trait(
   }
 
   if (!traitName.empty()) {
-    indent(out) << "use " << traitName << ";" << endl << endl;
+    indent(out) << "use " << traitName << ";\n\n";
   }
 }
 
 void t_hack_generator::generate_php_struct_shape_spec(
     std::ofstream& out,
-    t_struct* tstruct) {
-  indent(out) << "const type TShape = shape(" << endl;
+    t_struct* tstruct,
+    bool is_constructor_shape) {
+  indent(out) << "const type "
+              << (is_constructor_shape ? "TConstructorShape" : "TShape")
+              << " = shape(\n";
   const vector<t_field*>& members = tstruct->get_members();
   vector<t_field*>::const_iterator m_iter;
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
@@ -1630,19 +1625,22 @@ void t_hack_generator::generate_php_struct_shape_spec(
       dval = render_default_value(t);
     }
 
-    bool nullable = field_is_nullable(tstruct, *m_iter, dval);
+    bool nullable =
+        nullable_everything_ || field_is_nullable(tstruct, *m_iter, dval);
 
-    string namePrefix = nullable ? "?" : "";
+    string namePrefix = nullable || is_constructor_shape ? "?" : "";
 
     string typehint = nullable ? "?" : "";
 
-    typehint += type_to_typehint(t, false, true);
+    typehint += type_to_typehint(t, false, !is_constructor_shape);
 
     indent(out) << "  " << namePrefix << "'" << (*m_iter)->get_name() << "' => "
-                << typehint << "," << endl;
+                << typehint << ",\n";
   }
-  indent(out) << "  ..." << endl;
-  indent(out) << ");" << endl;
+  if (!is_constructor_shape && shapes_allow_unknown_fields_) {
+    indent(out) << "  ...\n";
+  }
+  indent(out) << ");\n";
 }
 
 /**
@@ -1674,12 +1672,19 @@ void t_hack_generator::generate_php_struct_shape_collection_value_lambda(
     t_name_generator& namer,
     t_type* t) {
   string tmp = namer("_val");
-  indent(out) << "$" << tmp << " ==> ";
+  indent(out);
+  if (arrprov_skip_frames_) {
+    out << "<<__ProvenanceSkipFrame>> ";
+  }
+  out << "($" << tmp << ") ==> ";
   if (t->is_struct()) {
-    out << "$" << tmp << "->__toShape()," << endl;
+    out << "$" << tmp << "->__toShape(),\n";
   } else if (t->is_set()) {
-    out << "ThriftUtil::toDArray(Dict\\fill_keys($" << tmp << ", true)),"
-        << endl;
+    if (arraysets_ || no_use_hack_collections_) {
+      out << "darray($" << tmp << "),\n";
+    } else {
+      out << "ThriftUtil::toDArray(Dict\\fill_keys($" << tmp << ", true)),\n";
+    }
   } else if (t->is_map() || t->is_list()) {
     t_type* val_type;
     if (t->is_map()) {
@@ -1690,17 +1695,17 @@ void t_hack_generator::generate_php_struct_shape_collection_value_lambda(
     val_type = val_type->get_true_type();
 
     if (!val_type->is_container() && !val_type->is_struct()) {
-      out << generate_to_array_method(t) << "($" << tmp << ")," << endl;
+      out << generate_to_array_method(t) << "($" << tmp << "),\n";
       return;
     }
 
-    out << "$" << tmp << "->map(" << endl;
+    out << "$" << tmp << "->map(\n";
     indent_up();
     generate_php_struct_shape_collection_value_lambda(out, namer, val_type);
     indent_down();
-    indent(out) << ")" << endl;
+    indent(out) << ")\n";
     indent_up();
-    indent(out) << "|> " << generate_to_array_method(t) << "($$)," << endl;
+    indent(out) << "|> " << generate_to_array_method(t) << "($$),\n";
     indent_down();
   }
 }
@@ -1710,12 +1715,12 @@ void t_hack_generator::generate_hack_array_from_shape_lambda(
     t_name_generator& namer,
     t_type* t) {
   if (t->is_map()) {
-    out << "Dict\\map(" << endl;
+    out << "Dict\\map(\n";
   } else {
-    out << "Vec\\map(" << endl;
+    out << "Vec\\map(\n";
   }
   indent_up();
-  indent(out) << "$$ ?? " << (t->is_map() ? "dict[]" : "vec[]") << "," << endl;
+  indent(out) << "$$,\n";
   string tmp = namer("_val");
   indent(out) << "$" << tmp << " ==> $" << tmp;
 
@@ -1729,39 +1734,55 @@ void t_hack_generator::generate_hack_array_from_shape_lambda(
 
   if (val_type->is_map() || val_type->is_list() || val_type->is_struct()) {
     indent_up();
-    out << endl;
+    out << "\n";
     indent(out) << "|> ";
 
     if (val_type->is_struct()) {
       string type = hack_name(val_type);
-      out << type << "::__fromShape($$)," << endl;
+      out << type << "::__fromShape($$),\n";
     } else {
       generate_hack_array_from_shape_lambda(out, namer, val_type);
-      out << "," << endl;
+      out << ",\n";
     }
 
     indent_down();
   } else {
-    out << "," << endl;
+    out << ",\n";
   }
 
   indent_down();
   indent(out) << ")";
+  if (no_use_hack_collections_) {
+    if (t->is_map()) {
+      out << " |> darray($$)";
+    } else {
+      out << " |> varray($$)";
+    }
+  }
 }
 
 void t_hack_generator::generate_shape_from_hack_array_lambda(
     std::ostream& out,
     t_name_generator& namer,
     t_type* t) {
+  if (no_use_hack_collections_) {
+    out << "(\n";
+    indent_up();
+    indent(out);
+  }
   if (t->is_map()) {
-    out << "Dict\\map(" << endl;
+    out << "Dict\\map(\n";
   } else {
-    out << "Vec\\map(" << endl;
+    out << "Vec\\map(\n";
   }
   indent_up();
-  indent(out) << "$$ ?? " << (t->is_map() ? "dict[]" : "vec[]") << "," << endl;
+  indent(out) << "$$,\n";
   string tmp = namer("_val");
-  indent(out) << "$" << tmp << " ==> $" << tmp;
+  indent(out);
+  if (arrprov_skip_frames_) {
+    out << "<<__ProvenanceSkipFrame>> ";
+  }
+  out << "($" << tmp << ") ==> $" << tmp;
 
   t_type* val_type;
   if (t->is_map()) {
@@ -1772,19 +1793,27 @@ void t_hack_generator::generate_shape_from_hack_array_lambda(
   val_type = val_type->get_true_type();
 
   if (val_type->is_struct()) {
-    out << "->__toShape()," << endl;
+    out << "->__toShape(),\n";
   } else if (val_type->is_map() || val_type->is_list()) {
     indent_up();
-    out << endl;
+    out << "\n";
     indent(out) << "|> ";
     generate_shape_from_hack_array_lambda(out, namer, val_type);
     indent_down();
   } else {
-    out << "," << endl;
+    out << ",\n";
   }
 
   indent_down();
-  indent(out) << ")," << endl;
+  if (no_use_hack_collections_) {
+    if (t->is_map()) {
+      indent(out) << ") |> darray($$)\n";
+    } else {
+      indent(out) << ") |> varray($$)\n";
+    }
+    indent_down();
+  }
+  indent(out) << "),\n";
 }
 
 bool t_hack_generator::type_has_nested_struct(t_type* t) {
@@ -1850,122 +1879,113 @@ void t_hack_generator::generate_php_struct_shape_json_conversion(
     t_name_generator& namer) {
   t = t->get_true_type();
   if (t->is_base_type()) {
-    if (!shape_unsafe_json_) {
-      switch (((t_base_type*)t)->get_base()) {
-        case t_base_type::TYPE_STRING:
-          indent(out) << "if (!is_string(" << shape_data << ")";
-          if (nullable) {
-            out << " && !is_null(" << shape_data << ")";
-          }
-          out << ") {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-          return;
-        case t_base_type::TYPE_BOOL:
-          indent(out) << "if (!is_bool(" << shape_data << ")";
-          if (nullable) {
-            out << " && !is_null(" << shape_data << ")";
-          }
-          out << ") {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-          return;
-        case t_base_type::TYPE_BYTE:
-        case t_base_type::TYPE_I16:
-        case t_base_type::TYPE_I32:
-        case t_base_type::TYPE_I64:
-          indent(out) << "if (!is_int(" << shape_data << ")";
-          if (nullable) {
-            out << " && !is_null(" << shape_data << ")";
-          }
-          out << ") {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-          return;
-        case t_base_type::TYPE_DOUBLE:
-        case t_base_type::TYPE_FLOAT:
-          indent(out) << "if (!(is_float(" << shape_data << ") || is_int("
-                      << shape_data << "))";
-          if (nullable) {
-            out << " && !is_null(" << shape_data << ")";
-          }
-          out << ") {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-          indent(out) << "if (is_int(" << shape_data << ")) {" << endl;
-          indent(out) << "  " << shape_data << " = (float)" << shape_data << ";"
-                      << endl;
-          indent(out) << "}" << endl;
-          return;
-        default:
-          indent(out) << "return null;" << endl;
-      }
+    switch (((t_base_type*)t)->get_base()) {
+      case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
+        indent(out) << "if (!is_string(" << shape_data << ")";
+        if (nullable) {
+          out << " && !is_null(" << shape_data << ")";
+        }
+        out << ") {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
+        return;
+      case t_base_type::TYPE_BOOL:
+        indent(out) << "if (!is_bool(" << shape_data << ")";
+        if (nullable) {
+          out << " && !is_null(" << shape_data << ")";
+        }
+        out << ") {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
+        return;
+      case t_base_type::TYPE_BYTE:
+      case t_base_type::TYPE_I16:
+      case t_base_type::TYPE_I32:
+      case t_base_type::TYPE_I64:
+        indent(out) << "if (!is_int(" << shape_data << ")";
+        if (nullable) {
+          out << " && !is_null(" << shape_data << ")";
+        }
+        out << ") {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
+        return;
+      case t_base_type::TYPE_DOUBLE:
+      case t_base_type::TYPE_FLOAT:
+        indent(out) << "if (!(is_float(" << shape_data << ") || is_int("
+                    << shape_data << "))";
+        if (nullable) {
+          out << " && !is_null(" << shape_data << ")";
+        }
+        out << ") {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
+        indent(out) << "if (is_int(" << shape_data << ")) {\n";
+        indent(out) << "  " << shape_data << " = (float)" << shape_data
+                    << ";\n";
+        indent(out) << "}\n";
+        return;
+      default:
+        indent(out) << "return null;\n";
     }
   } else if (t->is_set()) {
     string k = "$" + namer("key");
     string v = "$" + namer("shape_data");
     if (nullable) {
-      indent(out) << "if (!is_null(" << shape_data << ")) {" << endl;
+      indent(out) << "if (!is_null(" << shape_data << ")) {\n";
       indent_up();
     }
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (!is_array(" << shape_data << ")) {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
-    }
+    indent(out) << "if (!(" << shape_data << " is KeyedContainer<_, _>)) {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
     t_type* val_type = ((t_set*)t)->get_elem_type()->get_true_type();
     string the_set = "$" + namer("the_set");
-    indent(out) << the_set << " = " << array_keyword_ << "[];" << endl;
+    indent(out) << the_set << " = " << array_keyword_ << "[];\n";
     indent(out) << "foreach (/* HH_IGNORE_ERROR[4110] */ " << shape_data
-                << " as " << k << " => " << v << ") {" << endl;
-    if (!shape_unsafe_json_) {
-      if (val_type->is_string()) {
-        indent(out) << "  if (!is_string(" << v << ")) {" << endl;
-        indent(out) << "    return null;" << endl;
-        indent(out) << "  }" << endl;
-      } else {
-        indent(out) << "  if (!is_int(" << v << ")) {" << endl;
-        indent(out) << "    return null;" << endl;
-        indent(out) << "  }" << endl;
-      }
+                << " as " << k << " => " << v << ") {\n";
+    if (val_type->is_string_or_binary()) {
+      indent(out) << "  if (!is_string(" << v << ")) {\n";
+      indent(out) << "    return null;\n";
+      indent(out) << "  }\n";
+    } else {
+      indent(out) << "  if (!is_int(" << v << ")) {\n";
+      indent(out) << "    return null;\n";
+      indent(out) << "  }\n";
     }
-    indent(out) << "  " << the_set << "[" << v << "] = true;" << endl;
-    indent(out) << "}" << endl;
-    indent(out) << shape_data << " = " << the_set << ";" << endl;
+    indent(out) << "  " << the_set << "[" << v << "] = true;\n";
+    indent(out) << "}\n";
+    indent(out) << shape_data << " = " << the_set << ";\n";
     if (nullable) {
       indent_down();
-      indent(out) << "}" << endl;
+      indent(out) << "}\n";
     }
   } else if (t->is_list()) {
     t_type* val_type = ((t_list*)t)->get_elem_type()->get_true_type();
     string k = "$" + namer("key");
     string v = "$" + namer("value");
     if (nullable) {
-      indent(out) << "if (!is_null(" << shape_data << ")) {" << endl;
+      indent(out) << "if (!is_null(" << shape_data << ")) {\n";
       indent_up();
     }
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (!is_array(" << shape_data << ")) {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
-    }
+    indent(out) << "if (!(" << shape_data << " is KeyedContainer<_, _>)) {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
     indent(out) << "foreach (/* HH_IGNORE_ERROR[4110] */" << shape_data
-                << " as " << k << " => " << v << ") {" << endl;
+                << " as " << k << " => " << v << ") {\n";
     indent_up();
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (!is_int(" << k << ")) {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
-    }
+    indent(out) << "if (!is_int(" << k << ")) {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
     generate_php_struct_shape_json_conversion(out, false, v, val_type, namer);
-    indent(out) << "/* HH_IGNORE_ERROR[4005] */" << endl;
-    indent(out) << "/* HH_IGNORE_ERROR[4063] */" << endl;
-    indent(out) << shape_data << "[" << k << "] = " << v << ";" << endl;
+    indent(out) << "/* HH_IGNORE_ERROR[4005] */\n";
+    indent(out) << "/* HH_IGNORE_ERROR[4063] */\n";
+    indent(out) << shape_data << "[" << k << "] = " << v << ";\n";
     indent_down();
-    indent(out) << "}" << endl;
+    indent(out) << "}\n";
     if (nullable) {
       indent_down();
-      indent(out) << "}" << endl;
+      indent(out) << "}\n";
     }
   } else if (t->is_map()) {
     t_type* key_type = ((t_map*)t)->get_key_type()->get_true_type();
@@ -1973,77 +1993,69 @@ void t_hack_generator::generate_php_struct_shape_json_conversion(
     string k = "$" + namer("key");
     string v = "$" + namer("value");
     if (nullable) {
-      indent(out) << "if (!is_null(" << shape_data << ")) {" << endl;
+      indent(out) << "if (!is_null(" << shape_data << ")) {\n";
       indent_up();
     }
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (!is_array(" << shape_data << ")) {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
-    }
+    indent(out) << "if (!(" << shape_data << " is KeyedContainer<_, _>)) {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
     indent(out) << "foreach (/* HH_IGNORE_ERROR[4110] */" << shape_data
-                << " as " << k << " => " << v << ") {" << endl;
+                << " as " << k << " => " << v << ") {\n";
     indent_up();
 
-    if (!shape_unsafe_json_) {
-      if (shape_arraykeys_) {
-        indent(out) << "if (!is_string(" << k << ") && " << endl;
-        indent(out) << "    !is_int(" << k << ")) {" << endl;
-        indent(out) << "  return null;" << endl;
-        indent(out) << "}" << endl;
+    if (shape_arraykeys_) {
+      indent(out) << "if (!is_string(" << k << ") && \n";
+      indent(out) << "    !is_int(" << k << ")) {\n";
+      indent(out) << "  return null;\n";
+      indent(out) << "}\n";
+    } else {
+      if (key_type->is_string_or_binary()) {
+        indent(out) << "if (!is_string(" << k << ")) {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
       } else {
-        if (key_type->is_string()) {
-          indent(out) << "if (!is_string(" << k << ")) {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-        } else {
-          indent(out) << "if (!is_int(" << k << ")) {" << endl;
-          indent(out) << "  return null;" << endl;
-          indent(out) << "}" << endl;
-        }
+        indent(out) << "if (!is_int(" << k << ")) {\n";
+        indent(out) << "  return null;\n";
+        indent(out) << "}\n";
       }
     }
     generate_php_struct_shape_json_conversion(out, false, v, val_type, namer);
-    indent(out) << "/* HH_IGNORE_ERROR[4005] */" << endl;
-    indent(out) << "/* HH_IGNORE_ERROR[4063] */" << endl;
-    indent(out) << shape_data << "[" << k << "] = " << v << ";" << endl;
+    indent(out) << "/* HH_IGNORE_ERROR[4005] */\n";
+    indent(out) << "/* HH_IGNORE_ERROR[4063] */\n";
+    indent(out) << shape_data << "[" << k << "] = " << v << ";\n";
     indent_down();
-    indent(out) << "}" << endl;
+    indent(out) << "}\n";
     if (nullable) {
       indent_down();
-      indent(out) << "}" << endl;
+      indent(out) << "}\n";
     }
   } else if (t->is_struct()) {
     string struct_type = hack_name(t);
 
-    if (nullable && !shape_unsafe_json_) {
-      indent(out) << "if (!is_null(" << shape_data << ")) {" << endl;
+    if (nullable) {
+      indent(out) << "if (!is_null(" << shape_data << ")) {\n";
       indent_up();
     }
     indent(out) << shape_data << " = " << struct_type
                 << "::__jsonArrayToShape(/* HH_IGNORE_ERROR[4110] */ "
-                << shape_data << ");" << endl;
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (is_null(" << shape_data << ")) {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
-    }
-    if (nullable && !shape_unsafe_json_) {
+                << shape_data << ");\n";
+    indent(out) << "if (is_null(" << shape_data << ")) {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
+    if (nullable) {
       indent_down();
-      indent(out) << "}" << endl;
+      indent(out) << "}\n";
     }
   } else if (t->is_enum()) {
-    if (!shape_unsafe_json_) {
-      indent(out) << "if (!is_int(" << shape_data << ")";
-      if (nullable) {
-        out << " && !is_null(" << shape_data << ")";
-      }
-      out << ") {" << endl;
-      indent(out) << "  return null;" << endl;
-      indent(out) << "}" << endl;
+    indent(out) << "if (!is_int(" << shape_data << ")";
+    if (nullable) {
+      out << " && !is_null(" << shape_data << ")";
     }
+    out << ") {\n";
+    indent(out) << "  return null;\n";
+    indent(out) << "}\n";
   } else {
-    indent(out) << "return null; // unknown type" << endl;
+    indent(out) << "return null; // unknown type\n";
   }
 }
 
@@ -2051,28 +2063,37 @@ void t_hack_generator::generate_php_struct_shape_methods(
     std::ofstream& out,
     t_struct* tstruct) {
   if (shape_arraykeys_) {
+    string arg_return_type;
+    if (arrays_) {
+      arg_return_type = "dict";
+    } else if (no_use_hack_collections_) {
+      arg_return_type = "darray";
+    } else if (const_collections_) {
+      arg_return_type = "ConstMap";
+    } else {
+      arg_return_type = "Map";
+    }
     indent(out) << "public static function __stringifyMapKeys<T>("
-                << (const_collections_ ? "Const" : "")
-                << "Map<arraykey, T> $m): "
-                << (const_collections_ ? "Const" : "") << "Map<string, T> {"
-                << endl;
-    indent(out) << "  $new_map = Map {};" << endl;
-    indent(out) << "  foreach ($m as $k => $v) {" << endl;
-    indent(out) << "    $new_map[(string)$k] = $v;" << endl;
-    indent(out) << "  }" << endl;
-    indent(out) << "  return $new_map;" << endl;
-    indent(out) << "}" << endl;
-    out << endl;
+                << arg_return_type << "<arraykey, T> $m): " << arg_return_type
+                << "<string, T> {\n";
+    indent(out) << "  $new_map = " << arg_return_type
+                << ((arrays_ || no_use_hack_collections_) ? "[]" : " {}")
+                << ";\n";
+    indent(out) << "  foreach ($m as $k => $v) {\n";
+    indent(out) << "    $new_map[(string)$k] = $v;\n";
+    indent(out) << "  }\n";
+    indent(out) << "  return $new_map;\n";
+    indent(out) << "}\n";
+    out << "\n";
   }
 
   indent(out)
-      << "public static function __fromShape(self::TShape $shape): this {"
-      << endl;
+      << "public static function __fromShape(self::TShape $shape): this {\n";
   indent_up();
-  indent(out) << "$me = /* HH_IGNORE_ERROR[4060] */ new static();" << endl;
+  indent(out) << "$me = new static();\n";
   if (tstruct->is_union()) {
     indent(out) << "$me->_type = " << union_field_to_enum(tstruct, nullptr)
-                << ";" << endl;
+                << ";\n";
   }
 
   const vector<t_field*>& members = tstruct->get_members();
@@ -2089,45 +2110,32 @@ void t_hack_generator::generate_php_struct_shape_methods(
       dval = render_default_value(t);
     }
 
-    bool nullable = field_is_nullable(tstruct, *m_iter, dval);
+    bool nullable =
+        field_is_nullable(tstruct, *m_iter, dval) || nullable_everything_;
 
     stringstream source;
-    if (nullable) {
-      source << "Shapes::idx($shape, '" << (*m_iter)->get_name() << "')";
-    } else {
-      source << "$shape['" << (*m_iter)->get_name() << "']";
-    }
+    source << "$shape['" << (*m_iter)->get_name() << "']";
 
     stringstream val;
 
-    if (tstruct->is_union()) {
-      indent(val) << "if (" << source.str() << " !== null) {" << endl;
+    if (tstruct->is_union() || nullable) {
+      indent(val) << "if (Shapes::idx($shape, '" << (*m_iter)->get_name()
+                  << "') !== null) {\n";
       indent_up();
     }
 
     indent(val) << "$me->" << (*m_iter)->get_name() << " = ";
     if (t->is_set()) {
-      if (nullable) {
-        val << source.str() << " === null ? null : ";
-      }
-      if (arraysets_ || arrays_) {
-        val << source.str() << ";" << endl;
+      if (arraysets_ || arrays_ || no_use_hack_collections_) {
+        val << source.str() << ";\n";
       } else {
-        val << "new Set(Keyset\\keys(" << (nullable ? "\\nullthrows(" : "")
-            << source.str() << (nullable ? ")" : "") << "));" << endl;
+        val << "new Set(Keyset\\keys(" << source.str() << "));\n";
       }
     } else if (t->is_map() || t->is_list()) {
-      if (nullable) {
-        val << source.str() << " === null ? null : " << endl;
-        indent_up();
-        indent(val);
-      }
-
       bool stringify_map_keys = false;
       if (t->is_map() && shape_arraykeys_) {
         t_type* key_type = ((t_map*)t)->get_key_type();
-        if (key_type->is_base_type() &&
-            ((t_base_type*)key_type)->get_base() == t_base_type::TYPE_STRING) {
+        if (key_type->is_base_type() && key_type->is_string_or_binary()) {
           stringify_map_keys = true;
         }
       }
@@ -2136,7 +2144,7 @@ void t_hack_generator::generate_php_struct_shape_methods(
         val << "self::__stringifyMapKeys(";
       }
 
-      if (arrays_) {
+      if (arrays_ || no_use_hack_collections_) {
         val << source.str();
         if (type_has_nested_struct(t)) {
           indent_up();
@@ -2145,7 +2153,10 @@ void t_hack_generator::generate_php_struct_shape_methods(
           generate_hack_array_from_shape_lambda(val, namer, t);
           indent_down();
         }
-        val << ";" << endl;
+        if (stringify_map_keys) {
+          val << ")";
+        }
+        val << ";\n";
       } else {
         val << (stringify_map_keys ? "" : "(");
         if (t->is_map()) {
@@ -2170,12 +2181,12 @@ void t_hack_generator::generate_php_struct_shape_methods(
               val_type->is_list() || val_type->is_struct()) {
             indent_up();
             nest++;
-            val << "->map(" << endl;
+            val << "->map(\n";
 
             if (val_type->is_set()) {
               string tmp = namer("val");
               indent(val) << "$" << tmp << " ==> new Set(Keyset\\keys($" << tmp
-                          << "))," << endl;
+                          << ")),\n";
               break;
             } else if (val_type->is_map() || val_type->is_list()) {
               string tmp = namer("val");
@@ -2184,8 +2195,7 @@ void t_hack_generator::generate_php_struct_shape_methods(
               if (val_type->is_map() && shape_arraykeys_) {
                 t_type* key_type = ((t_map*)val_type)->get_key_type();
                 if (key_type->is_base_type() &&
-                    ((t_base_type*)key_type)->get_base() ==
-                        t_base_type::TYPE_STRING) {
+                    key_type->is_string_or_binary()) {
                   stringify_map_keys = true;
                 }
               }
@@ -2205,12 +2215,12 @@ void t_hack_generator::generate_php_struct_shape_methods(
               string tmp = namer("val");
               string type = hack_name(val_type);
               indent(val) << "$" << tmp << " ==> " << type << "::__fromShape("
-                          << "$" << tmp << ")," << endl;
+                          << "$" << tmp << "),\n";
               break;
             }
           } else {
             if (nest > 0) {
-              val << "," << endl;
+              val << ",\n";
             }
             break;
           }
@@ -2219,42 +2229,43 @@ void t_hack_generator::generate_php_struct_shape_methods(
           indent_down();
           indent(val) << ")";
           if (nest > 0) {
-            val << "," << endl;
+            val << ",\n";
           }
         }
-        val << ";" << endl;
-      }
-      if (nullable) {
-        indent_down();
+        val << ";\n";
       }
     } else if (t->is_struct()) {
       string type = hack_name(t);
-      if (nullable) {
-        val << source.str() << " === null ? null : ";
-      }
-      val << type << "::__fromShape(" << (nullable ? "\\nullthrows(" : "")
-          << source.str() << (nullable ? ")" : "") << ");" << endl;
+      val << type << "::__fromShape(" << source.str() << ");\n";
     } else {
-      val << source.str() << ";" << endl;
+      val << source.str() << ";\n";
     }
 
     if (tstruct->is_union()) {
       indent(val) << "$me->_type = " << union_field_to_enum(tstruct, *m_iter)
-                  << ";" << endl;
+                  << ";\n";
+    }
+
+    if (tstruct->is_union() || nullable) {
       indent_down();
-      indent(val) << "}" << endl;
+      indent(val) << "}\n";
     }
 
     out << val.str();
   }
-  indent(out) << "return $me;" << endl;
+  indent(out) << "return $me;\n";
   indent_down();
-  indent(out) << "}" << endl;
-  out << endl;
+  indent(out) << "}\n";
+  out << "\n";
 
-  indent(out) << "public function __toShape(): self::TShape {" << endl;
+  indent(out) << "<<__Rx";
+  if (arrprov_skip_frames_) {
+    out << ", __ProvenanceSkipFrame";
+  }
+  out << ">>\n";
+  indent(out) << "public function __toShape(): self::TShape {\n";
   indent_up();
-  indent(out) << "return shape(" << endl;
+  indent(out) << "return shape(\n";
   indent_up();
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
     t_type* t = (*m_iter)->get_type()->get_true_type();
@@ -2265,25 +2276,30 @@ void t_hack_generator::generate_php_struct_shape_methods(
     stringstream val;
 
     bool nullable =
-        field_is_nullable(tstruct, *m_iter, render_default_value(t));
+        field_is_nullable(tstruct, *m_iter, render_default_value(t)) ||
+        nullable_everything_;
 
     if (t->is_container()) {
       if (t->is_map() || t->is_list()) {
-        if (arrays_) {
+        if (arrays_ || no_use_hack_collections_) {
           val << "$this->" << (*m_iter)->get_name();
           if (type_has_nested_struct(t)) {
-            if (nullable) {
-              val << " === null ? null : $this->" << (*m_iter)->get_name()
-                  << endl;
-            } else {
-              val << endl;
-            }
+            val << "\n";
             indent_up();
             indent(val) << "|> ";
+            if (nullable) {
+              val << "$$ === null \n";
+              indent_up();
+              indent(val) << "? null \n";
+              indent(val) << ": ";
+            }
             generate_shape_from_hack_array_lambda(val, ngen, t);
+            if (nullable) {
+              indent_down();
+            }
             indent_down();
           } else {
-            val << "," << endl;
+            val << ",\n";
           }
         } else {
           t_type* val_type;
@@ -2297,7 +2313,7 @@ void t_hack_generator::generate_php_struct_shape_methods(
           if (val_type->is_container() || val_type->is_struct() || nullable) {
             val << "$this->" << (*m_iter)->get_name();
             if (val_type->is_container() || val_type->is_struct()) {
-              val << (nullable ? "?" : "") << "->map(" << endl;
+              val << (nullable ? "?" : "") << "->map(\n";
               indent_up();
               generate_php_struct_shape_collection_value_lambda(
                   val, ngen, val_type);
@@ -2307,18 +2323,18 @@ void t_hack_generator::generate_php_struct_shape_methods(
             val << endl;
             indent_up();
             indent(val) << "|> " << (nullable ? "$$ === null ? null : " : "")
-                        << generate_to_array_method(t) << "($$)," << endl;
+                        << generate_to_array_method(t) << "($$),\n";
             indent_down();
           } else {
             val << generate_to_array_method(t) << "($this->"
-                << (*m_iter)->get_name() << ")," << endl;
+                << (*m_iter)->get_name() << "),\n";
           }
         }
-      } else if (arraysets_ || arrays_) {
-        val << "$this->" << (*m_iter)->get_name() << "," << endl;
+      } else if (arraysets_ || arrays_ || no_use_hack_collections_) {
+        val << "$this->" << (*m_iter)->get_name() << ",\n";
       } else {
         if (nullable) {
-          val << "$this->" << (*m_iter)->get_name() << endl;
+          val << "$this->" << (*m_iter)->get_name() << "\n";
           indent_up();
           indent(val) << "|> $$ === null ? null : ";
         }
@@ -2328,24 +2344,24 @@ void t_hack_generator::generate_php_struct_shape_methods(
         } else {
           val << "$this->" << (*m_iter)->get_name();
         }
-        val << "->toValuesArray(), true))," << endl;
+        val << "->toValuesArray(), true)),\n";
         if (nullable) {
           indent_down();
         }
       }
     } else if (t->is_struct()) {
       val << "$this->" << (*m_iter)->get_name();
-      val << (nullable ? "?" : "") << "->__toShape()," << endl;
+      val << (nullable ? "?" : "") << "->__toShape(),\n";
     } else {
-      val << "$this->" << (*m_iter)->get_name() << "," << endl;
+      val << "$this->" << (*m_iter)->get_name() << ",\n";
     }
 
     out << val.str();
   }
   indent_down();
-  indent(out) << ");" << endl;
+  indent(out) << ");\n";
   indent_down();
-  indent(out) << "}" << endl;
+  indent(out) << "}\n";
 }
 
 /**
@@ -2357,16 +2373,15 @@ void t_hack_generator::generate_php_structural_id(
     t_struct* tstruct,
     bool asFunction) {
   if (asFunction) {
-    indent(out) << "static function getStructuralID(): int {" << endl;
+    indent(out) << "static function getStructuralID(): int {\n";
     indent_up();
     indent(out) << "return " << generate_structural_id(tstruct->get_members())
-                << ";" << endl;
+                << ";\n";
     indent_down();
-    indent(out) << "}" << endl;
+    indent(out) << "}\n";
   } else {
     indent(out) << "const int STRUCTURAL_ID = "
-                << generate_structural_id(tstruct->get_members()) << ";"
-                << endl;
+                << generate_structural_id(tstruct->get_members()) << ";\n";
   }
 }
 
@@ -2391,42 +2406,58 @@ void t_hack_generator::generate_php_union_methods(
   const vector<t_field*>& members = tstruct->get_members();
   auto enumName = union_enum_name(tstruct);
 
-  // getType() : <UnionName>Enum {}
-  indent(out) << "public function getType(): " << enumName << " {" << endl;
-  indent(out) << indent() << "return $this->_type;" << endl;
-  indent(out) << "}" << endl << endl;
+  indent(out) << "public function getType(): " << enumName << " {\n";
+  indent(out) << indent() << "return $this->_type;\n";
+  indent(out) << "}\n\n";
+
+  out << indent() << "public function reset(): void {\n";
+  indent_up();
+  out << indent() << "switch ($this->_type) {\n";
+  indent_up();
+  for (const auto& m : members) {
+    auto fieldName = m->get_name();
+    out << indent() << "case " << enumName << "::" << fieldName << ":\n";
+    out << indent(get_indent() + 1) << "$this->" << fieldName << " = null;\n";
+    out << indent(get_indent() + 1) << "break;\n";
+  }
+  out << indent() << "case " << enumName << "::_EMPTY_:\n";
+  out << indent(get_indent() + 1) << "break;\n";
+  indent_down();
+  out << indent() << "}\n";
+  out << indent() << "$this->_type = " << enumName << "::_EMPTY_;\n";
+  indent_down();
+  out << "}\n\n";
 
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
     auto fieldName = (*m_iter)->get_name();
     auto typehint = type_to_typehint((*m_iter)->get_type());
     // set_<fieldName>()
     indent(out) << "public function set_" << fieldName << "(" << typehint
-                << " $" << fieldName << "): this {" << endl;
+                << " $" << fieldName << "): this {\n";
     indent_up();
-    indent(out) << "$this->_type = " << enumName << "::" << fieldName << ";"
-                << endl;
+    indent(out) << "$this->reset();\n";
+    indent(out) << "$this->_type = " << enumName << "::" << fieldName << ";\n";
     indent(out) << "$this->" << fieldName << " = "
-                << "$" << fieldName << ";" << endl;
-    indent(out) << "return $this;" << endl;
+                << "$" << fieldName << ";\n";
+    indent(out) << "return $this;\n";
     indent_down();
-    indent(out) << "}" << endl << endl;
+    indent(out) << "}\n\n";
 
-    // set_<fieldName>()
     indent(out) << "public function get_" << fieldName << "(): " << typehint
-                << " {" << endl;
+                << " {\n";
     indent_up();
-    indent(out) << "invariant(" << endl;
+    indent(out) << "invariant(\n";
     indent_up();
-    indent(out) << "$this->_type === " << enumName << "::" << fieldName << ","
-                << endl;
+    indent(out) << "$this->_type === " << enumName << "::" << fieldName
+                << ",\n";
     indent(out) << "'get_" << fieldName << " called on an instance of "
-                << tstruct->get_name() << " whose current type is %s'," << endl;
-    indent(out) << "$this->_type," << endl;
+                << tstruct->get_name() << " whose current type is %s',\n";
+    indent(out) << "(string)$this->_type,\n";
     indent_down();
-    indent(out) << ");" << endl;
-    indent(out) << "return \\nullthrows($this->" << fieldName << ");" << endl;
+    indent(out) << ");\n";
+    indent(out) << "return $this->" << fieldName << " as nonnull;\n";
     indent_down();
-    indent(out) << "}" << endl << endl;
+    indent(out) << "}\n\n";
   }
 }
 
@@ -2441,17 +2472,22 @@ void t_hack_generator::generate_php_union_enum(
   const vector<t_field*>& members = tstruct->get_members();
   vector<t_field*>::const_iterator m_iter;
 
-  out << "enum " << union_enum_name(tstruct, true) << ": int {" << endl;
+  string const* union_enum_attributes =
+      get_hack_annotation(tstruct, "union_enum_attributes");
+  if (union_enum_attributes) {
+    indent(out) << "<<" << *union_enum_attributes << ">>\n";
+  }
+  out << "enum " << union_enum_name(tstruct, true) << ": int {\n";
 
   indent_up();
   // If no member is set
-  indent(out) << UNION_EMPTY << " = 0;" << endl;
+  indent(out) << UNION_EMPTY << " = 0;\n";
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-    indent(out) << (*m_iter)->get_name() << " = " << (*m_iter)->get_key() << ";"
-                << endl;
+    indent(out) << (*m_iter)->get_name() << " = " << (*m_iter)->get_key()
+                << ";\n";
   }
   indent_down();
-  out << "}" << endl << endl;
+  out << "}\n\n";
 }
 
 bool t_hack_generator::is_base_exception_property(const t_field* field) {
@@ -2459,6 +2495,26 @@ bool t_hack_generator::is_base_exception_property(const t_field* field) {
       "code", "message", "line", "file"};
   return kBaseExceptionProperties.find(field->get_name()) !=
       kBaseExceptionProperties.end();
+}
+
+std::string t_hack_generator::render_structured_annotations(
+    const std::vector<std::shared_ptr<t_const>>& annotations) {
+  std::ostringstream out;
+  out << "dict[";
+  if (!annotations.empty()) {
+    out << "\n";
+    indent_up();
+    for (const auto& annotation : annotations) {
+      indent(out) << "'" << hack_name(annotation->get_type()) << "' => "
+                  << render_const_value(
+                         annotation->get_type(), annotation->get_value())
+                  << ",\n";
+    }
+    indent_down();
+    indent(out);
+  }
+  out << "]";
+  return out.str();
 }
 
 /**
@@ -2485,7 +2541,7 @@ void t_hack_generator::_generate_php_struct_definition(
   }
   std::string const* attributes = get_hack_annotation(tstruct, "attributes");
   if (attributes) {
-    f_types_ << "<<" << *attributes << ">>" << endl;
+    f_types_ << "<<" << *attributes << ">>\n";
   }
   out << (generateAsTrait ? "trait " : "class ") << hack_name(tstruct, true);
   if (generateAsTrait) {
@@ -2505,24 +2561,24 @@ void t_hack_generator::_generate_php_struct_definition(
     out << ", \\IThriftShapishStruct";
   }
 
-  out << " {" << endl;
+  out << " {\n";
   indent_up();
 
-  if (!generate_legacy_read_write_) {
-    if (tstruct->is_union()) {
-      indent(out) << "use \\ThriftUnionSerializationTrait;" << endl << endl;
-    } else {
-      indent(out) << "use \\ThriftSerializationTrait;" << endl << endl;
-    }
+  if (tstruct->is_union()) {
+    indent(out) << "use \\ThriftUnionSerializationTrait;\n\n";
+  } else {
+    indent(out) << "use \\ThriftSerializationTrait;\n\n";
   }
 
   if (generateAsTrait && is_exception) {
-    indent(out) << "require extends TException;" << endl;
+    indent(out) << "require extends \\TException;\n";
   }
 
   generate_php_struct_struct_trait(out, tstruct);
   generate_php_struct_spec(out, tstruct);
-
+  out << "\n";
+  generate_php_struct_shape_spec(out, tstruct, true);
+  out << "\n";
   if (gen_shapes) {
     generate_php_struct_shape_spec(out, tstruct);
   }
@@ -2560,7 +2616,7 @@ void t_hack_generator::_generate_php_struct_definition(
 
     string const* field_attributes = get_hack_annotation(*m_iter, "attributes");
     if (field_attributes) {
-      indent(out) << "<<" << *field_attributes << ">>" << endl;
+      indent(out) << "<<" << *field_attributes << ">>\n";
     }
 
     if (is_exception && (*m_iter)->get_name() == "code") {
@@ -2574,75 +2630,62 @@ void t_hack_generator::_generate_php_struct_definition(
             ", but it has no values.";
       }
       if (t->is_enum()) {
-        indent(out) << "/* HH_FIXME[4110] conflicting definition with parent */"
-                    << endl;
-        indent(out) << "/* HH_FIXME[4236] conflicting definition with parent */"
-                    << endl;
+        typehint = "/* Originally defined as " + typehint + " */ int";
       }
     }
 
-    string visibility = "public";
-    string const* visibility_annotation =
-        get_hack_annotation(*m_iter, "visibility");
-
-    if (visibility_annotation) {
-      string const& value = *visibility_annotation;
-      if (value == "public" || value == "protected" || value == "private") {
-        visibility = value;
-      } else {
-        throw tstruct->get_name() + "::" + (*m_iter)->get_name() +
-            " doesn't have a valid visibility (public|protected|private)";
-      }
-    }
+    string visibility =
+        (protected_unions_ && tstruct->is_union()) ? "protected" : "public";
 
     indent(out) << visibility << " " << typehint << " $"
-                << (*m_iter)->get_name() << ";" << endl;
+                << (*m_iter)->get_name() << ";\n";
 
-    bool hack_getter = (*m_iter)->annotations_.find("hack.getter") !=
-        (*m_iter)->annotations_.end();
-    string const* getter_attributes =
-        get_hack_annotation(*m_iter, "getter_attributes");
-    if (hack_getter) {
-      if (getter_attributes) {
-        indent(out) << "<<" << *getter_attributes << ">>" << endl;
+    if (is_exception && (*m_iter)->get_name() == "code" && t->is_enum()) {
+      string enum_type = type_to_typehint(t);
+      out << "\n";
+      out << indent() << "public function setCodeAsEnum(" << enum_type
+          << " $code): void {\n";
+      if (!enum_transparenttype_) {
+        out << indent() << "  /* HH_FIXME[4110] nontransparent enum */\n";
       }
-      indent(out) << "public function get_" << (*m_iter)->get_name()
-                  << "(): " << typehint << " {" << endl;
-      indent(indent(out)) << "return $this->" << (*m_iter)->get_name() << ";"
-                          << endl;
-      indent(out) << "}" << endl;
-    } else if (getter_attributes) {
-      throw tstruct->get_name() + "::" + (*m_iter)->get_name() +
-          " declares hack.getter_attributes without enabling hack.getter";
+      out << indent() << "  $this->code = $code;" << indent() << "\n"
+          << indent() << "}\n\n";
+      out << indent() << "public function getCodeAsEnum(): " << enum_type
+          << " {\n"
+          << indent()
+          << "  /* HH_FIXME[4110] retain HHVM enforcement semantics */\n"
+          << indent() << "  return $this->code;" << indent() << "\n"
+          << indent() << "}\n";
     }
   }
 
   if (tstruct->is_union()) {
     // Generate _type to store which field is set and initialize it to _EMPTY_
     indent(out) << "protected " << union_enum_name(tstruct)
-                << " $_type = " << union_field_to_enum(tstruct, nullptr) << ";"
-                << endl;
+                << " $_type = " << union_field_to_enum(tstruct, nullptr)
+                << ";\n";
   }
 
-  out << endl;
+  out << "\n";
 
-  if (map_construct_) {
+  out << indent() << "<<__Rx";
+  if (arrprov_skip_frames_) {
+    out << ", __ProvenanceSkipFrame";
+  }
+  out << ">>\n";
+  out << indent() << "public function __construct(";
+  if (map_construct_ && !from_map_construct_) {
     if (strict_types_) {
       // Generate constructor from Map
-      out << indent() << "public function __construct("
-          << (const_collections_ ? "Const" : "")
-          << "Map<string, mixed> $vals = Map {}) {" << endl;
+      out << (const_collections_ ? "Const" : "")
+          << "Map<string, mixed> $vals = Map {}) {\n";
     } else {
-      // Generate constructor from Indexish
-      out << indent()
-          << "public function __construct(@\\Indexish<string, mixed> $vals = "
-          << array_keyword_ << "[]) {" << endl;
+      // Generate constructor from KeyedContainer
+      out << (soft_attribute_ ? "<<__Soft>> " : "@")
+          << "KeyedContainer<string, mixed> $vals = " << array_keyword_
+          << "[]) {\n";
     }
-    out << indent()
-        << "  // UNSAFE_BLOCK $vals is not type safe :(, and we don't cast structs (yet)"
-        << endl;
   } else {
-    out << indent() << "public function __construct(";
     bool first = true;
     for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
       if (!first) {
@@ -2653,17 +2696,16 @@ void t_hack_generator::_generate_php_struct_definition(
           << " = null";
       first = false;
     }
-    out << indent() << ") {" << endl;
+    out << indent() << ") {\n";
   }
   indent_up();
 
   if (is_exception) {
-    out << indent() << "parent::__construct();" << endl;
+    out << indent() << "parent::__construct();\n";
   }
   if (tstruct->is_union()) {
     out << indent()
-        << "$this->_type = " << union_field_to_enum(tstruct, nullptr) << ";"
-        << endl;
+        << "$this->_type = " << union_field_to_enum(tstruct, nullptr) << ";\n";
   }
   for (m_iter = members.begin(); !is_result && m_iter != members.end();
        ++m_iter) {
@@ -2694,36 +2736,58 @@ void t_hack_generator::_generate_php_struct_definition(
       dval = render_default_value(t);
     }
 
-    if (map_construct_) {
+    if (map_construct_ && !from_map_construct_) {
       string cast;
       if (nullable_everything_ &&
           !(is_exception && is_base_exception_property(*m_iter))) {
         cast = "";
-      } else if (
-          is_exception && (*m_iter)->get_name() == "code" && t->is_enum()) {
-        cast = "(int)";
       } else {
         cast = type_to_cast(t);
       }
 
       if (strict_types_) {
-        out << indent() << "$this->" << (*m_iter)->get_name() << " = " << cast
-            << "($vals->get('" << (*m_iter)->get_name() << "') ?: " << dval
-            << ");" << endl;
-      } else {
-        if ((*m_iter)->get_req() == t_field::T_OPTIONAL &&
-            (*m_iter)->get_value() == nullptr) {
-          out << indent() << "if (C\\contains_key($vals, '"
-              << (*m_iter)->get_name() << "')) {" << endl;
-          indent_up();
+        if (t->is_container() || t->is_enum()) {
+          out << indent()
+              << "/* HH_FIXME[4110] mixed vs default conflict previously hidden by unsafe */\n";
         }
         out << indent() << "$this->" << (*m_iter)->get_name() << " = " << cast
-            << "idx($vals, '" << (*m_iter)->get_name() << "', " << dval << ");"
-            << endl;
-        if ((*m_iter)->get_req() == t_field::T_OPTIONAL &&
-            (*m_iter)->get_value() == nullptr) {
+            << "($vals->get('" << (*m_iter)->get_name() << "') ?: " << dval
+            << ");\n";
+      } else {
+        bool needs_optional_check = tstruct->is_union() ||
+            ((*m_iter)->get_req() == t_field::T_OPTIONAL &&
+             (*m_iter)->get_value() == nullptr &&
+             !(is_exception && is_base_exception_property(*m_iter)));
+
+        if (needs_optional_check) {
+          out << indent() << "if (C\\contains_key($vals, '"
+              << (*m_iter)->get_name() << "')) {\n";
+          indent_up();
+        }
+
+        if (is_exception && (*m_iter)->get_name() == "code" && t->is_enum()) {
+          out << indent()
+              << "/* HH_FIXME[4110] exposed by decl fixme scope refinement */\n";
+        } else if (cast == "") {
+          out << indent()
+              << "/* HH_FIXME[4110] previously hidden by unsafe */\n";
+        }
+        out << indent() << "$this->" << (*m_iter)->get_name() << " = " << cast
+            << (needs_optional_check && dval == "null" ? "$vals['"
+                                                       : "idx($vals, '")
+            << (*m_iter)->get_name() << "'"
+            << (needs_optional_check && dval == "null"
+                    ? "]"
+                    : (dval != "null" ? ", " + dval : "") + ")")
+            << ";\n";
+        if (tstruct->is_union()) {
+          out << indent()
+              << "$this->_type = " << union_field_to_enum(tstruct, *m_iter)
+              << ";\n";
+        }
+        if (needs_optional_check) {
           indent_down();
-          out << indent() << "}" << endl;
+          out << indent() << "}\n";
         }
       }
     } else {
@@ -2735,40 +2799,41 @@ void t_hack_generator::_generate_php_struct_definition(
           (dval == "null" || is_result ||
            ((*m_iter)->get_req() == t_field::T_OPTIONAL &&
             (*m_iter)->get_value() == nullptr));
-
+      string name = (*m_iter)->get_name();
+      bool need_enum_code_fixme = is_exception && name == "code" &&
+          t->is_enum() && !enum_transparenttype_;
       if (tstruct->is_union()) {
         // Capture value from constructor and update _type field
-        out << indent() << "if ($" << (*m_iter)->get_name() << " !== null) {"
-            << endl
-            << indent() << "  $this->" << (*m_iter)->get_name() << " = $"
-            << (*m_iter)->get_name() << ";" << endl
-            << indent()
+        out << indent() << "if ($" << name << " !== null) {\n";
+      }
+      if (need_enum_code_fixme) {
+        out << indent() << "  /* HH_FIXME[4110] nontransparent Enum */\n";
+      }
+      out << indent() << (tstruct->is_union() ? "  " : "") << "$this->" << name
+          << " = $" << name << (!nullable ? " ?? " + dval : "") << ";\n";
+      if (tstruct->is_union()) {
+        out << indent()
             << "  $this->_type = " << union_field_to_enum(tstruct, *m_iter)
-            << ";" << endl
-            << indent() << "}" << endl;
-      } else if (nullable) {
-        indent(out) << "$this->" << (*m_iter)->get_name() << " = $"
-                    << (*m_iter)->get_name() << ";" << endl;
-      } else {
-        out << indent() << "if ($" << (*m_iter)->get_name() << " === null) {"
-            << endl
-            << indent() << "  $this->" << (*m_iter)->get_name() << " = " << dval
-            << ";" << endl
-            << indent() << "} else {" << endl
-            << indent() << "  $this->" << (*m_iter)->get_name() << " = $"
-            << (*m_iter)->get_name() << ";" << endl
-            << indent() << "}" << endl;
+            << ";\n"
+            << indent() << "}\n";
       }
     }
   }
 
   scope_down(out);
-  out << endl;
+  out << "\n";
 
-  out << indent() << "public function getName(): string {" << endl
-      << indent() << "  return '" << tstruct->get_name() << "';" << endl
-      << indent() << "}" << endl
-      << endl;
+  generate_php_struct_from_shape(out, tstruct);
+  out << "\n";
+
+  if (from_map_construct_) {
+    generate_php_struct_from_map(out, tstruct, is_exception);
+    out << "\n";
+  }
+
+  out << indent() << "public function getName(): string {\n"
+      << indent() << "  return '" << tstruct->get_name() << "';\n"
+      << indent() << "}\n\n";
   if (tstruct->is_union()) {
     generate_php_union_methods(out, tstruct);
   }
@@ -2777,304 +2842,185 @@ void t_hack_generator::_generate_php_struct_definition(
     if (message_annotation != tstruct->annotations_.end() &&
         message_annotation->second != "message") {
       auto message_field = tstruct->get_member(message_annotation->second);
-      out << indent() << "<<__Override>>" << endl
-          << indent() << "public function getMessage(): string {" << endl
+      out << indent() << "<<__Override, __Rx, __MaybeMutable>>\n"
+          << indent() << "public function getMessage(): string {\n"
           << indent() << "  return $this->" << message_field->get_name();
       if (message_field->get_req() != t_field::T_REQUIRED) {
         out << " ?? ''";
       }
-      out << ";" << endl << indent() << "}" << endl << endl;
+      out << ";\n" << indent() << "}\n\n";
     }
   }
+
+  // Structured annotations
+  indent(out) << "public static function getAllStructuredAnnotations(): "
+                 "\\TStructAnnotations {\n";
+  indent_up();
+  indent(out) << "return shape(\n";
+  indent_up();
+  indent(out) << "'struct' => "
+              << render_structured_annotations(tstruct->structured_annotations_)
+              << ",\n";
+  indent(out) << "'fields' => dict[\n";
+  indent_up();
+  for (const auto& field : tstruct->get_members()) {
+    indent(out) << "'" << field->get_name() << "' => shape(\n";
+    indent_up();
+    indent(out) << "'field' => "
+                << render_structured_annotations(field->structured_annotations_)
+                << ",\n";
+    indent(out) << "'type' => "
+                << render_structured_annotations(
+                       field->get_type()->structured_annotations_)
+                << ",\n";
+    indent_down();
+    indent(out) << "),\n";
+  }
+  indent_down();
+  indent(out) << "],\n";
+  indent_down();
+  indent(out) << ");\n";
+  indent_down();
+  indent(out) << "}\n\n";
+
+  // Regular annotations
+  out << indent()
+      << "public static function getAnnotations(): darray<string, mixed> {\n";
+  indent_up();
+  out << indent() << "return darray[\n";
+  indent_up();
+  for (auto& it : tstruct->annotations_) {
+    out << indent() << "'" << it.first << "' => " << render_string(it.second)
+        << ",\n";
+  }
+  for (auto& it : tstruct->annotation_objects_) {
+    out << indent() << "'" << it.first << "' => ";
+    out << render_const_value(it.second->get_type(), it.second->get_value());
+    out << ",\n";
+  }
+  indent_down();
+  out << indent() << "];\n";
+  indent_down();
+  out << indent() << "}\n\n";
 
   if (gen_shapes) {
     generate_php_struct_shape_methods(out, tstruct);
   }
-  if (generate_legacy_read_write_) {
-    generate_php_struct_reader(out, tstruct);
-    generate_php_struct_writer(out, tstruct);
-  }
   generate_json_reader(out, tstruct);
   indent_down();
-  out << indent() << "}" << endl << endl;
+  out << indent() << "}\n\n";
 }
 
-/**
- * Generates the read() method for a struct
- */
-void t_hack_generator::generate_php_struct_reader(
+void t_hack_generator::generate_php_struct_from_shape(
     ofstream& out,
     t_struct* tstruct) {
-  const vector<t_field*>& fields = tstruct->get_members();
-  vector<t_field*>::const_iterator f_iter;
-
-  indent(out) << "public function read(\\TProtocol $input): int {" << endl;
+  indent(out) << "<<__Rx>>\n";
+  out << indent() << "public static function fromShape"
+      << "(self::TConstructorShape $shape): this {\n";
   indent_up();
-  t_name_generator namer;
-
-  out << indent() << "$xfer = 0;" << endl
-      << indent() << "$fname = '';" << endl
-      << indent() << "$ftype = 0;" << endl
-      << indent() << "$fid = 0;" << endl;
-
-  if (tstruct->is_union()) {
-    // init _type field
+  out << indent() << "return new static(\n";
+  indent_up();
+  if (map_construct_ && !from_map_construct_) {
+    out << indent() << "Map {\n";
+    indent_up();
+  }
+  const vector<t_field*>& members = tstruct->get_members();
+  vector<t_field*>::const_iterator m_iter;
+  for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
+    string name = (*m_iter)->get_name();
     out << indent()
-        << "$this->_type = " << union_field_to_enum(tstruct, nullptr) << ";"
-        << endl;
+        << (map_construct_ && !from_map_construct_ ? "'" + name + "' => " : "")
+        << "Shapes::idx($shape, '" << name << "'),\n";
   }
-
-  // create flags for required fields, we check then after reading
-  for (const auto& f : fields) {
-    if (f->get_req() == t_field::T_REQUIRED) {
-      indent(out) << "$" << f->get_name() << "__isset = false;" << endl;
-    }
-  }
-  // Declare stack tmp variables
-  indent(out) << "$xfer += $input->readStructBegin(&$fname);" << endl;
-
-  // Loop over reading in fields
-  indent(out) << "while (true)" << endl;
-
-  scope_up(out);
-
-  // Read beginning field marker
-  out << indent() << "$xfer += $input->readFieldBegin(&$fname, &$ftype, &$fid);"
-      << endl;
-  // Check for field STOP marker and break
-  indent(out) << "if ($ftype == \\TType::STOP) {" << endl;
-  indent_up();
-  indent(out) << "break;" << endl;
-  indent_down();
-  indent(out) << "}" << endl;
-  out << indent() << "if (!$fid && $fname !== null) {" << endl
-      << indent() << "  $fid = (int) self::$_TFIELDMAP->get($fname);" << endl
-      << indent() << "  if ($fid !== 0) {" << endl
-      << indent() << "    $ftype = self::$_TSPEC[$fid]['type'];" << endl
-      << indent() << "  }" << endl
-      << indent() << "}" << endl;
-
-  // Switch statement on the field we are reading
-  indent(out) << "switch ($fid)" << endl;
-
-  scope_up(out);
-
-  // Generate deserialization code for known cases
-  for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
-    indent(out) << "case " << (*f_iter)->get_key() << ":" << endl;
-    indent_up();
-    indent(out) << "if ($ftype == " << type_to_enum((*f_iter)->get_type())
-                << ") {" << endl;
-    indent_up();
-    generate_deserialize_field(
-        out, namer, *f_iter, "this->" + (*f_iter)->get_name(), true);
-    if (tstruct->is_union()) {
-      // Update _type for union
-      indent(out) << "$this->_type = " << union_field_to_enum(tstruct, *f_iter)
-                  << ";" << endl;
-    }
-    if ((*f_iter)->get_req() == t_field::T_REQUIRED) {
-      indent(out) << "$" << (*f_iter)->get_name() << "__isset = true;" << endl;
-    }
+  if (map_construct_ && !from_map_construct_) {
     indent_down();
-    out << indent() << "} else {" << endl;
-    indent(out) << "  $xfer += $input->skip($ftype);" << endl;
-    out << indent() << "}" << endl << indent() << "break;" << endl;
-    indent_down();
+    out << indent() << "},\n";
   }
-
-  // In the default case we skip the field
-  indent(out) << "default:" << endl;
-  indent(out) << "  $xfer += $input->skip($ftype);" << endl;
-  indent(out) << "  break;" << endl;
-
-  scope_down(out);
-
-  indent(out) << "$xfer += $input->readFieldEnd();" << endl;
-
-  scope_down(out);
-
-  indent(out) << "$xfer += $input->readStructEnd();" << endl;
-
-  if (tstruct->is_xception()) {
-    const char* annotations[] = {"message", "code"};
-    for (auto& annotation : annotations) {
-      auto it = tstruct->annotations_.find(annotation);
-      if (it != tstruct->annotations_.end()) {
-        // if annotation is also used as field, ignore annotation
-        if (tstruct->has_field_named(annotation)) {
-          if (strcmp(annotation, it->second.c_str()) != 0) {
-            fprintf(
-                stderr,
-                "Ignoring annotation '%s' in Hack generator because "
-                "it is already being used as a field in exception "
-                "'%s'\n",
-                annotation,
-                tstruct->get_name().c_str());
-          }
-          continue;
-        }
-
-        std::string msg = it->second;
-        size_t idx = 0;
-
-        // replace . with -> so annotation works in both C++ and php.
-        while ((idx = msg.find_first_of('.', idx)) != string::npos) {
-          msg.replace(idx, 1, "->");
-        }
-
-        indent(out) << "$this->" << annotation << " = $this->" << msg << ";\n";
-      }
-    }
-  }
-
-  // The code that checks for the require field
-  for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
-    if ((*f_iter)->get_req() == t_field::T_REQUIRED) {
-      indent(out) << "if (!$" << (*f_iter)->get_name() << "__isset) {" << endl;
-      indent_up();
-      indent(out) << "throw new \\TProtocolException(\"Required field '"
-                  << (*f_iter)->get_name()
-                  << "' was not found in serialized data! Struct: "
-                  << tstruct->get_name() << "\", "
-                  << "\\TProtocolException::MISSING_REQUIRED_FIELD);" << endl;
-      indent_down();
-      indent(out) << "}" << endl;
-    }
-  }
-
-  indent(out) << "return $xfer;" << endl;
-
   indent_down();
-  out << indent() << "}" << endl << endl;
+  out << indent() << ");\n";
+  indent_down();
+  out << indent() << "}\n";
 }
 
-/**
- * Generates the write() method for a struct
- */
-void t_hack_generator::generate_php_struct_writer(
+void t_hack_generator::generate_php_struct_from_map(
     ofstream& out,
-    t_struct* tstruct) {
-  string name = tstruct->get_name();
-  const vector<t_field*>& fields = tstruct->get_sorted_members();
-  vector<t_field*>::const_iterator f_iter;
-
-  indent(out) << "public function write(\\TProtocol $output): int {" << endl;
-  indent_up();
-
-  t_name_generator namer;
-
-  indent(out) << "$xfer = 0;" << endl;
-
-  indent(out) << "$xfer += $output->writeStructBegin('" << name << "');"
-              << endl;
-
-  for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
-    t_type* type = (*f_iter)->get_type()->get_true_type();
-
-    indent(out) << "if ($this->" << (*f_iter)->get_name() << " !== null";
-
-    if ((*f_iter)->get_req() == t_field::T_OPTIONAL &&
-        (*f_iter)->get_value() != nullptr &&
-        !(type->is_struct() || type->is_xception())) {
-      out << " && $this->" << (*f_iter)->get_name()
-          << " !== " << render_const_value(type, (*f_iter)->get_value());
-    }
-
-    out << ") {" << endl;
-
-    indent_up();
-    string val = namer("_val");
-
-    if (type->is_enum()) {
-      t_enum* tenum = (t_enum*)type;
-      indent(out) << "$" << val << " = " << hack_name(type)
-                  << "::assert($this->" << (*f_iter)->get_name() << ");"
-                  << endl;
-    } else {
-      indent(out) << "$" << val << " = $this->" << (*f_iter)->get_name() << ";"
-                  << endl;
-    }
-
-    if (type->is_container() || type->is_struct()) {
-      out << indent() << "if (";
-      if (strict_types_) {
-        if (type->is_map()) {
-          if (arrays_) {
-            out << "!(is_dict($" << val << "))";
-          } else {
-            out << "!($" << val << " instanceof Map)";
-          }
-        } else if (type->is_list()) {
-          if (arrays_) {
-            out << "!(is_vec($" << val << "))";
-          } else {
-            out << "!($" << val << " instanceof Vector)";
-          }
-        } else if (type->is_set()) {
-          if (arrays_) {
-            out << "!(is_keyset($" << val << "))";
-          } else if (arraysets_) {
-            out << "!($" << val << " instanceof \\Indexish) && "
-                << "!(($" << val << " instanceof \\Iterator || "
-                << "$" << val << " instanceof \\IteratorAggregate) "
-                << "&& $" << val << " instanceof \\Countable)";
-          } else {
-            out << "!($" << val << " instanceof Set)";
-          }
-        } else {
-          out << "!($" << val << " instanceof " << type_to_typehint(type)
-              << ")";
-        }
-      } else {
-        if (type->is_set() && !arraysets_) {
-          if (arrays_) {
-            out << "!(is_keyset($" << val << "))";
-          } else {
-            out << "!($" << val << " instanceof Set)";
-          }
-        } else if (type->is_container()) {
-          out << "!($" << val << " instanceof \\Indexish) && "
-              << "!(($" << val << " instanceof \\Iterator || "
-              << "$" << val << " instanceof \\IteratorAggregate) "
-              << "&& $" << val << " instanceof \\Countable)";
-        } else {
-          out << "!($" << val << " instanceof " << type_to_typehint(type)
-              << ")";
-        }
-      }
-
-      out << ") {" << endl;
-      indent_up();
-      out << indent()
-          << "throw new \\TProtocolException('Bad type in structure.', \\TProtocolException::INVALID_DATA);"
-          << endl;
-      scope_down(out);
-    }
-
-    // Write field header
-    indent(out) << "$xfer += $output->writeFieldBegin("
-                << "'" << (*f_iter)->get_name() << "', "
-                << type_to_enum((*f_iter)->get_type()) << ", "
-                << (*f_iter)->get_key() << ");" << endl;
-
-    // Write field contents
-    generate_serialize_field(out, namer, *f_iter, val);
-
-    // Write field closer
-    indent(out) << "$xfer += $output->writeFieldEnd();" << endl;
-
-    indent_down();
-    indent(out) << "}" << endl;
+    t_struct* tstruct,
+    bool is_exception) {
+  out << indent() << "public static function fromMap_DEPRECATED(";
+  if (strict_types_) {
+    // Generate constructor from Map
+    out << (const_collections_ ? "Const" : "") << "Map<string, mixed> $maps";
+  } else {
+    // Generate constructor from KeyedContainer
+    out << (soft_attribute_ ? "<<__Soft>> " : "@")
+        << "KeyedContainer<string, mixed> $map";
   }
+  out << "): this {\n";
+  indent_up();
+  out << indent() << "return new static(\n";
+  indent_up();
+  const vector<t_field*>& members = tstruct->get_members();
+  vector<t_field*>::const_iterator m_iter;
+  for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
+    t_type* t = (*m_iter)->get_type()->get_true_type();
+    string name = (*m_iter)->get_name();
+    string cast;
+    string dval = "";
+    if ((*m_iter)->get_value() != nullptr &&
+        !(t->is_struct() || t->is_xception())) {
+      dval = render_const_value(t, (*m_iter)->get_value());
+    } else if (
+        is_exception &&
+        ((*m_iter)->get_name() == "code" || (*m_iter)->get_name() == "line")) {
+      if (t->is_any_int()) {
+        dval = "0";
+      } else {
+        // just use the lowest value
+        t_enum* tenum = (t_enum*)t;
+        dval = hack_name(tenum) +
+            "::" + (*(tenum->get_enum_values().begin()))->get_name();
+      }
+    } else if (
+        is_exception &&
+        ((*m_iter)->get_name() == "message" ||
+         (*m_iter)->get_name() == "file")) {
+      dval = "''";
+    } else if (tstruct->is_union() || nullable_everything_) {
+      dval = "null";
+    } else {
+      dval = render_default_value(t);
+    }
 
-  out << indent() << "$xfer += $output->writeFieldStop();" << endl
-      << indent() << "$xfer += $output->writeStructEnd();" << endl;
+    if ((tstruct->is_union() || nullable_everything_) &&
+        !(is_exception && is_base_exception_property(*m_iter))) {
+      cast = "";
+    } else {
+      cast = type_to_cast(t);
+    }
 
-  out << indent() << "return $xfer;" << endl;
-
+    if (strict_types_) {
+      if (t->is_container() || t->is_enum()) {
+        out << indent()
+            << "/* HH_FIXME[4110] mixed vs default conflict previously hidden by unsafe */\n";
+      }
+      out << indent() << cast << (cast != "" ? "(" : "") << "$map->get('"
+          << name << "')" << (cast != "" ? " ?: " + dval + ")" : "") << ",\n";
+    } else {
+      if (is_exception && name == "code" && t->is_enum()) {
+        out << indent()
+            << "/* HH_FIXME[4110] exposed by decl fixme scope refinement */\n";
+      } else if (cast == "") {
+        out << indent() << "/* HH_FIXME[4110] previously hidden by unsafe */\n";
+      }
+      out << indent() << cast << "idx($map, '" << name << "'"
+          << (dval != "null" && cast != "" ? ", " + dval : "") << ")"
+          << ",\n";
+    }
+  }
   indent_down();
-  out << indent() << "}" << endl << endl;
+  out << indent() << ");\n";
+  indent_down();
+  out << indent() << "}\n";
 }
 
 /**
@@ -3108,25 +3054,40 @@ void t_hack_generator::generate_service(t_service* tservice, bool mangle) {
   f_service_.open(f_service_name.c_str());
   record_genfile(f_service_name);
 
-  f_service_ << "<?hh // strict" << endl << autogen_comment() << endl;
+  f_service_ << "<?hh // strict\n" << autogen_comment() << "\n";
   string hack_ns = hack_namespace(program_);
   if (!hack_ns.empty()) {
-    f_service_ << "namespace " << hack_ns << ";" << endl << endl;
+    f_service_ << "namespace " << hack_ns << ";\n\n";
   }
 
   // Generate the main parts of the service
-  generate_service_interface(tservice, mangle, true);
-  generate_service_interface(tservice, mangle, false);
-  if (rest_) {
-    generate_service_rest(tservice, mangle);
-  }
+  generate_service_interface(
+      tservice,
+      mangle,
+      /*async*/ true,
+      /*rpc_options*/ false,
+      /*client*/ false);
+  generate_service_interface(
+      tservice,
+      mangle,
+      /*async*/ false,
+      /*rpc_options*/ false,
+      /*client*/ false);
+  generate_service_interface(
+      tservice,
+      mangle,
+      /*async*/ false,
+      /*rpc_options*/ false,
+      /*client*/ true);
+  generate_service_interface(
+      tservice, mangle, /*async*/ true, /*rpc_options*/ true, /*client*/ false);
   generate_service_client(tservice, mangle);
   if (phps_) {
-    generate_service_processor(tservice, mangle, true);
-    generate_service_processor(tservice, mangle, false);
+    generate_service_processor(tservice, mangle, /*async*/ true);
+    generate_service_processor(tservice, mangle, /*async*/ false);
   }
   // Generate the structures passed around and helper functions
-  generate_service_helpers(tservice);
+  generate_service_helpers(tservice, mangle);
 
   // Close service file
   f_service_.close();
@@ -3146,17 +3107,14 @@ void t_hack_generator::generate_event_handler_functions(
     ofstream& /*out*/,
     string cl) {
   f_service_ << indent() << "public function setEventHandler(" << cl
-             << " $event_handler): this {" << endl
-             << indent() << "  $this->eventHandler_ = $event_handler;" << endl
-             << indent() << "  return $this;" << endl
-             << indent() << "}" << endl
-             << endl;
+             << " $event_handler): this {\n"
+             << indent() << "  $this->eventHandler_ = $event_handler;\n"
+             << indent() << "  return $this;\n"
+             << indent() << "}\n\n";
 
-  indent(f_service_) << "public function getEventHandler(): " << cl << " {"
-                     << endl
-                     << indent() << "  return $this->eventHandler_;" << endl
-                     << indent() << "}" << endl
-                     << endl;
+  indent(f_service_) << "public function getEventHandler(): " << cl << " {\n"
+                     << indent() << "  return $this->eventHandler_;\n"
+                     << indent() << "}\n\n";
 }
 
 /**
@@ -3174,9 +3132,9 @@ void t_hack_generator::generate_service_processor(
 
   string suffix = async ? "Async" : "Sync";
   string extends = "";
-  string extends_processor = string("Thrift") + suffix + "Processor";
+  string extends_processor = string("\\Thrift") + suffix + "Processor";
   if (tservice->get_extends() != nullptr) {
-    extends = php_servicename_mangle(mangle, tservice->get_extends());
+    extends = php_servicename_mangle(mangle, tservice->get_extends(), true);
     extends_processor = extends + suffix + "ProcessorBase";
   }
 
@@ -3188,9 +3146,9 @@ void t_hack_generator::generate_service_processor(
   // define the const type.
 
   f_service_ << indent() << "abstract class " << long_name << suffix
-             << "ProcessorBase extends " << extends_processor << " {" << endl
+             << "ProcessorBase extends " << extends_processor << " {\n"
              << indent() << "  abstract const type TThriftIf as " << long_name
-             << (async ? "Async" : "") << "If;" << endl;
+             << (async ? "Async" : "") << "If;\n";
 
   indent_up();
 
@@ -3200,22 +3158,22 @@ void t_hack_generator::generate_service_processor(
   }
 
   indent_down();
-  f_service_ << "}" << endl;
+  f_service_ << "}\n";
 
   f_service_ << indent() << "class " << long_name << suffix
-             << "Processor extends " << long_name << suffix << "ProcessorBase {"
-             << endl
+             << "Processor extends " << long_name << suffix
+             << "ProcessorBase {\n"
              << indent() << "  const type TThriftIf = " << long_name
-             << (async ? "Async" : "") << "If;" << endl
-             << indent() << "}" << endl;
+             << (async ? "Async" : "") << "If;\n"
+             << indent() << "}\n";
 
   if (!async) {
-    f_service_ << indent() << "// For backwards compatibility" << endl
+    f_service_ << indent() << "// For backwards compatibility\n"
                << indent() << "class " << long_name << "Processor extends "
-               << long_name << "SyncProcessor {}" << endl;
+               << long_name << "SyncProcessor {}\n";
   }
 
-  f_service_ << endl;
+  f_service_ << "\n";
 }
 
 /**
@@ -3232,39 +3190,38 @@ void t_hack_generator::generate_process_function(
       << "protected" << (async ? " async" : "") << " function process_"
       << tfunction->get_name()
       << "(int $seqid, \\TProtocol $input, \\TProtocol $output): "
-      << (async ? "Awaitable<void>" : "void") << " {" << endl;
+      << (async ? "Awaitable<void>" : "void") << " {\n";
   indent_up();
 
   string service_name = hack_name(tservice);
   string argsname = service_name + "_" + tfunction->get_name() + "_args";
   string resultname = service_name + "_" + tfunction->get_name() + "_result";
-  string fn_name = tfunction->get_name();
+  const string& fn_name = tfunction->get_name();
 
   f_service_ << indent()
              << "$handler_ctx = $this->eventHandler_->getHandlerContext('"
-             << fn_name << "');" << endl
-             << indent() << "$reply_type = \\TMessageType::REPLY;" << endl
-             << endl
+             << fn_name << "');\n"
+             << indent() << "$reply_type = \\TMessageType::REPLY;\n"
+             << "\n"
              << indent() << "$this->eventHandler_->preRead($handler_ctx, '"
-             << fn_name << "', " << array_keyword_ << "[]);" << endl
-             << endl
-             << indent()
-             << "if ($input instanceof \\TBinaryProtocolAccelerated) {" << endl
+             << fn_name << "', " << array_keyword_ << "[]);\n"
+             << "\n"
+             << indent() << "if ($input is \\TBinaryProtocolAccelerated) {\n"
              << indent() << "  $args = \\thrift_protocol_read_binary_struct("
-             << "$input, '" << argsname << "');" << endl
+             << "$input, '" << argsname << "');\n"
              << indent()
-             << "} else if ($input instanceof \\TCompactProtocolAccelerated) {"
-             << endl
+             << "} else if ($input is \\TCompactProtocolAccelerated) {"
+             << "\n"
              << indent()
              << "  $args = \\thrift_protocol_read_compact_struct($input, '"
-             << argsname << "');" << endl
-             << indent() << "} else {" << endl
-             << indent() << "  $args = new " << argsname << "();" << endl
-             << indent() << "  $args->read($input);" << endl
-             << indent() << "}" << endl;
-  f_service_ << indent() << "$input->readMessageEnd();" << endl;
+             << argsname << "');\n"
+             << indent() << "} else {\n"
+             << indent() << "  $args = new " << argsname << "();\n"
+             << indent() << "  $args->read($input);\n"
+             << indent() << "}\n";
+  f_service_ << indent() << "$input->readMessageEnd();\n";
   f_service_ << indent() << "$this->eventHandler_->postRead($handler_ctx, '"
-             << fn_name << "', $args);" << endl;
+             << fn_name << "', $args);\n";
 
   t_struct* xs = tfunction->get_xceptions();
   const std::vector<t_field*>& xceptions = xs->get_members();
@@ -3272,11 +3229,11 @@ void t_hack_generator::generate_process_function(
 
   // Declare result for non oneway function
   if (!tfunction->is_oneway()) {
-    f_service_ << indent() << "$result = new " << resultname << "();" << endl;
+    f_service_ << indent() << "$result = new " << resultname << "();\n";
   }
 
   // Try block for a function with exceptions
-  f_service_ << indent() << "try {" << endl;
+  f_service_ << indent() << "try {\n";
   indent_up();
 
   // Generate the function call
@@ -3285,7 +3242,7 @@ void t_hack_generator::generate_process_function(
   vector<t_field*>::const_iterator f_iter;
 
   indent(f_service_) << "$this->eventHandler_->preExec($handler_ctx, '"
-                     << fn_name << "', $args);" << endl;
+                     << fn_name << "', $args);\n";
 
   f_service_ << indent();
   if (!tfunction->is_oneway() && !tfunction->get_returntype()->is_void()) {
@@ -3302,11 +3259,11 @@ void t_hack_generator::generate_process_function(
     }
     f_service_ << "$args->" << (*f_iter)->get_name();
   }
-  f_service_ << ");" << endl;
+  f_service_ << ");\n";
 
   if (!tfunction->is_oneway()) {
     indent(f_service_) << "$this->eventHandler_->postExec($handler_ctx, '"
-                       << fn_name << "', $result);" << endl;
+                       << fn_name << "', $result);\n";
   }
 
   indent_down();
@@ -3314,76 +3271,71 @@ void t_hack_generator::generate_process_function(
   for (exc_num = 0, x_iter = xceptions.begin(); x_iter != xceptions.end();
        ++x_iter, ++exc_num) {
     f_service_ << indent() << "} catch (" << hack_name((*x_iter)->get_type())
-               << " $exc" << exc_num << ") {" << endl;
+               << " $exc" << exc_num << ") {\n";
     if (!tfunction->is_oneway()) {
       indent_up();
       f_service_ << indent()
                  << "$this->eventHandler_->handlerException($handler_ctx, '"
-                 << fn_name << "', $exc" << exc_num << ");" << endl
+                 << fn_name << "', $exc" << exc_num << ");\n"
                  << indent() << "$result->" << (*x_iter)->get_name()
-                 << " = $exc" << exc_num << ";" << endl;
+                 << " = $exc" << exc_num << ";\n";
       indent_down();
     }
   }
   f_service_
-      << indent() << "} catch (\\Exception $ex) {" << endl
-      << indent() << "  $reply_type = \\TMessageType::EXCEPTION;" << endl
+      << indent() << "} catch (\\Exception $ex) {\n"
+      << indent() << "  $reply_type = \\TMessageType::EXCEPTION;\n"
       << indent() << "  $this->eventHandler_->handlerError($handler_ctx, '"
-      << fn_name << "', $ex);" << endl
+      << fn_name << "', $ex);\n"
       << indent()
-      << "  $result = new \\TApplicationException($ex->getMessage().\"\\n\".$ex->getTraceAsString());"
-      << endl
-      << indent() << "}" << endl;
+      << "  $result = new \\TApplicationException($ex->getMessage().\"\\n\".$ex->getTraceAsString());\n"
+      << indent() << "}\n";
 
   // Shortcut out here for oneway functions
   if (tfunction->is_oneway()) {
-    f_service_ << indent() << "return;" << endl;
+    f_service_ << indent() << "return;\n";
     indent_down();
-    f_service_ << indent() << "}" << endl;
+    f_service_ << indent() << "}\n";
     return;
   }
 
   f_service_ << indent() << "$this->eventHandler_->preWrite($handler_ctx, '"
-             << fn_name << "', $result);" << endl;
+             << fn_name << "', $result);\n";
 
-  f_service_ << indent()
-             << "if ($output instanceof \\TBinaryProtocolAccelerated)" << endl;
+  f_service_ << indent() << "if ($output is \\TBinaryProtocolAccelerated)\n";
   scope_up(f_service_);
 
   f_service_ << indent() << "\\thrift_protocol_write_binary($output, '"
              << tfunction->get_name()
-             << "', $reply_type, $result, $seqid, $output->isStrictWrite());"
-             << endl;
+             << "', $reply_type, $result, $seqid, $output->isStrictWrite());\n";
 
   scope_down(f_service_);
   f_service_ << indent()
-             << "else if ($output instanceof \\TCompactProtocolAccelerated)"
-             << endl;
+             << "else if ($output is \\TCompactProtocolAccelerated)\n";
   scope_up(f_service_);
 
   f_service_ << indent() << "\\thrift_protocol_write_compact($output, '"
-             << tfunction->get_name() << "', $reply_type, $result, $seqid);"
-             << endl;
+             << tfunction->get_name() << "', $reply_type, $result, $seqid);\n";
 
   scope_down(f_service_);
-  f_service_ << indent() << "else" << endl;
+  f_service_ << indent() << "else\n";
   scope_up(f_service_);
 
   // Serialize the request header
   f_service_ << indent() << "$output->writeMessageBegin(\""
-             << tfunction->get_name() << "\", $reply_type, $seqid);" << endl
-             << indent() << "$result->write($output);" << endl
-             << indent() << "$output->writeMessageEnd();" << endl
-             << indent() << "$output->getTransport()->flush();" << endl;
+             << tfunction->get_name() << "\", $reply_type, $seqid);\n"
+             << indent() << "$result->write($output);\n"
+             << indent() << "$output->writeMessageEnd();\n"
+             << indent() << "$output->getTransport()->flush();\n";
 
   scope_down(f_service_);
 
   f_service_ << indent() << "$this->eventHandler_->postWrite($handler_ctx, '"
-             << fn_name << "', $result);" << endl;
+             << fn_name << "', $result);\n";
 
   // Close function
   indent_down();
-  f_service_ << indent() << "}" << endl;
+  f_service_ << indent() << "}\n";
 }
 
 /**
@@ -3391,11 +3343,13 @@ void t_hack_generator::generate_process_function(
  *
  * @param tservice The service to generate a header definition for
  */
-void t_hack_generator::generate_service_helpers(t_service* tservice) {
+void t_hack_generator::generate_service_helpers(
+    t_service* tservice,
+    bool mangle) {
   vector<t_function*> functions = tservice->get_functions();
   vector<t_function*>::iterator f_iter;
 
-  f_service_ << "// HELPER FUNCTIONS AND STRUCTURES" << endl << endl;
+  f_service_ << "// HELPER FUNCTIONS AND STRUCTURES\n\n";
 
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     t_struct* ts = (*f_iter)->get_arglist();
@@ -3405,6 +3359,37 @@ void t_hack_generator::generate_service_helpers(t_service* tservice) {
     generate_php_function_helpers(*f_iter);
     ts->set_name(name);
   }
+
+  f_service_ << indent() << "class " << php_servicename_mangle(mangle, tservice)
+             << "StaticMetadata implements \\IThriftServiceStaticMetadata {\n";
+  indent_up();
+  // Structured annotations
+  f_service_ << indent()
+             << "public static function getAllStructuredAnnotations(): "
+                "\\TServiceAnnotations {\n";
+  indent_up();
+  f_service_ << indent() << "return shape(\n";
+  indent_up();
+  f_service_ << indent() << "'service' => "
+             << render_structured_annotations(tservice->structured_annotations_)
+             << ",\n";
+  f_service_ << indent() << "'functions' => dict[\n";
+  indent_up();
+  for (const auto& function : functions) {
+    f_service_ << indent() << "'" << function->get_name() << "' => "
+               << render_structured_annotations(
+                      function->structured_annotations_)
+               << ",\n";
+  }
+  indent_down();
+  f_service_ << indent() << "],\n";
+  indent_down();
+  f_service_ << indent() << ");\n";
+  indent_down();
+  f_service_ << indent() << "}\n";
+
+  indent_down();
+  f_service_ << indent() << "}\n\n";
 }
 
 /**
@@ -3464,7 +3449,7 @@ void t_hack_generator::generate_php_docstring(ofstream& out, t_doc* tdoc) {
 void t_hack_generator::generate_php_docstring(
     ofstream& out,
     t_function* tfunction) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tfunction->has_doc()) {
     generate_docstring_comment(
@@ -3477,16 +3462,16 @@ void t_hack_generator::generate_php_docstring(
 
   // Also write the original thrift function definition.
   if (tfunction->has_doc()) {
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
-              << "Original thrift definition:-" << endl;
+              << "Original thrift definition:-\n";
   // Return type.
   indent(out) << " * ";
   if (tfunction->is_oneway()) {
     out << "oneway ";
   }
-  out << thrift_type_name(tfunction->get_returntype()) << endl;
+  out << thrift_type_name(tfunction->get_returntype()) << "\n";
 
   // Function name.
   indent(out) << " * " << indent(1) << tfunction->get_name() << "(";
@@ -3501,15 +3486,15 @@ void t_hack_generator::generate_php_docstring(
   // Exceptions.
   t_struct* xceptions = tfunction->get_xceptions();
   if (xceptions && xceptions->get_members().size()) {
-    out << endl << indent() << " * " << indent(1) << "throws (";
+    out << "\n" << indent() << " * " << indent(1) << "throws (";
     // Find the position after the " * " from where the exceptions should be
     // rendered.
     start_pos = get_indent_size() + strlen("throws (");
     generate_php_docstring_args(out, start_pos, xceptions);
     out << ")";
   }
-  out << ";" << endl;
-  indent(out) << " */" << endl;
+  out << ";\n";
+  indent(out) << " */\n";
 }
 
 /**
@@ -3523,7 +3508,7 @@ void t_hack_generator::generate_php_docstring(
  * argNumber: argType argName
  */
 void t_hack_generator::generate_php_docstring(ofstream& out, t_field* tfield) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tfield->has_doc()) {
     generate_docstring_comment(
@@ -3532,14 +3517,14 @@ void t_hack_generator::generate_php_docstring(ofstream& out, t_field* tfield) {
         " * ", // line_prefix
         tfield->get_doc(), // contents
         ""); // comment_end
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
-              << "Original thrift field:-" << endl;
+              << "Original thrift field:-\n";
   indent(out) << " * " << tfield->get_key() << ": "
               << tfield->get_type()->get_full_name() << " "
-              << tfield->get_name() << endl;
-  indent(out) << " */" << endl;
+              << tfield->get_name() << "\n";
+  indent(out) << " */\n";
 }
 
 /**
@@ -3556,7 +3541,7 @@ void t_hack_generator::generate_php_docstring(
     ofstream& out,
     t_struct* tstruct,
     bool is_exception) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tstruct->has_doc()) {
     generate_docstring_comment(
@@ -3565,13 +3550,13 @@ void t_hack_generator::generate_php_docstring(
         " * ", // line_prefix
         tstruct->get_doc(), // contents
         ""); // comment_end
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
               << "Original thrift " << (is_exception ? "exception" : "struct")
-              << ":-" << endl;
-  indent(out) << " * " << tstruct->get_name() << endl;
-  indent(out) << " */" << endl;
+              << ":-\n";
+  indent(out) << " * " << tstruct->get_name() << "\n";
+  indent(out) << " */\n";
 }
 
 /**
@@ -3585,7 +3570,7 @@ void t_hack_generator::generate_php_docstring(
  * Name
  */
 void t_hack_generator::generate_php_docstring(ofstream& out, t_enum* tenum) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tenum->has_doc()) {
     generate_docstring_comment(
@@ -3594,12 +3579,12 @@ void t_hack_generator::generate_php_docstring(ofstream& out, t_enum* tenum) {
         " * ", // line_prefix
         tenum->get_doc(), // contents
         ""); // comment_end
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
-              << "Original thrift enum:-" << endl;
-  indent(out) << " * " << tenum->get_name() << endl;
-  indent(out) << " */" << endl;
+              << "Original thrift enum:-\n";
+  indent(out) << " * " << tenum->get_name() << "\n";
+  indent(out) << " */\n";
 }
 
 /**
@@ -3615,7 +3600,7 @@ void t_hack_generator::generate_php_docstring(ofstream& out, t_enum* tenum) {
 void t_hack_generator::generate_php_docstring(
     ofstream& out,
     t_service* tservice) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tservice->has_doc()) {
     generate_docstring_comment(
@@ -3624,12 +3609,12 @@ void t_hack_generator::generate_php_docstring(
         " * ", // line_prefix
         tservice->get_doc(), // contents
         ""); // comment_end
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
-              << "Original thrift service:-" << endl;
-  indent(out) << " * " << tservice->get_name() << endl;
-  indent(out) << " */" << endl;
+              << "Original thrift service:-\n";
+  indent(out) << " * " << tservice->get_name() << "\n";
+  indent(out) << " */\n";
 }
 
 /**
@@ -3643,7 +3628,7 @@ void t_hack_generator::generate_php_docstring(
  * TYPE NAME
  */
 void t_hack_generator::generate_php_docstring(ofstream& out, t_const* tconst) {
-  indent(out) << "/**" << endl;
+  indent(out) << "/**\n";
   // Copy the doc.
   if (tconst->has_doc()) {
     generate_docstring_comment(
@@ -3652,14 +3637,14 @@ void t_hack_generator::generate_php_docstring(ofstream& out, t_const* tconst) {
         " * ", // line_prefix
         tconst->get_doc(), // contents
         ""); // comment_end
-    indent(out) << " * " << endl;
+    indent(out) << " * \n";
   }
   indent(out) << " * "
-              << "Original thrift constant:-" << endl;
+              << "Original thrift constant:-\n";
   indent(out) << " * " << tconst->get_type()->get_full_name() << " "
-              << tconst->get_name() << endl;
+              << tconst->get_name() << "\n";
   // no value because it could have characters that mess up the comment
-  indent(out) << " */" << endl;
+  indent(out) << " */\n";
 }
 
 /**
@@ -3680,8 +3665,7 @@ void t_hack_generator::generate_php_docstring_args(
       for (p_iter = params.begin(); p_iter != params.end(); ++p_iter) {
         t_field* p = *p_iter;
         if (p_iter != params.begin()) { // If not first argument
-          out << "," << endl
-              << indent() << " * " << std::string(start_pos, ' ');
+          out << ",\n" << indent() << " * " << std::string(start_pos, ' ');
         }
         out << p->get_key() << ": " << thrift_type_name(p->get_type()) << " "
             << p->get_name();
@@ -3693,13 +3677,18 @@ void t_hack_generator::generate_php_docstring_args(
 /**
  * Generate an appropriate string for a php typehint
  */
-string
-t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
+string t_hack_generator::type_to_typehint(
+    t_type* ttype,
+    bool nullable,
+    bool shape,
+    bool immutable_collections) {
+  immutable_collections = immutable_collections || const_collections_;
   if (ttype->is_base_type()) {
     switch (((t_base_type*)ttype)->get_base()) {
       case t_base_type::TYPE_VOID:
         return "void";
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         return "string";
       case t_base_type::TYPE_BOOL:
         return "bool";
@@ -3715,13 +3704,16 @@ t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
         return "mixed";
     }
   } else if (ttype->is_typedef()) {
-    return type_to_typehint(((t_typedef*)ttype)->get_type(), nullable, shape);
+    return type_to_typehint(
+        ((t_typedef*)ttype)->get_type(),
+        nullable,
+        shape,
+        immutable_collections);
   } else if (ttype->is_enum()) {
     if (is_bitmask_enum((t_enum*)ttype)) {
       return "int";
     } else {
-      return (nullable ? "?" : "") + hack_name(ttype) +
-          (oldenum_ ? "Type" : "");
+      return (nullable ? "?" : "") + hack_name(ttype);
     }
   } else if (ttype->is_struct() || ttype->is_xception()) {
     return (nullable ? "?" : "") + hack_name(ttype) + (shape ? "::TShape" : "");
@@ -3734,10 +3726,15 @@ t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
     } else if (shape) {
       prefix = array_migration_ ? "varray" : "vec";
     } else {
-      prefix = const_collections_ ? "ConstVector" : "Vector";
+      prefix = immutable_collections ? "ConstVector" : "Vector";
     }
     return prefix + "<" +
-        type_to_typehint(((t_list*)ttype)->get_elem_type(), false, shape) + ">";
+        type_to_typehint(
+               ((t_list*)ttype)->get_elem_type(),
+               false,
+               shape,
+               immutable_collections) +
+        ">";
   } else if (ttype->is_map()) {
     string prefix;
     if (arrays_) {
@@ -3747,15 +3744,22 @@ t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
     } else if (shape) {
       prefix = array_keyword_;
     } else {
-      prefix = const_collections_ ? "ConstMap" : "Map";
+      prefix = immutable_collections ? "ConstMap" : "Map";
     }
-    string key_type =
-        type_to_typehint(((t_map*)ttype)->get_key_type(), false, shape);
+    string key_type = type_to_typehint(
+        ((t_map*)ttype)->get_key_type(), false, shape, immutable_collections);
     if (shape && shape_arraykeys_ && key_type == "string") {
+      key_type = "arraykey";
+    } else if (!is_type_arraykey(((t_map*)ttype)->get_key_type())) {
       key_type = "arraykey";
     }
     return prefix + "<" + key_type + ", " +
-        type_to_typehint(((t_map*)ttype)->get_val_type(), false, shape) + ">";
+        type_to_typehint(
+               ((t_map*)ttype)->get_val_type(),
+               false,
+               shape,
+               immutable_collections) +
+        ">";
   } else if (ttype->is_set()) {
     string prefix;
     if (arraysets_) {
@@ -3765,12 +3769,17 @@ t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
     } else if (shape) {
       prefix = array_keyword_;
     } else {
-      prefix = const_collections_ ? "ConstSet" : "Set";
+      prefix = immutable_collections ? "ConstSet" : "Set";
     }
     string suffix = (arraysets_ || (shape && !arrays_)) ? ", bool>" : ">";
-    return prefix + "<" +
-        type_to_typehint(((t_set*)ttype)->get_elem_type(), false, shape) +
-        suffix;
+    string key_type = !is_type_arraykey(((t_set*)ttype)->get_elem_type())
+        ? "arraykey"
+        : type_to_typehint(
+              ((t_set*)ttype)->get_elem_type(),
+              false,
+              shape,
+              immutable_collections);
+    return prefix + "<" + key_type + suffix;
   } else {
     return "mixed";
   }
@@ -3779,27 +3788,35 @@ t_hack_generator::type_to_typehint(t_type* ttype, bool nullable, bool shape) {
 /**
  * Generate an appropriate string for a parameter typehint.
  * The difference from type_to_typehint() is for parameters we should accept an
- * array or a collection type, so we return Indexish
+ * array or a collection type, so we return KeyedContainer
  */
 string t_hack_generator::type_to_param_typehint(t_type* ttype, bool nullable) {
   if (ttype->is_list()) {
     if (strict_types_) {
       return type_to_typehint(ttype, nullable);
     } else {
-      return "\\Indexish<int, " +
+      return "KeyedContainer<int, " +
           type_to_param_typehint(((t_list*)ttype)->get_elem_type()) + ">";
     }
   } else if (ttype->is_map()) {
     if (strict_types_) {
       return type_to_typehint(ttype, nullable);
     } else {
-      return "\\Indexish<" +
-          type_to_param_typehint(((t_map*)ttype)->get_key_type()) + ", " +
-          type_to_param_typehint(((t_map*)ttype)->get_val_type()) + ">";
+      auto key_type = ((t_map*)ttype)->get_key_type();
+      return "KeyedContainer<" +
+          (!is_type_arraykey(key_type) ? "arraykey"
+                                       : type_to_param_typehint(key_type)) +
+          ", " + type_to_param_typehint(((t_map*)ttype)->get_val_type()) + ">";
     }
   } else {
     return type_to_typehint(ttype, nullable);
   }
+}
+
+bool t_hack_generator::is_type_arraykey(t_type* type) {
+  type = type->get_true_type();
+  return type->is_string_or_binary() || type->is_any_int() || type->is_byte() ||
+      type->is_enum();
 }
 
 /**
@@ -3811,24 +3828,31 @@ string t_hack_generator::type_to_param_typehint(t_type* ttype, bool nullable) {
 void t_hack_generator::generate_service_interface(
     t_service* tservice,
     bool mangle,
-    bool async) {
+    bool async,
+    bool rpc_options,
+    bool client) {
   generate_php_docstring(f_service_, tservice);
-  string suffix = async ? "Async" : "";
-  string extends_if = string("\\IThrift") + (async ? "Async" : "Sync") + "If";
+  string suffix = string(async ? "Async" : "") +
+      (rpc_options ? "RpcOptions" : "") + (client ? "Client" : "");
+  string extends_if = string("\\IThrift") + (async ? "Async" : "Sync") +
+      (rpc_options ? "RpcOptions" : "") + "If";
   if (tservice->get_extends() != nullptr) {
-    string ext_prefix = php_servicename_mangle(mangle, tservice->get_extends());
+    string ext_prefix =
+        php_servicename_mangle(mangle, tservice->get_extends(), true);
     extends_if = ext_prefix + suffix + "If";
   }
   string long_name = php_servicename_mangle(mangle, tservice);
+  string head_parameters = rpc_options ? "\\RpcOptions $rpc_options" : "";
+
   f_service_ << "interface " << long_name << suffix << "If extends "
-             << extends_if << " {" << endl;
+             << extends_if << " {\n";
   indent_up();
   vector<t_function*> functions = tservice->get_functions();
   vector<t_function*>::iterator f_iter;
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     // Add a blank line before the start of a new function definition
     if (f_iter != functions.begin()) {
-      f_service_ << endl;
+      f_service_ << "\n";
     }
 
     // Add the doxygen style comments.
@@ -3836,111 +3860,26 @@ void t_hack_generator::generate_service_interface(
 
     // Finally, the function declaration.
     string return_typehint = type_to_typehint((*f_iter)->get_returntype());
-    if (async) {
+    if (async || client) {
       return_typehint = "Awaitable<" + return_typehint + ">";
     }
+
     if (nullable_everything_) {
       string funname = (*f_iter)->get_name();
-      indent(f_service_) << "public function " << funname << "("
-                         << argument_list(
-                                (*f_iter)->get_arglist(), "", true, true)
-                         << "): " << return_typehint << ";" << endl;
+      indent(f_service_)
+          << "public function " << funname << "("
+          << argument_list(
+                 (*f_iter)->get_arglist(), head_parameters, "", true, true)
+          << "): " << return_typehint << ";\n";
     } else {
       indent(f_service_) << "public function "
-                         << function_signature(*f_iter, "", "", return_typehint)
-                         << ";" << endl;
+                         << function_signature(
+                                *f_iter, head_parameters, "", return_typehint)
+                         << ";\n";
     }
   }
   indent_down();
-  f_service_ << "}" << endl << endl;
-}
-
-/**
- * Generates a REST interface
- */
-void t_hack_generator::generate_service_rest(t_service* tservice, bool mangle) {
-  string extends = "";
-  string extends_if = "";
-  if (tservice->get_extends() != nullptr) {
-    string ext_prefix = php_servicename_mangle(mangle, tservice->get_extends());
-    extends = " extends " + ext_prefix;
-    extends_if = " extends " + ext_prefix + "Rest";
-  }
-  string long_name = php_servicename_mangle(mangle, tservice);
-  f_service_ << "class " << long_name << "Rest" << extends_if << " {" << endl;
-  indent_up();
-
-  if (extends.empty()) {
-    f_service_ << indent() << "protected " << long_name << "If $impl_;" << endl
-               << endl;
-  }
-
-  f_service_ << indent() << "public function __construct(" << long_name
-             << "If $impl) {" << endl;
-  if (!extends.empty()) {
-    f_service_ << indent() << "parent::__construct($impl);" << endl;
-  }
-  f_service_ << indent() << "  $this->impl_ = $impl;" << endl
-             << indent() << "}" << endl
-             << endl;
-
-  vector<t_function*> functions = tservice->get_functions();
-  vector<t_function*>::iterator f_iter;
-  for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
-    indent(f_service_) << "public function " << (*f_iter)->get_name()
-                       << "(\\Indexish<string, mixed> $request): "
-                       << type_to_typehint((*f_iter)->get_returntype()) << " {"
-                       << endl;
-    indent_up();
-    indent(f_service_)
-        << "// UNSAFE_BLOCK $request is not type safe :(, and we don't cast structs (yet)"
-        << endl;
-    const vector<t_field*>& args = (*f_iter)->get_arglist()->get_members();
-    vector<t_field*>::const_iterator a_iter;
-    for (a_iter = args.begin(); a_iter != args.end(); ++a_iter) {
-      t_type* atype = (*a_iter)->get_type()->get_true_type();
-      string cast = type_to_cast(atype);
-      string req = "$request['" + (*a_iter)->get_name() + "']";
-      if (atype->is_bool()) {
-        f_service_ << indent() << "$" << (*a_iter)->get_name() << " = " << cast
-                   << "(!empty(" << req << ") && (" << req << " !== 'false'));"
-                   << endl;
-      } else {
-        f_service_ << indent() << "$" << (*a_iter)->get_name() << " = " << cast
-                   << " idx($request, '" << (*a_iter)->get_name() << "');"
-                   << endl;
-      }
-      if (atype->is_string() && ((t_base_type*)atype)->is_string_list()) {
-        f_service_ << indent() << "$" << (*a_iter)->get_name()
-                   << " = explode(',', $" << (*a_iter)->get_name() << ");"
-                   << endl;
-      } else if (atype->is_container()) {
-        f_service_ << indent() << "$" << (*a_iter)->get_name()
-                   << " = json_decode($" << (*a_iter)->get_name() << ", true);"
-                   << endl;
-      } else if (atype->is_struct() || atype->is_xception()) {
-        f_service_ << indent() << "if ($" << (*a_iter)->get_name()
-                   << " !== null) {" << endl
-                   << indent() << "  $" << (*a_iter)->get_name() << " = new "
-                   << hack_name(atype) << "(json_decode($"
-                   << (*a_iter)->get_name() << ", true));" << endl
-                   << indent() << "}" << endl;
-      }
-    }
-
-    f_service_ << indent();
-    if (!(*f_iter)->get_returntype()->is_void()) {
-      f_service_ << "return ";
-    }
-    f_service_ << "$this->impl_->" << (*f_iter)->get_name() << "("
-               << argument_list((*f_iter)->get_arglist(), "", false) << ");"
-               << endl;
-
-    indent_down();
-    indent(f_service_) << "}" << endl << endl;
-  }
-  indent_down();
-  f_service_ << "}" << endl << endl;
+  f_service_ << "}\n\n";
 }
 
 void t_hack_generator::generate_service_client(
@@ -3961,9 +3900,8 @@ void t_hack_generator::_generate_service_client(
   generate_php_docstring(out, tservice);
 
   string long_name = php_servicename_mangle(mangle, tservice);
-  out << "trait " << long_name << "ClientBase {" << endl
-      << "  require extends \\ThriftClientBase;" << endl
-      << endl;
+  out << "trait " << long_name << "ClientBase {\n"
+      << "  require extends \\ThriftClientBase;\n\n";
   indent_up();
 
   // Generate client method implementations
@@ -3977,29 +3915,26 @@ void t_hack_generator::_generate_service_client(
 
     if (nullable_everything_) {
       indent(out) << "protected function sendImpl_" << funname << "("
-                  << argument_list((*f_iter)->get_arglist(), "", true, true)
-                  << "): int {" << endl;
+                  << argument_list((*f_iter)->get_arglist(), "", "", true, true)
+                  << "): int {\n";
     } else {
       indent(out) << "protected function sendImpl_"
-                  << function_signature(*f_iter, "", "", "int") << " {" << endl;
+                  << function_signature(*f_iter, "", "", "int") << " {\n";
     }
     indent_up();
 
     std::string argsname =
         hack_name(tservice) + "_" + (*f_iter)->get_name() + "_args";
 
-    out << indent() << "$currentseqid = $this->getNextSequenceID();" << endl
-        << indent() << "$args = new " << argsname << "(";
-    if (map_construct_) {
-      out << "Map {";
-    }
-    out << endl;
+    out << indent() << "$currentseqid = $this->getNextSequenceID();\n"
+        << indent() << "$args = new " << argsname << "("
+        << (map_construct_ && !from_map_construct_ ? "Map {" : "") << "\n";
     indent_up();
     // Loop through the fields and assign to the args struct
     for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
       indent(out);
       string name = "$" + (*fld_iter)->get_name();
-      if (map_construct_) {
+      if (map_construct_ && !from_map_construct_) {
         out << "'" << (*fld_iter)->get_name() << "' => ";
       }
       if (nullable_everything_) {
@@ -4008,93 +3943,85 @@ void t_hack_generator::_generate_service_client(
       }
       t_name_generator namer;
       this->_generate_sendImpl_arg(out, namer, name, (*fld_iter)->get_type());
-      out << "," << endl;
+      out << ",\n";
     }
     indent_down();
-    out << indent();
-    if (map_construct_) {
-      out << "}";
-    }
-    out << ");" << endl;
-    out << indent() << "try {" << endl;
+    out << indent() << (map_construct_ && !from_map_construct_ ? "}" : "")
+        << ");\n";
+    out << indent() << "try {\n";
     indent_up();
     out << indent() << "$this->eventHandler_->preSend('"
-        << (*f_iter)->get_name() << "', $args, $currentseqid);" << endl;
-    out << indent()
-        << "if ($this->output_ instanceof \\TBinaryProtocolAccelerated)"
-        << endl;
+        << (*f_iter)->get_name() << "', $args, $currentseqid);\n";
+    out << indent() << "if ($this->output_ is \\TBinaryProtocolAccelerated)\n";
     scope_up(out);
 
     out << indent() << "\\thrift_protocol_write_binary($this->output_, '"
         << (*f_iter)->get_name() << "', "
         << "\\TMessageType::CALL, $args, $currentseqid, "
         << "$this->output_->isStrictWrite(), "
-        << ((*f_iter)->is_oneway() ? "true" : "false") << ");" << endl;
+        << ((*f_iter)->is_oneway() ? "true" : "false") << ");\n";
 
     scope_down(out);
     out << indent()
-        << "else if ($this->output_ instanceof \\TCompactProtocolAccelerated)"
-        << endl;
+        << "else if ($this->output_ is \\TCompactProtocolAccelerated)\n";
     scope_up(out);
 
     out << indent() << "\\thrift_protocol_write_compact($this->output_, '"
         << (*f_iter)->get_name() << "', "
         << "\\TMessageType::CALL, $args, $currentseqid, "
-        << ((*f_iter)->is_oneway() ? "true" : "false") << ");" << endl;
+        << ((*f_iter)->is_oneway() ? "true" : "false") << ");\n";
 
     scope_down(out);
-    out << indent() << "else" << endl;
+    out << indent() << "else\n";
     scope_up(out);
 
     // Serialize the request header
     out << indent() << "$this->output_->writeMessageBegin('"
-        << (*f_iter)->get_name() << "', \\TMessageType::CALL, $currentseqid);"
-        << endl;
+        << (*f_iter)->get_name()
+        << "', \\TMessageType::CALL, $currentseqid);\n";
 
     // Write to the stream
-    out << indent() << "$args->write($this->output_);" << endl
-        << indent() << "$this->output_->writeMessageEnd();" << endl;
+    out << indent() << "$args->write($this->output_);\n"
+        << indent() << "$this->output_->writeMessageEnd();\n";
     if ((*f_iter)->is_oneway()) {
-      out << indent() << "$this->output_->getTransport()->onewayFlush();"
-          << endl;
+      out << indent() << "$this->output_->getTransport()->onewayFlush();\n";
     } else {
-      out << indent() << "$this->output_->getTransport()->flush();" << endl;
+      out << indent() << "$this->output_->getTransport()->flush();\n";
     }
 
     scope_down(out);
 
     indent_down();
-    indent(out) << "} catch (\\THandlerShortCircuitException $ex) {" << endl;
+    indent(out) << "} catch (\\THandlerShortCircuitException $ex) {\n";
     indent_up();
-    out << indent() << "switch ($ex->resultType) {" << endl
+    out << indent() << "switch ($ex->resultType) {\n"
         << indent()
-        << "  case \\THandlerShortCircuitException::R_EXPECTED_EX:" << endl
+        << "  case \\THandlerShortCircuitException::R_EXPECTED_EX:\n"
         << indent()
-        << "  case \\THandlerShortCircuitException::R_UNEXPECTED_EX:" << endl
+        << "  case \\THandlerShortCircuitException::R_UNEXPECTED_EX:\n"
         << indent() << "    $this->eventHandler_->sendError('"
         << (*f_iter)->get_name() << "', $args, $currentseqid, $ex->result);"
-        << endl
-        << indent() << "    throw $ex->result;" << endl
-        << indent()
-        << "  case \\THandlerShortCircuitException::R_SUCCESS:" << endl
-        << indent() << "  default:" << endl
+        << "\n"
+        << indent() << "    throw $ex->result;\n"
+        << indent() << "  case \\THandlerShortCircuitException::R_SUCCESS:\n"
+        << indent() << "  default:\n"
         << indent() << "    $this->eventHandler_->postSend('"
-        << (*f_iter)->get_name() << "', $args, $currentseqid);" << endl
-        << indent() << "    return $currentseqid;" << endl
-        << indent() << "}" << endl;
+        << (*f_iter)->get_name() << "', $args, $currentseqid);\n"
+        << indent() << "    return $currentseqid;\n"
+        << indent() << "}\n";
     indent_down();
-    indent(out) << "} catch (\\Exception $ex) {" << endl;
+    indent(out) << "} catch (\\Exception $ex) {\n";
     indent_up();
     out << indent() << "$this->eventHandler_->sendError('"
-        << (*f_iter)->get_name() << "', $args, $currentseqid, $ex);" << endl
-        << indent() << "throw $ex;" << endl;
+        << (*f_iter)->get_name() << "', $args, $currentseqid, $ex);\n"
+        << indent() << "throw $ex;\n";
     indent_down();
-    indent(out) << "}" << endl;
+    indent(out) << "}\n";
 
     out << indent() << "$this->eventHandler_->postSend('"
-        << (*f_iter)->get_name() << "', $args, $currentseqid);" << endl;
+        << (*f_iter)->get_name() << "', $args, $currentseqid);\n";
 
-    indent(out) << "return $currentseqid;" << endl;
+    indent(out) << "return $currentseqid;\n";
 
     scope_down(out);
 
@@ -4108,120 +4035,118 @@ void t_hack_generator::_generate_service_client(
           std::make_unique<t_struct>(program_));
       string return_typehint = type_to_typehint((*f_iter)->get_returntype());
       // Open function
-      out << endl
-          << indent() << "protected function "
+      out << "\n";
+      if (arrprov_skip_frames_) {
+        indent(f_service_) << "<<__ProvenanceSkipFrame>>\n";
+      }
+      out << indent() << "protected function "
           << function_signature(
                  &recv_function,
                  "",
                  "?int $expectedsequenceid = null",
                  return_typehint)
-          << " {" << endl;
+          << " {\n";
       indent_up();
 
-      out << indent() << "try {" << endl;
+      out << indent() << "try {\n";
       indent_up();
 
       out << indent() << "$this->eventHandler_->preRecv('"
-          << (*f_iter)->get_name() << "', $expectedsequenceid);" << endl;
+          << (*f_iter)->get_name() << "', $expectedsequenceid);\n";
 
       out << indent()
-          << "if ($this->input_ instanceof \\TBinaryProtocolAccelerated) {"
-          << endl;
+          << "if ($this->input_ is \\TBinaryProtocolAccelerated) {\n";
 
       indent_up();
 
       out << indent() << "$result = \\thrift_protocol_read_binary("
           << "$this->input_, '" << resultname
-          << "', $this->input_->isStrictRead());" << endl;
+          << "', $this->input_->isStrictRead());\n";
 
       indent_down();
 
       out << indent()
-          << "} else if ($this->input_ instanceof \\TCompactProtocolAccelerated)"
-          << endl;
+          << "} else if ($this->input_ is \\TCompactProtocolAccelerated)\n";
       scope_up(out);
       out << indent()
           << "$result = \\thrift_protocol_read_compact($this->input_, '"
-          << resultname << "');" << endl;
+          << resultname << "');\n";
       scope_down(out);
 
-      out << indent() << "else" << endl;
+      out << indent() << "else\n";
       scope_up(out);
 
-      out << indent() << "$rseqid = 0;" << endl
-          << indent() << "$fname = '';" << endl
-          << indent() << "$mtype = 0;" << endl
-          << endl;
+      out << indent() << "$rseqid = 0;\n"
+          << indent() << "$fname = '';\n"
+          << indent() << "$mtype = 0;\n\n";
 
-      out << indent() << "$this->input_->readMessageBegin(&$fname, &$mtype, "
-          << "&$rseqid);" << endl
-          << indent() << "if ($mtype == \\TMessageType::EXCEPTION) {" << endl
-          << indent() << "  $x = new \\TApplicationException();" << endl
-          << indent() << "  $x->read($this->input_);" << endl
-          << indent() << "  $this->input_->readMessageEnd();" << endl
-          << indent() << "  throw $x;" << endl
-          << indent() << "}" << endl;
+      out << indent() << "$this->input_->readMessageBegin(\n"
+          << indent() << "  inout $fname,\n"
+          << indent() << "  inout $mtype,\n"
+          << indent() << "  inout $rseqid,\n"
+          << indent() << ");\n"
+          << indent() << "if ($mtype == \\TMessageType::EXCEPTION) {\n"
+          << indent() << "  $x = new \\TApplicationException();\n"
+          << indent() << "  $x->read($this->input_);\n"
+          << indent() << "  $this->input_->readMessageEnd();\n"
+          << indent() << "  throw $x;\n"
+          << indent() << "}\n";
 
-      out << indent() << "$result = new " << resultname << "();" << endl
-          << indent() << "$result->read($this->input_);" << endl;
+      out << indent() << "$result = new " << resultname << "();\n"
+          << indent() << "$result->read($this->input_);\n";
 
-      out << indent() << "$this->input_->readMessageEnd();" << endl;
+      out << indent() << "$this->input_->readMessageEnd();\n";
 
       out << indent()
-          << "if ($expectedsequenceid !== null && ($rseqid != $expectedsequenceid)) {"
-          << endl
+          << "if ($expectedsequenceid !== null && ($rseqid != $expectedsequenceid)) {\n"
           << indent() << "  throw new \\TProtocolException(\""
-          << (*f_iter)->get_name() << " failed: sequence id is out of order\");"
-          << endl
-          << indent() << "}" << endl;
+          << (*f_iter)->get_name()
+          << " failed: sequence id is out of order\");\n"
+          << indent() << "}\n";
 
       scope_down(out);
       indent_down();
-      indent(out) << "} catch (\\THandlerShortCircuitException $ex) {" << endl;
+      indent(out) << "} catch (\\THandlerShortCircuitException $ex) {\n";
       indent_up();
-      out << indent() << "switch ($ex->resultType) {" << endl
+      out << indent() << "switch ($ex->resultType) {\n"
           << indent()
-          << "  case \\THandlerShortCircuitException::R_EXPECTED_EX:" << endl
+          << "  case \\THandlerShortCircuitException::R_EXPECTED_EX:\n"
           << indent() << "    $this->eventHandler_->recvException('"
-          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);"
-          << endl
-          << indent() << "    throw $ex->result;" << endl
+          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);\n"
+          << indent() << "    throw $ex->result;\n"
           << indent()
-          << "  case \\THandlerShortCircuitException::R_UNEXPECTED_EX:" << endl
+          << "  case \\THandlerShortCircuitException::R_UNEXPECTED_EX:\n"
           << indent() << "    $this->eventHandler_->recvError('"
-          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);"
-          << endl
-          << indent() << "    throw $ex->result;" << endl
-          << indent()
-          << "  case \\THandlerShortCircuitException::R_SUCCESS:" << endl
-          << indent() << "  default:" << endl
+          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);\n"
+          << indent() << "    throw $ex->result;\n"
+          << indent() << "  case \\THandlerShortCircuitException::R_SUCCESS:\n"
+          << indent() << "  default:\n"
           << indent() << "    $this->eventHandler_->postRecv('"
-          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);"
-          << endl
+          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex->result);\n"
           << indent() << "    return";
 
       if (!(*f_iter)->get_returntype()->is_void()) {
         out << " $ex->result";
       }
-      out << ";" << endl << indent() << "}" << endl;
+      out << ";\n" << indent() << "}\n";
       indent_down();
-      out << indent() << "} catch (\\Exception $ex) {" << endl;
+      out << indent() << "} catch (\\Exception $ex) {\n";
       indent_up();
       out << indent() << "$this->eventHandler_->recvError('"
-          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex);" << endl
-          << indent() << "throw $ex;" << endl;
+          << (*f_iter)->get_name() << "', $expectedsequenceid, $ex);\n"
+          << indent() << "throw $ex;\n";
       indent_down();
-      out << indent() << "}" << endl;
+      out << indent() << "}\n";
 
       // Careful, only return result if not a void function
       if (!(*f_iter)->get_returntype()->is_void()) {
-        out << indent() << "if ($result->success !== null) {" << endl
-            << indent() << "  $success = $result->success;" << endl
+        out << indent() << "if ($result->success !== null) {\n"
+            << indent() << "  $success = $result->success;\n"
             << indent() << "  $this->eventHandler_->postRecv('"
             << (*f_iter)->get_name() << "', $expectedsequenceid, $success);"
-            << endl
-            << indent() << "  return $success;" << endl
-            << indent() << "}" << endl;
+            << "\n"
+            << indent() << "  return $success;\n"
+            << indent() << "}\n";
       }
 
       t_struct* xs = (*f_iter)->get_xceptions();
@@ -4229,46 +4154,50 @@ void t_hack_generator::_generate_service_client(
       vector<t_field*>::const_iterator x_iter;
       for (x_iter = xceptions.begin(); x_iter != xceptions.end(); ++x_iter) {
         out << indent() << "if ($result->" << (*x_iter)->get_name()
-            << " !== null) {" << endl
+            << " !== null) {\n"
             << indent() << "  $x = $result->" << (*x_iter)->get_name() << ";"
-            << endl
+            << "\n"
             << indent() << "  $this->eventHandler_->recvException('"
-            << (*f_iter)->get_name() << "', $expectedsequenceid, $x);" << endl
-            << indent() << "  throw $x;" << endl
-            << indent() << "}" << endl;
+            << (*f_iter)->get_name() << "', $expectedsequenceid, $x);\n"
+            << indent() << "  throw $x;\n"
+            << indent() << "}\n";
       }
 
       // Careful, only return _result if not a void function
       if ((*f_iter)->get_returntype()->is_void()) {
         indent(out) << indent() << "  $this->eventHandler_->postRecv('"
                     << (*f_iter)->get_name() << "', $expectedsequenceid, null);"
-                    << endl
-                    << "return;" << endl;
+                    << "\n"
+                    << "return;\n";
       } else {
         out << indent() << "$x = new \\TApplicationException(\""
             << (*f_iter)->get_name() << " failed: unknown result\""
             << ", \\TApplicationException::MISSING_RESULT"
-            << ");" << endl
+            << ");\n"
             << indent() << "$this->eventHandler_->recvError('"
-            << (*f_iter)->get_name() << "', $expectedsequenceid, $x);" << endl
-            << indent() << "throw $x;" << endl;
+            << (*f_iter)->get_name() << "', $expectedsequenceid, $x);\n"
+            << indent() << "throw $x;\n";
       }
 
       // Close function
       scope_down(out);
     }
 
-    out << endl;
+    out << "\n";
   }
 
   scope_down(out);
-  out << endl;
+  out << "\n";
 
-  _generate_service_client_children(out, tservice, mangle, /*async*/ true);
-  _generate_service_client_children(out, tservice, mangle, /*async*/ false);
+  _generate_service_client_children(
+      out, tservice, mangle, /*async*/ true, /*rpc_options*/ false);
+  _generate_service_client_children(
+      out, tservice, mangle, /*async*/ false, /*rpc_options*/ false);
+  _generate_service_client_children(
+      out, tservice, mangle, /*async*/ true, /*rpc_options*/ true);
 }
 
-// If !strict_types, containers are typehinted as Indexish<Key, Value>
+// If !strict_types, containers are typehinted as KeyedContainer<Key, Value>
 // to better support passing in arrays/dicts/maps/vecs/vectors and
 // handle backwards compatibility. However, structs are typehinted as
 // the actual container (ex: Map<Key, Val>), and we need to safely
@@ -4323,13 +4252,13 @@ void t_hack_generator::_generate_sendImpl_arg(
       throw std::runtime_error("Unknown container type");
     }
     indent_up();
-    out << endl << indent();
+    out << "\n" << indent();
     // update var to what it will be next, since we no longer need the old value
     string new_var = "$" + namer("_val");
     out << new_var << " ==> ";
     this->_generate_sendImpl_arg(out, namer, new_var, val_type);
     indent_down();
-    out << endl << indent();
+    out << "\n" << indent();
     if (no_use_hack_collections_) {
       out << ")";
     }
@@ -4365,90 +4294,71 @@ void t_hack_generator::_generate_service_client_children(
     ofstream& out,
     t_service* tservice,
     bool mangle,
-    bool async) {
+    bool async,
+    bool rpc_options) {
   string long_name = php_servicename_mangle(mangle, tservice);
-  string suffix = (async ? "Async" : "");
+  string class_suffix =
+      string(async ? "Async" : "") + (rpc_options ? "RpcOptions" : "");
+  if (rpc_options && !async) {
+    throw std::runtime_error(
+        "RpcOptions are currently supported for async clients only");
+  }
+  string interface_suffix =
+      string(async ? "Async" : "Client") + (rpc_options ? "RpcOptions" : "");
   string extends = "\\ThriftClientBase";
   bool root = tservice->get_extends() == nullptr;
-  bool first = true;
   if (!root) {
-    extends = php_servicename_mangle(mangle, tservice->get_extends()) + suffix +
-        "Client";
+    extends = php_servicename_mangle(mangle, tservice->get_extends(), true) +
+        class_suffix + "Client";
   }
 
-  out << "class " << long_name << suffix << "Client extends " << extends
-      << " implements " << long_name << suffix << "If {" << endl
-      << "  use " << long_name << "ClientBase;" << endl
-      << endl;
+  out << "class " << long_name << class_suffix << "Client extends " << extends
+      << " implements " << long_name << interface_suffix << "If {\n"
+      << "  use " << long_name << "ClientBase;\n\n";
   indent_up();
 
   // Generate client method implementations
   vector<t_function*> functions = tservice->get_functions();
   vector<t_function*>::const_iterator f_iter;
+
+  // generate functions as necessary
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     t_struct* arg_struct = (*f_iter)->get_arglist();
     const vector<t_field*>& fields = arg_struct->get_members();
     vector<t_field*>::const_iterator fld_iter;
     string funname = (*f_iter)->get_name();
+    const string& tservice_name = tservice->get_name();
     string return_typehint = type_to_typehint((*f_iter)->get_returntype());
+    string head_parameters = rpc_options ? "\\RpcOptions $rpc_options" : "";
+    string rpc_options_param =
+        rpc_options ? "$rpc_options" : "new \\RpcOptions()";
 
-    if (!async) {
-      // Non-Async function
-      indent(out) << "<<__Deprecated('use gen_" << funname << "()')>>" << endl;
-      if (nullable_everything_) {
-        indent(out) << "public function " << funname << "("
-                    << argument_list((*f_iter)->get_arglist(), "", true, true)
-                    << "): " << return_typehint << " {" << endl;
-      } else {
-        indent(out) << "public function " << function_signature(*f_iter) << " {"
-                    << endl;
-      }
-      indent_up();
-      indent(out) << "$currentseqid = $this->sendImpl_" << funname << "(";
-
-      first = true;
-      for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-        if (first) {
-          first = false;
-        } else {
-          out << ", ";
-        }
-        out << "$" << (*fld_iter)->get_name();
-      }
-      out << ");" << endl;
-
-      if (!(*f_iter)->is_oneway()) {
-        out << indent();
-        if (!(*f_iter)->get_returntype()->is_void()) {
-          out << "return ";
-        }
-        out << "$this->recvImpl_" << funname << "($currentseqid);" << endl;
-      }
-      scope_down(out);
-      out << endl;
-    }
-
-    // Async function
     generate_php_docstring(out, *f_iter);
-    string prefix = async ? "" : "gen_";
+    if (arrprov_skip_frames_) {
+      indent(out) << "<<__ProvenanceSkipFrame>>\n";
+    }
     if (nullable_everything_) {
-      indent(out) << "public async function " << prefix << funname << "("
-                  << argument_list((*f_iter)->get_arglist(), "", true, true)
-                  << "): Awaitable<" + return_typehint + "> {" << endl;
+      indent(out)
+          << "public async function " << funname << "("
+          << argument_list(
+                 (*f_iter)->get_arglist(), head_parameters, "", true, true)
+          << "): Awaitable<" + return_typehint + "> {\n";
     } else {
       indent(out) << "public async function "
                   << function_signature(
                          *f_iter,
-                         prefix,
+                         head_parameters,
                          "",
                          "Awaitable<" + return_typehint + ">")
-                  << " {" << endl;
+                  << " {\n";
     }
 
     indent_up();
+    indent(out) << "await $this->asyncHandler_->genBefore(\"" << tservice_name
+                << "\", \"" << funname << "\");\n";
     indent(out) << "$currentseqid = $this->sendImpl_" << funname << "(";
 
-    first = true;
+    bool first = true;
     for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
       if (first) {
         first = false;
@@ -4457,23 +4367,50 @@ void t_hack_generator::_generate_service_client_children(
       }
       out << "$" << (*fld_iter)->get_name();
     }
-    out << ");" << endl;
+    out << ");\n";
 
     if (!(*f_iter)->is_oneway()) {
-      indent(out) << "await $this->asyncHandler_->genWait($currentseqid);"
-                  << endl;
+      out << indent() << "$channel = $this->channel_;\n"
+          << indent() << "$out_transport = $this->output_->getTransport();\n"
+          << indent() << "$in_transport = $this->input_->getTransport();\n"
+          << indent()
+          << "if ($channel !== null && $out_transport is \\TMemoryBuffer && $in_transport is \\TMemoryBuffer) {\n";
+      indent_up();
+      out << indent() << "$msg = $out_transport->getBuffer();\n"
+          << indent() << "$out_transport->resetBuffer();\n"
+          << indent()
+          << "list($result_msg, $_read_headers) = await $channel->genSendRequestResponse("
+          << rpc_options_param << ", $msg);\n"
+          << indent() << "$in_transport->resetBuffer();\n"
+          << indent() << "$in_transport->write($result_msg);\n";
+      indent_down();
+      indent(out) << "} else {\n";
+      indent_up();
+      indent(out) << "await $this->asyncHandler_->genWait($currentseqid);\n";
+      scope_down(out);
       out << indent();
       if (!(*f_iter)->get_returntype()->is_void()) {
         out << "return ";
       }
-      out << "$this->recvImpl_" << funname << "($currentseqid);" << endl;
+      out << "$this->recvImpl_" << funname << "($currentseqid);\n";
+    } else {
+      out << indent() << "$channel = $this->channel_;\n"
+          << indent() << "$out_transport = $this->output_->getTransport();\n"
+          << indent()
+          << "if ($channel !== null && $out_transport is \\TMemoryBuffer) {\n";
+      indent_up();
+      out << indent() << "$msg = $out_transport->getBuffer();\n"
+          << indent() << "$out_transport->resetBuffer();\n"
+          << indent() << "await $channel->genSendRequestNoResponse("
+          << rpc_options_param << ", $msg);\n";
+      scope_down(out);
     }
     scope_down(out);
-    out << endl;
+    out << "\n";
   }
 
   if (!async) {
-    out << indent() << "/* send and recv functions */" << endl;
+    out << indent() << "/* send and recv functions */\n";
 
     for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
       t_struct* arg_struct = (*f_iter)->get_arglist();
@@ -4483,9 +4420,9 @@ void t_hack_generator::_generate_service_client_children(
       string return_typehint = type_to_typehint((*f_iter)->get_returntype());
 
       out << indent() << "public function send_"
-          << function_signature(*f_iter, "", "", "int") << " {" << endl
+          << function_signature(*f_iter, "", "", "int") << " {\n"
           << indent() << "  return $this->sendImpl_" << funname << "(";
-      first = true;
+      bool first = true;
       for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
         if (first) {
           first = false;
@@ -4494,13 +4431,16 @@ void t_hack_generator::_generate_service_client_children(
         }
         out << "$" << (*fld_iter)->get_name();
       }
-      out << ");" << endl << indent() << "}" << endl;
+      out << ");\n" << indent() << "}\n";
       if (!(*f_iter)->is_oneway()) {
         t_function recv_function(
             (*f_iter)->get_returntype(),
             string("recv_") + (*f_iter)->get_name(),
             std::make_unique<t_struct>(program_));
         // Open function
+        if (arrprov_skip_frames_) {
+          indent(out) << "<<__ProvenanceSkipFrame>>\n";
+        }
         bool is_void = (*f_iter)->get_returntype()->is_void();
         out << indent() << "public function "
             << function_signature(
@@ -4508,16 +4448,16 @@ void t_hack_generator::_generate_service_client_children(
                    "",
                    "?int $expectedsequenceid = null",
                    return_typehint)
-            << " {" << endl
+            << " {\n"
             << indent() << "  " << (is_void ? "" : "return ")
-            << "$this->recvImpl_" << funname << "($expectedsequenceid);" << endl
-            << indent() << "}" << endl;
+            << "$this->recvImpl_" << funname << "($expectedsequenceid);\n"
+            << indent() << "}\n";
       }
     }
   }
 
   indent_down();
-  out << "}" << endl << endl;
+  out << "}\n\n";
 }
 
 /**
@@ -4546,7 +4486,7 @@ void t_hack_generator::generate_deserialize_field(
     } else if (type->is_base_type() || type->is_enum()) {
       if (type->is_base_type()) {
         if (!declared) {
-          indent(out) << "$" << name << " = null;" << endl;
+          indent(out) << "$" << name << " = null;\n";
         }
         indent(out) << "$xfer += $input->";
 
@@ -4556,6 +4496,7 @@ void t_hack_generator::generate_deserialize_field(
             throw "compiler error: cannot serialize void field in a struct: " +
                 name;
           case t_base_type::TYPE_STRING:
+          case t_base_type::TYPE_BINARY:
             out << "readString(&$" << name << ");";
             break;
           case t_base_type::TYPE_BOOL:
@@ -4587,17 +4528,17 @@ void t_hack_generator::generate_deserialize_field(
         t_enum* tenum = (t_enum*)type;
 
         string val = namer("_val");
-        out << indent() << "$" << val << " = null;" << endl
-            << indent() << "$xfer += $input->readI32($" << val << ");" << endl
+        out << indent() << "$" << val << " = null;\n"
+            << indent() << "$xfer += $input->readI32($" << val << ");\n"
             << indent() << "$" << name << " = " << hack_name(tenum);
         if (tfield->get_req() == t_field::T_REQUIRED) {
           out << "::assert(";
         } else {
           out << "::coerce(";
         }
-        out << "$" << val << ");" << endl;
+        out << "$" << val << ");\n";
       }
-      out << endl;
+      out << "\n";
     } else {
       printf(
           "DO NOT KNOW HOW TO DESERIALIZE FIELD '%s' TYPE '%s'\n",
@@ -4618,8 +4559,8 @@ void t_hack_generator::generate_deserialize_struct(
     t_struct* tstruct,
     string prefix) {
   out << indent() << "$" << prefix << " = new " << hack_name(tstruct) << "();"
-      << endl
-      << indent() << "$xfer += $" << prefix << "->read($input);" << endl;
+      << "\n"
+      << indent() << "$xfer += $" << prefix << "->read($input);\n";
 }
 
 void t_hack_generator::generate_deserialize_container(
@@ -4638,49 +4579,52 @@ void t_hack_generator::generate_deserialize_container(
   t_field fvtype(byte_type(), vtype);
   t_field fetype(byte_type(), etype);
 
-  out << indent() << "$" << size << " = 0;" << endl;
+  out << indent() << "$" << size << " = 0;\n";
 
   // Declare variables, read header
   if (ttype->is_map()) {
     if (arrays_) {
-      out << indent() << "$" << val << " = dict[];" << endl;
+      out << indent() << "$" << val << " = dict[];\n";
     } else if (no_use_hack_collections_) {
-      out << indent() << "$" << val << " = darray[];" << endl;
+      out << indent() << "$" << val << " = darray[];\n";
     } else {
-      out << indent() << "$" << val << " = Map {};" << endl;
+      out << indent() << "$" << val << " = Map {};\n";
     }
-    out << indent() << "$" << ktype << " = 0;" << endl
-        << indent() << "$" << vtype << " = 0;" << endl;
-    out << indent() << "$xfer += $input->readMapBegin("
-        << "&$" << ktype << ", &$" << vtype << ", &$" << size << ");" << endl;
+    out << indent() << "$" << ktype << " = 0;\n"
+        << indent() << "$" << vtype << " = 0;\n";
+    out << indent() << "$xfer += $input->readMapBegin(\n"
+        << indent() << "  inout $" << ktype << ",\n"
+        << indent() << "  inout $" << vtype << ",\n"
+        << indent() << "  inout $" << size << ",\n"
+        << indent() << ");\n";
   } else if (ttype->is_set()) {
-    out << indent() << "$" << etype << " = 0;" << endl;
+    out << indent() << "$" << etype << " = 0;\n";
     if (arrays_) {
-      out << indent() << "$" << val << " = keyset[];" << endl;
+      out << indent() << "$" << val << " = keyset[];\n";
     } else if (arraysets_) {
-      out << indent() << "$" << val << " = " << array_keyword_ << "[];" << endl;
+      out << indent() << "$" << val << " = " << array_keyword_ << "[];\n";
     } else {
-      out << indent() << "$" << val << " = Set{};" << endl;
+      out << indent() << "$" << val << " = Set{};\n";
     }
     out << indent() << "$xfer += $input->readSetBegin("
-        << "&$" << etype << ", &$" << size << ");" << endl;
+        << "&$" << etype << ", &$" << size << ");\n";
   } else if (ttype->is_list()) {
     if (arrays_) {
-      out << indent() << "$" << val << " = vec[];" << endl;
+      out << indent() << "$" << val << " = vec[];\n";
     } else if (no_use_hack_collections_) {
-      out << indent() << "$" << val << " = varray[];" << endl;
+      out << indent() << "$" << val << " = varray[];\n";
     } else {
-      out << indent() << "$" << val << " = Vector {};" << endl;
+      out << indent() << "$" << val << " = Vector {};\n";
     }
-    out << indent() << "$" << etype << " = 0;" << endl
+    out << indent() << "$" << etype << " = 0;\n"
         << indent() << "$xfer += $input->readListBegin("
-        << "&$" << etype << ", &$" << size << ");" << endl;
+        << "&$" << etype << ", &$" << size << ");\n";
   }
 
   // For loop iterates over elements
   string i = namer("_i");
   indent(out) << "for ($" << i << " = 0; $" << size << " === null || $" << i
-              << " < $" << size << "; ++$" << i << ")" << endl;
+              << " < $" << size << "; ++$" << i << ")\n";
 
   scope_up(out);
 
@@ -4697,14 +4641,14 @@ void t_hack_generator::generate_deserialize_container(
 
   // Read container end
   if (ttype->is_map()) {
-    indent(out) << "$xfer += $input->readMapEnd();" << endl;
+    indent(out) << "$xfer += $input->readMapEnd();\n";
   } else if (ttype->is_set()) {
-    indent(out) << "$xfer += $input->readSetEnd();" << endl;
+    indent(out) << "$xfer += $input->readSetEnd();\n";
   } else if (ttype->is_list()) {
-    indent(out) << "$xfer += $input->readListEnd();" << endl;
+    indent(out) << "$xfer += $input->readListEnd();\n";
   }
 
-  out << indent() << "$" << prefix << " = $" << val << ";" << endl;
+  out << indent() << "$" << prefix << " = $" << val << ";\n";
 }
 
 /**
@@ -4722,19 +4666,18 @@ void t_hack_generator::generate_deserialize_map_element(
   t_field fval(tmap->get_val_type(), val);
 
   out << indent() << "if ($" << size
-      << " === null && !$input->readMapHasNext()) {" << endl
-      << indent() << "  break;" << endl
-      << indent() << "}" << endl;
+      << " === null && !$input->readMapHasNext()) {\n"
+      << indent() << "  break;\n"
+      << indent() << "}\n";
 
   generate_deserialize_field(out, namer, &fkey);
   generate_deserialize_field(out, namer, &fval);
 
-  indent(out) << "if ($" << key << " !== null && $" << val << " !== null) {"
-              << endl;
+  indent(out) << "if ($" << key << " !== null && $" << val << " !== null) {\n";
   indent_up();
-  indent(out) << "$" << prefix << "[$" << key << "] = $" << val << ";" << endl;
+  indent(out) << "$" << prefix << "[$" << key << "] = $" << val << ";\n";
   indent_down();
-  indent(out) << "}" << endl;
+  indent(out) << "}\n";
 }
 
 void t_hack_generator::generate_deserialize_set_element(
@@ -4747,23 +4690,23 @@ void t_hack_generator::generate_deserialize_set_element(
   t_field felem(tset->get_elem_type(), elem);
 
   out << indent() << "if ($" << size
-      << " === null && !$input->readSetHasNext()) {" << endl
-      << indent() << "  break;" << endl
-      << indent() << "}" << endl;
+      << " === null && !$input->readSetHasNext()) {\n"
+      << indent() << "  break;\n"
+      << indent() << "}\n";
 
   generate_deserialize_field(out, namer, &felem);
 
-  indent(out) << "if ($" << elem << " !== null) {" << endl;
+  indent(out) << "if ($" << elem << " !== null) {\n";
   indent_up();
   if (arrays_) {
-    indent(out) << "$" << prefix << "[] = $" << elem << ";" << endl;
+    indent(out) << "$" << prefix << "[] = $" << elem << ";\n";
   } else if (arraysets_) {
-    indent(out) << "$" << prefix << "[$" << elem << "] = true;" << endl;
+    indent(out) << "$" << prefix << "[$" << elem << "] = true;\n";
   } else {
-    indent(out) << "$" << prefix << "->add($" << elem << ");" << endl;
+    indent(out) << "$" << prefix << "->add($" << elem << ");\n";
   }
   indent_down();
-  indent(out) << "}" << endl;
+  indent(out) << "}\n";
 }
 
 void t_hack_generator::generate_deserialize_list_element(
@@ -4776,17 +4719,17 @@ void t_hack_generator::generate_deserialize_list_element(
   t_field felem(tlist->get_elem_type(), elem);
 
   out << indent() << "if ($" << size
-      << " === null && !$input->readListHasNext()) {" << endl
-      << indent() << "  break;" << endl
-      << indent() << "}" << endl;
+      << " === null && !$input->readListHasNext()) {\n"
+      << indent() << "  break;\n"
+      << indent() << "}\n";
 
   generate_deserialize_field(out, namer, &felem);
 
-  indent(out) << "if ($" << elem << " !== null) {" << endl;
+  indent(out) << "if ($" << elem << " !== null) {\n";
   indent_up();
-  indent(out) << "$" << prefix << " []= $" << elem << ";" << endl;
+  indent(out) << "$" << prefix << " []= $" << elem << ";\n";
   indent_down();
-  indent(out) << "}" << endl;
+  indent(out) << "}\n";
 }
 
 /**
@@ -4824,6 +4767,7 @@ void t_hack_generator::generate_serialize_field(
           throw "compiler error: cannot serialize void field in a struct: " +
               name;
         case t_base_type::TYPE_STRING:
+        case t_base_type::TYPE_BINARY:
           out << "writeString($" << name << ");";
           break;
         case t_base_type::TYPE_BOOL:
@@ -4854,7 +4798,7 @@ void t_hack_generator::generate_serialize_field(
     } else if (type->is_enum()) {
       out << "writeI32($" << name << ");";
     }
-    out << endl;
+    out << "\n";
   } else {
     printf(
         "DO NOT KNOW HOW TO SERIALIZE FIELD '%s' TYPE '%s'\n",
@@ -4874,7 +4818,7 @@ void t_hack_generator::generate_serialize_struct(
     t_name_generator& /* namer */,
     t_struct* /* tstruct */,
     string prefix) {
-  indent(out) << "$xfer += $" << prefix << "->write($output);" << endl;
+  indent(out) << "$xfer += $" << prefix << "->write($output);\n";
 }
 
 /**
@@ -4889,18 +4833,18 @@ void t_hack_generator::generate_serialize_container(
     indent(out) << "$output->writeMapBegin("
                 << type_to_enum(((t_map*)ttype)->get_key_type()) << ", "
                 << type_to_enum(((t_map*)ttype)->get_val_type()) << ", "
-                << "C\\count($" << prefix << "));" << endl;
+                << "C\\count($" << prefix << "));\n";
   } else if (ttype->is_set()) {
     indent(out) << "$output->writeSetBegin("
                 << type_to_enum(((t_set*)ttype)->get_elem_type()) << ", "
-                << "C\\count($" << prefix << "));" << endl;
+                << "C\\count($" << prefix << "));\n";
   } else if (ttype->is_list()) {
     indent(out) << "$output->writeListBegin("
                 << type_to_enum(((t_list*)ttype)->get_elem_type()) << ", "
-                << "C\\count($" << prefix << "));" << endl;
+                << "C\\count($" << prefix << "));\n";
   }
 
-  indent(out) << "if ($" << prefix << " !== null)" << endl;
+  indent(out) << "if ($" << prefix << " !== null)\n";
 
   scope_up(out);
 
@@ -4908,24 +4852,24 @@ void t_hack_generator::generate_serialize_container(
     string kiter = namer("kiter");
     string viter = namer("viter");
     indent(out) << "foreach ($" << prefix << " as "
-                << "$" << kiter << " => $" << viter << ")" << endl;
+                << "$" << kiter << " => $" << viter << ")\n";
     scope_up(out);
     generate_serialize_map_element(out, namer, (t_map*)ttype, kiter, viter);
     scope_down(out);
   } else if (ttype->is_set()) {
     string iter = namer("iter");
     if (arraysets_) {
-      indent(out) << "foreach ($" << prefix << " as $" << iter << " => $true)"
-                  << endl;
+      indent(out) << "foreach ($" << prefix << " as $" << iter
+                  << " => $true)\n";
     } else {
-      indent(out) << "foreach ($" << prefix << " as $" << iter << ")" << endl;
+      indent(out) << "foreach ($" << prefix << " as $" << iter << ")\n";
     }
     scope_up(out);
     generate_serialize_set_element(out, namer, (t_set*)ttype, iter);
     scope_down(out);
   } else if (ttype->is_list()) {
     string iter = namer("iter");
-    indent(out) << "foreach ($" << prefix << " as $" << iter << ")" << endl;
+    indent(out) << "foreach ($" << prefix << " as $" << iter << ")\n";
     scope_up(out);
     generate_serialize_list_element(out, namer, (t_list*)ttype, iter);
     scope_down(out);
@@ -4934,11 +4878,11 @@ void t_hack_generator::generate_serialize_container(
   scope_down(out);
 
   if (ttype->is_map()) {
-    indent(out) << "$output->writeMapEnd();" << endl;
+    indent(out) << "$output->writeMapEnd();\n";
   } else if (ttype->is_set()) {
-    indent(out) << "$output->writeSetEnd();" << endl;
+    indent(out) << "$output->writeSetEnd();\n";
   } else if (ttype->is_list()) {
-    indent(out) << "$output->writeListEnd();" << endl;
+    indent(out) << "$output->writeListEnd();\n";
   }
 }
 
@@ -5005,6 +4949,7 @@ string t_hack_generator::declare_field(
         case t_base_type::TYPE_VOID:
           break;
         case t_base_type::TYPE_STRING:
+        case t_base_type::TYPE_BINARY:
           result += " = ''";
           break;
         case t_base_type::TYPE_BOOL:
@@ -5069,15 +5014,18 @@ string t_hack_generator::declare_field(
  */
 string t_hack_generator::function_signature(
     t_function* tfunction,
-    string prefix,
-    string moreparameters,
+    string more_head_parameters,
+    string more_tail_parameters,
     string typehint) {
   if (typehint.empty()) {
     typehint = type_to_typehint(tfunction->get_returntype());
   }
 
-  return prefix + tfunction->get_name() + "(" +
-      argument_list(tfunction->get_arglist(), moreparameters) +
+  return tfunction->get_name() + "(" +
+      argument_list(
+             tfunction->get_arglist(),
+             more_head_parameters,
+             more_tail_parameters) +
       "): " + typehint;
 }
 
@@ -5086,7 +5034,8 @@ string t_hack_generator::function_signature(
  */
 string t_hack_generator::argument_list(
     t_struct* tstruct,
-    string moreparameters,
+    string more_head_parameters,
+    string more_tail_parameters,
     bool typehints,
     bool force_nullable) {
   string result = "";
@@ -5094,6 +5043,12 @@ string t_hack_generator::argument_list(
   const vector<t_field*>& fields = tstruct->get_members();
   vector<t_field*>::const_iterator f_iter;
   bool first = true;
+
+  if (more_head_parameters.length() > 0) {
+    result += more_head_parameters;
+    first = false;
+  }
+
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
     if (first) {
       first = false;
@@ -5116,11 +5071,11 @@ string t_hack_generator::argument_list(
     result += "$" + (*f_iter)->get_name();
   }
 
-  if (moreparameters.length() > 0) {
+  if (more_tail_parameters.length() > 0) {
     if (!first) {
       result += ", ";
     }
-    result += moreparameters;
+    result += more_tail_parameters;
   }
   return result;
 }
@@ -5143,6 +5098,7 @@ string t_hack_generator::type_to_cast(t_type* type) {
       case t_base_type::TYPE_FLOAT:
         return "(float)";
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         return "(string)";
       default:
         return "";
@@ -5165,6 +5121,7 @@ string t_hack_generator::type_to_enum(t_type* type) {
       case t_base_type::TYPE_VOID:
         throw "NO T_VOID CONSTRUCT";
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         return "\\TType::STRING";
       case t_base_type::TYPE_BOOL:
         return "\\TType::BOOL";
@@ -5201,19 +5158,25 @@ THRIFT_REGISTER_GENERATOR(
     "HACK",
     "    server:          Generate Hack server stubs.\n"
     "    rest:            Generate Hack REST processors.\n"
-    "    oldenum:         Generate enums with $__names and $__values fields.\n"
     "    json:            Generate functions to parse JSON into thrift struct.\n"
     "    mangledsvcs      Generate services with namespace mangling.\n"
-    "    stricttypes      Use Collection classes everywhere rather than Indexish.\n"
+    "    stricttypes      Use Collection classes everywhere rather than KeyedContainer.\n"
     "    strict           Generate strict hack header.\n"
     "    arraysets        Use legacy arrays for sets rather than objects.\n"
     "    nonullables      Instantiate struct fields within structs, rather than nullable\n"
     "    mapconstruct     Struct constructors accept arrays/Maps rather than their fields\n"
-    "    structtrait         Add 'use [StructName]Trait;' to generated classes\n"
+    "    structtrait      Add 'use [StructName]Trait;' to generated classes\n"
     "    shapes           Generate Shape definitions for structs\n"
+    "    protected_unions Generate protected members for thrift unions\n"
     "    shape_arraykeys  When generating Shape definition for structs:\n"
     "                        replace array<string, TValue> with array<arraykey, TValue>\n"
-    "    shape_unsafe_json When converting json to Shapes, do not validate.\n"
+    "    shapes_allow_unknown_fields Allow unknown fields and implicit subtyping for shapes \n"
     "    lazy_constants   Generate lazy initialization code for global constants.\n"
+    "    frommap_construct Generate fromMap_DEPRECATED method to migrate from mapconstruct.\n"
     "    arrays           Use Hack arrays for maps/lists/sets instead of objects.\n"
-    "    const_collections Use ConstCollection objects rather than their mutable counterparts.\n");
+    "    const_collections Use ConstCollection objects rather than their mutable counterparts.\n"
+    "    enum_transparenttype Use transparent typing for Hack enums: 'enum FooBar: int as int'.\n");
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache

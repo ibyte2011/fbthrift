@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <folly/futures/Future.h>
 #include <folly/synchronization/Baton.h>
@@ -70,35 +70,14 @@ class ChatRoomTest : public testing::Test {
   std::shared_ptr<ChatRoomServiceHandler> handler_;
 };
 
-TEST_F(ChatRoomTest, SyncCall) {
-  // Send RPC to Server
-  SendMessageRequest sendRequest;
-  sendRequest.message = "This is an example!";
-  sendRequest.sender = "UnitTest";
-  client_->sync_sendMessage(sendRequest);
-
-  // Send RPC to get Results
-  GetMessagesRequest getRequest;
-  GetMessagesResponse response;
-  client_->sync_getMessages(response, getRequest);
-  EXPECT_EQ(response.messages.size(), 1);
-  EXPECT_EQ(response.messages.front().message, sendRequest.message);
-  EXPECT_EQ(response.messages.front().sender, sendRequest.sender);
-
-  // Repeat
-  client_->sync_sendMessage(sendRequest);
-  client_->sync_getMessages(response, getRequest);
-  EXPECT_EQ(response.messages.size(), 2);
-}
-
 TEST_F(ChatRoomTest, AsyncCall) {
   // Send RPC to Server
   ClientReceiveState sendResult;
   folly::Baton<> sendBaton;
   auto sendCb = std::make_unique<AsyncCallback>(&sendResult, &sendBaton);
   SendMessageRequest sendRequest;
-  sendRequest.message = "This is an example!";
-  sendRequest.sender = "UnitTest";
+  *sendRequest.message_ref() = "This is an example!";
+  *sendRequest.sender_ref() = "UnitTest";
   client_->sendMessage(std::move(sendCb), sendRequest);
   sendBaton.wait();
 
@@ -113,7 +92,7 @@ TEST_F(ChatRoomTest, AsyncCall) {
 
   // Receive Result
   client_->recv_getMessages(response, getResult);
-  EXPECT_EQ(response.messages.size(), 1);
+  EXPECT_EQ(response.messages_ref()->size(), 1);
 
   // Repeat
   ClientReceiveState sendResult2;
@@ -129,27 +108,31 @@ TEST_F(ChatRoomTest, AsyncCall) {
 
   // Receive Result
   client_->recv_getMessages(response, getResult2);
-  EXPECT_EQ(response.messages.size(), 2);
+  EXPECT_EQ(response.messages_ref()->size(), 2);
 }
 
 TEST_F(ChatRoomTest, FuturesCall) {
   // Send RPC to Server
   SendMessageRequest sendRequest;
-  sendRequest.message = "This is an example!";
-  sendRequest.sender = "UnitTest";
+  *sendRequest.message_ref() = "This is an example!";
+  *sendRequest.sender_ref() = "UnitTest";
   client_->future_sendMessage(sendRequest).get();
 
   // Send RPC to get Results
   GetMessagesRequest getRequest;
   auto response = client_->future_getMessages(getRequest).get();
-  EXPECT_EQ(response.messages.size(), 1);
-  EXPECT_EQ(response.messages.front().message, sendRequest.message);
-  EXPECT_EQ(response.messages.front().sender, sendRequest.sender);
+  EXPECT_EQ(response.messages_ref()->size(), 1);
+  EXPECT_EQ(
+      *response.messages_ref()->front().message_ref(),
+      *sendRequest.message_ref());
+  EXPECT_EQ(
+      *response.messages_ref()->front().sender_ref(),
+      *sendRequest.sender_ref());
 
   // Repeat
   client_->future_sendMessage(sendRequest).get();
   response = client_->future_getMessages(getRequest).get();
-  EXPECT_EQ(response.messages.size(), 2);
+  EXPECT_EQ(response.messages_ref()->size(), 2);
 }
 
 } // namespace thrift

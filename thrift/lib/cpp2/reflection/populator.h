@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -469,7 +469,6 @@ struct populator_methods<type_class::structure, Struct> {
 
       auto& got = Member::getter::ref(out);
       using member_type = folly::remove_cvref_t<decltype(got)>;
-      member_type tmp;
 
       DVLOG(3) << "populating member: "
                << fatal::z_data<typename Member::name>();

@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,12 @@
 #pragma once
 
 #include <folly/SocketAddress.h>
+#include <folly/io/async/AsyncSocket.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <thrift/lib/cpp/async/TAsyncSSLSocket.h>
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
 #include <thrift/lib/cpp2/async/HeaderClientChannel.h>
-#include <thrift/lib/cpp2/async/RSocketClientChannel.h>
+#include <thrift/lib/cpp2/async/RocketClientChannel.h>
 #include <thrift/lib/cpp2/server/BaseThriftServer.h>
 #include <thrift/lib/cpp2/transport/core/ThriftClient.h>
 #include <thrift/lib/cpp2/transport/core/testutil/ServerConfigsMock.h>
@@ -33,17 +33,16 @@ using apache::thrift::ClientConnectionIf;
 using apache::thrift::H2ClientConnection;
 using apache::thrift::HeaderClientChannel;
 using apache::thrift::InMemoryConnection;
-using apache::thrift::RSocketClientChannel;
+using apache::thrift::RocketClientChannel;
 using apache::thrift::ThriftClient;
 using apache::thrift::ThriftServerAsyncProcessorFactory;
-using apache::thrift::async::TAsyncSocket;
 using apache::thrift::async::TAsyncSSLSocket;
 using apache::thrift::server::ServerConfigsMock;
 
 namespace apache {
 namespace thrift {
 namespace perf {
-TAsyncSocket::UniquePtr getSocket(
+folly::AsyncSocket::UniquePtr getSocket(
     folly::EventBase* evb,
     folly::SocketAddress const& addr,
     bool encrypted,
@@ -78,13 +77,13 @@ static std::unique_ptr<AsyncClient> newHTTP2Client(
 }
 
 template <typename AsyncClient>
-static std::unique_ptr<AsyncClient> newRSocketClient(
+static std::unique_ptr<AsyncClient> newRocketClient(
     folly::EventBase* evb,
     folly::SocketAddress const& addr,
     bool encrypted) {
-  auto sock = apache::thrift::perf::getSocket(evb, addr, encrypted, {"rs"});
-  RSocketClientChannel::Ptr channel =
-      RSocketClientChannel::newChannel(std::move(sock), encrypted);
+  auto sock = apache::thrift::perf::getSocket(evb, addr, encrypted, {"rs2"});
+  RocketClientChannel::Ptr channel =
+      RocketClientChannel::newChannel(std::move(sock));
   channel->setProtocolId(apache::thrift::protocol::T_COMPACT_PROTOCOL);
   return std::make_unique<AsyncClient>(std::move(channel));
 }
@@ -111,8 +110,8 @@ static std::unique_ptr<AsyncClient> newClient(
   if (transport == "header") {
     return newHeaderClient<AsyncClient>(evb, addr);
   }
-  if (transport == "rsocket") {
-    return newRSocketClient<AsyncClient>(evb, addr, encrypted);
+  if (transport == "rocket") {
+    return newRocketClient<AsyncClient>(evb, addr, encrypted);
   }
   if (transport == "http2") {
     return newHTTP2Client<AsyncClient>(evb, addr, encrypted);

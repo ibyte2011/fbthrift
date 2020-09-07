@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,35 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
-#include <thrift/lib/cpp2/async/RequestChannel.h>
-#include <thrift/lib/cpp2/async/FutureRequest.h>
-#include <thrift/lib/cpp2/test/gen-cpp2/FutureService.h>
-#include <thrift/lib/cpp2/server/ThriftServer.h>
-#include <thrift/lib/cpp2/async/HeaderClientChannel.h>
 
-#include <folly/io/async/EventBase.h>
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
-#include <thrift/lib/cpp2/util/ScopedServerThread.h>
-
-#include <thrift/lib/cpp2/async/StubSaslClient.h>
-#include <thrift/lib/cpp2/async/StubSaslServer.h>
-#include <thrift/lib/cpp2/test/util/TestThriftServerFactory.h>
-#include <thrift/lib/cpp2/util/ScopedServerInterfaceThread.h>
+#include <atomic>
+#include <memory>
 
 #include <boost/lexical_cast.hpp>
-#include <memory>
-#include <atomic>
 
 #include <folly/Executor.h>
 #include <folly/MapUtil.h>
 #include <folly/executors/ManualExecutor.h>
+#include <folly/io/async/EventBase.h>
+#include <folly/portability/GTest.h>
+
+#include <folly/io/async/AsyncSocket.h>
+#include <thrift/lib/cpp2/async/FutureRequest.h>
+#include <thrift/lib/cpp2/async/HeaderClientChannel.h>
+#include <thrift/lib/cpp2/async/RequestChannel.h>
+#include <thrift/lib/cpp2/server/ThriftServer.h>
+#include <thrift/lib/cpp2/test/gen-cpp2/FutureService.h>
+#include <thrift/lib/cpp2/test/util/TestThriftServerFactory.h>
+#include <thrift/lib/cpp2/util/ScopedServerInterfaceThread.h>
+#include <thrift/lib/cpp2/util/ScopedServerThread.h>
 
 using namespace apache::thrift;
 using namespace apache::thrift::concurrency;
 using namespace apache::thrift::test::cpp2;
 using namespace apache::thrift::util;
-using namespace apache::thrift::async;
 using namespace folly;
 
 class TestInterface : public FutureServiceSvIf {
@@ -52,14 +49,14 @@ class TestInterface : public FutureServiceSvIf {
     Promise<std::unique_ptr<std::string>> p;
     auto f = p.getFuture();
 
-    auto func = [ p = std::move(p), size ]() mutable {
+    auto func = [p = std::move(p), size]() mutable {
       std::unique_ptr<std::string> _return(
-        new std::string("test" + boost::lexical_cast<std::string>(size)));
+          new std::string("test" + boost::lexical_cast<std::string>(size)));
       p.setValue(std::move(_return));
     };
 
     RequestEventBase::get()->runInEventBaseThread(
-        [ func = std::move(func), size ]() mutable {
+        [func = std::move(func), size]() mutable {
           RequestEventBase::get()->tryRunAfterDelay(std::move(func), size);
         });
 
@@ -70,11 +67,9 @@ class TestInterface : public FutureServiceSvIf {
     Promise<Unit> p;
     auto f = p.getFuture();
 
-    auto func = [p = std::move(p)]() mutable {
-      p.setValue();
-    };
+    auto func = [p = std::move(p)]() mutable { p.setValue(); };
     RequestEventBase::get()->runInEventBaseThread(
-        [ func = std::move(func), size ]() mutable {
+        [func = std::move(func), size]() mutable {
           RequestEventBase::get()->tryRunAfterDelay(std::move(func), size);
         });
     return f;
@@ -97,7 +92,7 @@ class TestInterface : public FutureServiceSvIf {
       std::unique_ptr<std::string> req,
       int64_t sleepMs) override {
     return folly::futures::sleep(std::chrono::milliseconds{sleepMs})
-        .semi()
+
         .deferValue(
             [req = std::move(req)](auto&&) mutable { return std::move(req); });
   }
@@ -107,8 +102,8 @@ class TestInterface : public FutureServiceSvIf {
     auto f = p.getFuture();
 
     Xception x;
-    x.errorCode = 32;
-    x.message = "test";
+    *x.errorCode_ref() = 32;
+    *x.message_ref() = "test";
 
     p.setException(x);
 
@@ -120,8 +115,8 @@ class TestInterface : public FutureServiceSvIf {
     auto f = p.getFuture();
 
     Xception x;
-    x.errorCode = 42;
-    x.message = "test2";
+    *x.errorCode_ref() = 42;
+    *x.message_ref() = "test2";
 
     p.setException(x);
 
@@ -129,42 +124,12 @@ class TestInterface : public FutureServiceSvIf {
   }
 };
 
-void AsyncCpp2Test(bool enable_security) {
-  apache::thrift::TestThriftServerFactory<TestInterface> factory;
-  ScopedServerThread sst(factory.create());
-  EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-    TAsyncSocket::newSocket(&base, *sst.getAddress()));
-
-  auto channel = HeaderClientChannel::newChannel(socket);
-  channel->setTimeout(10000);
-  if (enable_security) {
-    channel->setSecurityPolicy(THRIFT_SECURITY_PERMITTED);
-    channel->setSaslClient(std::unique_ptr<SaslClient>(
-      new StubSaslClient(socket->getEventBase())
-    ));
-  }
-  FutureServiceAsyncClient client(std::move(channel));
-
-  client.sendResponse([](ClientReceiveState&& state) {
-                        std::string response;
-                        try {
-                          FutureServiceAsyncClient::recv_sendResponse(
-                              response, state);
-                        } catch(const std::exception& ex) {
-                        }
-                        EXPECT_EQ(response, "test64");
-                      },
-                      64);
-  base.loop();
-}
-
 TEST(ThriftServer, FutureExceptions) {
   apache::thrift::TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-    TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<AsyncSocket> socket(
+      AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   auto channel = HeaderClientChannel::newChannel(socket);
   FutureServiceAsyncClient client(std::move(channel));
@@ -181,8 +146,8 @@ TEST(ThriftServer, SemiFutureExceptions) {
   apache::thrift::TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-      TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<AsyncSocket> socket(
+      AsyncSocket::newSocket(&base, *sst.getAddress()));
   auto channel = HeaderClientChannel::newChannel(socket);
   FutureServiceAsyncClient client(std::move(channel));
 
@@ -199,8 +164,8 @@ TEST(ThriftServer, FutureClientTest) {
   apache::thrift::TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-    TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<AsyncSocket> socket(
+      AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   auto channel = HeaderClientChannel::newChannel(socket);
   channel->setTimeout(10000);
@@ -256,9 +221,8 @@ TEST(ThriftServer, SemiFutureClientTest) {
 
   EventBase base;
   ManualExecutor executor;
-  auto client = runner.newClient<FutureServiceAsyncClient>(base);
+  auto client = runner.newClient<FutureServiceAsyncClient>();
   auto future = client->semifuture_sendResponse(1).via(&executor);
-  base.loop();
   EXPECT_FALSE(future.isReady());
   future.waitVia(&executor);
   EXPECT_TRUE(future.isReady());
@@ -290,7 +254,7 @@ TEST(ThriftServer, FutureGetOrderTest) {
   using std::chrono::steady_clock;
 
   auto thf = std::make_shared<PosixThreadFactory>();
-  auto thm = ThreadManager::newSimpleThreadManager(1, 5, false);
+  auto thm = ThreadManager::newSimpleThreadManager(1, false);
   thm->threadFactory(thf);
   thm->start();
   apache::thrift::TestThriftServerFactory<TestInterface> factory;
@@ -298,8 +262,8 @@ TEST(ThriftServer, FutureGetOrderTest) {
   factory.useThreadManager(thm);
   ScopedServerThread sst(factory.create());
   EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-    TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<AsyncSocket> socket(
+      AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   auto channel = HeaderClientChannel::newChannel(socket);
   channel->setTimeout(10000);
@@ -334,8 +298,8 @@ TEST(ThriftServer, OnewayFutureClientTest) {
   apache::thrift::TestThriftServerFactory<TestInterface> factory;
   ScopedServerThread sst(factory.create());
   EventBase base;
-  std::shared_ptr<TAsyncSocket> socket(
-    TAsyncSocket::newSocket(&base, *sst.getAddress()));
+  std::shared_ptr<AsyncSocket> socket(
+      AsyncSocket::newSocket(&base, *sst.getAddress()));
 
   auto channel = HeaderClientChannel::newChannel(socket);
   FutureServiceAsyncClient client(std::move(channel));
@@ -364,14 +328,14 @@ TEST(ThriftServer, OnewayFutureClientTest) {
 }
 
 TEST(ThriftServer, FutureHeaderClientTest) {
-  ScopedServerInterfaceThread runner(make_shared<TestInterface>());
+  ScopedServerInterfaceThread runner(std::make_shared<TestInterface>());
   EventBase eb;
   auto client = runner.newClient<FutureServiceAsyncClient>(&eb);
 
   RpcOptions rpcOptions;
   rpcOptions.setWriteHeader("foo", "bar");
-  auto future = client->header_future_echoRequest(rpcOptions, "hi")
-    .waitVia(&eb);
+  auto future =
+      client->header_future_echoRequest(rpcOptions, "hi").waitVia(&eb);
 
   const auto& headers = future.value().second->getHeaders();
   EXPECT_EQ(get_default(headers, "header_from_server"), "1");
@@ -381,15 +345,12 @@ TEST(ThriftServer, SemiFutureServerTest) {
   auto handler = std::make_shared<TestInterface>();
   apache::thrift::ScopedServerInterfaceThread runner(handler);
 
-  EventBase base;
-  ManualExecutor executor;
-  auto client = runner.newClient<FutureServiceAsyncClient>(base);
+  auto client = runner.newClient<FutureServiceAsyncClient>();
 
   auto startTime = std::chrono::steady_clock::now();
 
   auto request = "request";
-  auto response =
-      client->semifuture_echoRequestSlow(request, 100).via(&base).getVia(&base);
+  auto response = client->semifuture_echoRequestSlow(request, 100).get();
   EXPECT_EQ(request, response);
   EXPECT_GE(
       std::chrono::steady_clock::now() - startTime,

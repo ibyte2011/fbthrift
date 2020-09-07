@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <deque>
+
 namespace apache {
 namespace thrift {
 namespace frozen {
@@ -316,6 +319,22 @@ struct ArrayLayout : public LayoutBase {
         return !(*this == other);
       }
 
+      bool operator<(const Iterator& other) const {
+        return index_ < other.index_;
+      }
+
+      bool operator<=(const Iterator& other) const {
+        return index_ <= other.index_;
+      }
+
+      bool operator>(const Iterator& other) const {
+        return index_ > other.index_;
+      }
+
+      bool operator>=(const Iterator& other) const {
+        return index_ >= other.index_;
+      }
+
      private:
       ViewPosition position() const {
         return indexPosition(outer_.data_, index_, outer_.itemLayout());
@@ -352,3 +371,5 @@ struct Layout<T, typename std::enable_if<IsList<T>::value>::type>
 } // namespace apache
 
 THRIFT_DECLARE_TRAIT_TEMPLATE(IsList, std::vector)
+THRIFT_DECLARE_TRAIT_TEMPLATE(IsList, std::deque)
+THRIFT_DECLARE_TRAIT_TEMPLATE(IsList, folly::fbvector)

@@ -14,18 +14,18 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.*;
 import java.util.*;
 
+@SwiftGenerated
 @ThriftService("MyRoot")
-public interface MyRoot
-{
+public interface MyRoot extends java.io.Closeable {
     @ThriftService("MyRoot")
-    public interface Async
-    {
-        @ThriftMethod(value = "do_root")
-        ListenableFuture<Void> doRoot(
-        );
-    }
-    @ThriftMethod(value = "do_root")
-    void doRoot(
-    );
+    public interface Async extends java.io.Closeable {
+        @Override void close();
 
+        @ThriftMethod(value = "do_root")
+        ListenableFuture<Void> doRoot();
+    }
+    @Override void close();
+
+    @ThriftMethod(value = "do_root")
+    void doRoot() throws org.apache.thrift.TException;
 }

@@ -1,6 +1,20 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from cython.operator cimport dereference as deref, preincrement as inc
 from enum import Enum
-from collections import Mapping
+from collections.abc import Mapping
 from functools import total_ordering
 
 
@@ -37,7 +51,7 @@ cdef class Headers:
 
     def __iter__(self):
         if not self:
-            raise StopIteration
+            return
 
         cdef string ckey
         it = deref(self._getMap()).const_begin()
@@ -89,7 +103,7 @@ cdef class Headers:
 
     def values(self):
         if not self:
-            raise StopIteration
+            return
 
         cdef string cvalue
         it = deref(self._getMap()).const_begin()
@@ -100,7 +114,7 @@ cdef class Headers:
 
     def items(self):
         if not self:
-            raise StopIteration
+            return
 
         cdef string ckey
         cdef string cvalue
@@ -181,6 +195,16 @@ cdef class RpcOptions:
 
     def set_header(self, str key not None, str value not None):
         self._cpp_obj.setWriteHeader(key.encode('utf-8'), value.encode('utf-8'))
+
+    @property
+    def chunk_buffer_size(self):
+        """Get chunkBufferSize"""
+        return self._cpp_obj.getChunkBufferSize()
+
+    @chunk_buffer_size.setter
+    def chunk_buffer_size(self, int buffer_size):
+        """Set chunkBufferSize"""
+        self._cpp_obj.setChunkBufferSize(buffer_size)
 
     @property
     def read_headers(self):

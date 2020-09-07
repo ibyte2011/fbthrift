@@ -6,20 +6,140 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct weeks;
+struct title;
+struct employer;
+struct min;
+struct max;
+struct a;
+struct b;
+struct a;
+struct b;
+struct c;
+struct d;
+struct a;
+struct b;
+struct c;
+struct a;
+struct b;
+struct c;
+struct i;
+struct d;
+struct i;
+struct d;
+struct s;
+struct u;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_weeks
+#define APACHE_THRIFT_ACCESSOR_weeks
+APACHE_THRIFT_DEFINE_ACCESSOR(weeks);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_title
+#define APACHE_THRIFT_ACCESSOR_title
+APACHE_THRIFT_DEFINE_ACCESSOR(title);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_employer
+#define APACHE_THRIFT_ACCESSOR_employer
+APACHE_THRIFT_DEFINE_ACCESSOR(employer);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_min
+#define APACHE_THRIFT_ACCESSOR_min
+APACHE_THRIFT_DEFINE_ACCESSOR(min);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_max
+#define APACHE_THRIFT_ACCESSOR_max
+APACHE_THRIFT_DEFINE_ACCESSOR(max);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_a
+#define APACHE_THRIFT_ACCESSOR_a
+APACHE_THRIFT_DEFINE_ACCESSOR(a);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_b
+#define APACHE_THRIFT_ACCESSOR_b
+APACHE_THRIFT_DEFINE_ACCESSOR(b);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_a
+#define APACHE_THRIFT_ACCESSOR_a
+APACHE_THRIFT_DEFINE_ACCESSOR(a);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_b
+#define APACHE_THRIFT_ACCESSOR_b
+APACHE_THRIFT_DEFINE_ACCESSOR(b);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_c
+#define APACHE_THRIFT_ACCESSOR_c
+APACHE_THRIFT_DEFINE_ACCESSOR(c);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_d
+#define APACHE_THRIFT_ACCESSOR_d
+APACHE_THRIFT_DEFINE_ACCESSOR(d);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_a
+#define APACHE_THRIFT_ACCESSOR_a
+APACHE_THRIFT_DEFINE_ACCESSOR(a);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_b
+#define APACHE_THRIFT_ACCESSOR_b
+APACHE_THRIFT_DEFINE_ACCESSOR(b);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_c
+#define APACHE_THRIFT_ACCESSOR_c
+APACHE_THRIFT_DEFINE_ACCESSOR(c);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_a
+#define APACHE_THRIFT_ACCESSOR_a
+APACHE_THRIFT_DEFINE_ACCESSOR(a);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_b
+#define APACHE_THRIFT_ACCESSOR_b
+APACHE_THRIFT_DEFINE_ACCESSOR(b);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_c
+#define APACHE_THRIFT_ACCESSOR_c
+APACHE_THRIFT_DEFINE_ACCESSOR(c);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_i
+#define APACHE_THRIFT_ACCESSOR_i
+APACHE_THRIFT_DEFINE_ACCESSOR(i);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_d
+#define APACHE_THRIFT_ACCESSOR_d
+APACHE_THRIFT_DEFINE_ACCESSOR(d);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_i
+#define APACHE_THRIFT_ACCESSOR_i
+APACHE_THRIFT_DEFINE_ACCESSOR(i);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_d
+#define APACHE_THRIFT_ACCESSOR_d
+APACHE_THRIFT_DEFINE_ACCESSOR(d);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_s
+#define APACHE_THRIFT_ACCESSOR_s
+APACHE_THRIFT_DEFINE_ACCESSOR(s);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_u
+#define APACHE_THRIFT_ACCESSOR_u
+APACHE_THRIFT_DEFINE_ACCESSOR(u);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 namespace cpp2 {
 
-enum class EmptyEnum {};
+enum class EmptyEnum {
+};
 
-using _EmptyEnum_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<EmptyEnum, EmptyEnum>;
-extern const _EmptyEnum_EnumMapFactory::ValuesToNamesMapType _EmptyEnum_VALUES_TO_NAMES;
-extern const _EmptyEnum_EnumMapFactory::NamesToValuesMapType _EmptyEnum_NAMES_TO_VALUES;
 
 
 
@@ -27,12 +147,9 @@ enum class City {
   NYC = 0,
   MPK = 1,
   SEA = 2,
-  LON = 3
+  LON = 3,
 };
 
-using _City_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<City, City>;
-extern const _City_EnumMapFactory::ValuesToNamesMapType _City_VALUES_TO_NAMES;
-extern const _City_EnumMapFactory::NamesToValuesMapType _City_NAMES_TO_VALUES;
 
 
 
@@ -40,12 +157,9 @@ enum class Company {
   FACEBOOK = 0,
   WHATSAPP = 1,
   OCULUS = 2,
-  INSTAGRAM = 3
+  INSTAGRAM = 3,
 };
 
-using _Company_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<Company, Company>;
-extern const _Company_EnumMapFactory::ValuesToNamesMapType _Company_VALUES_TO_NAMES;
-extern const _Company_EnumMapFactory::NamesToValuesMapType _Company_NAMES_TO_VALUES;
 
 
 
@@ -53,16 +167,16 @@ extern const _Company_EnumMapFactory::NamesToValuesMapType _Company_NAMES_TO_VAL
 namespace std {
 
 
-template<> struct hash<typename  ::cpp2::EmptyEnum> : public apache::thrift::detail::enum_hash<typename  ::cpp2::EmptyEnum> {};
-template<> struct equal_to<typename  ::cpp2::EmptyEnum> : public apache::thrift::detail::enum_equal_to<typename  ::cpp2::EmptyEnum> {};
+template<> struct hash<typename ::cpp2::EmptyEnum> : public apache::thrift::detail::enum_hash<typename ::cpp2::EmptyEnum> {};
+template<> struct equal_to<typename ::cpp2::EmptyEnum> : public apache::thrift::detail::enum_equal_to<typename ::cpp2::EmptyEnum> {};
 
 
-template<> struct hash<typename  ::cpp2::City> : public apache::thrift::detail::enum_hash<typename  ::cpp2::City> {};
-template<> struct equal_to<typename  ::cpp2::City> : public apache::thrift::detail::enum_equal_to<typename  ::cpp2::City> {};
+template<> struct hash<typename ::cpp2::City> : public apache::thrift::detail::enum_hash<typename ::cpp2::City> {};
+template<> struct equal_to<typename ::cpp2::City> : public apache::thrift::detail::enum_equal_to<typename ::cpp2::City> {};
 
 
-template<> struct hash<typename  ::cpp2::Company> : public apache::thrift::detail::enum_hash<typename  ::cpp2::Company> {};
-template<> struct equal_to<typename  ::cpp2::Company> : public apache::thrift::detail::enum_equal_to<typename  ::cpp2::Company> {};
+template<> struct hash<typename ::cpp2::Company> : public apache::thrift::detail::enum_hash<typename ::cpp2::Company> {};
+template<> struct equal_to<typename ::cpp2::Company> : public apache::thrift::detail::enum_equal_to<typename ::cpp2::Company> {};
 
 
 } // std
@@ -70,55 +184,78 @@ template<> struct equal_to<typename  ::cpp2::Company> : public apache::thrift::d
 namespace apache { namespace thrift {
 
 
-template <> struct TEnumDataStorage< ::cpp2::EmptyEnum>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::cpp2::EmptyEnum>::size;
-template <> const folly::Range<const  ::cpp2::EmptyEnum*> TEnumTraits< ::cpp2::EmptyEnum>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::EmptyEnum>::names;
-#endif
-template <> const char* TEnumTraits< ::cpp2::EmptyEnum>::findName( ::cpp2::EmptyEnum value);
-template <> bool TEnumTraits< ::cpp2::EmptyEnum>::findValue(const char* name,  ::cpp2::EmptyEnum* outValue);
+template <> struct TEnumDataStorage<::cpp2::EmptyEnum>;
+
+template <> struct TEnumTraits<::cpp2::EmptyEnum> {
+  using type = ::cpp2::EmptyEnum;
+
+  static constexpr std::size_t const size = 0;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+};
 
 
+template <> struct TEnumDataStorage<::cpp2::City>;
 
-template <> struct TEnumDataStorage< ::cpp2::City>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::cpp2::City>::size;
-template <> const folly::Range<const  ::cpp2::City*> TEnumTraits< ::cpp2::City>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::City>::names;
-#endif
-template <> const char* TEnumTraits< ::cpp2::City>::findName( ::cpp2::City value);
-template <> bool TEnumTraits< ::cpp2::City>::findValue(const char* name,  ::cpp2::City* outValue);
+template <> struct TEnumTraits<::cpp2::City> {
+  using type = ::cpp2::City;
 
-template <> inline constexpr  ::cpp2::City TEnumTraits< ::cpp2::City>::min() {
-  return  ::cpp2::City::NYC;
-}
+  static constexpr std::size_t const size = 4;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
 
-template <> inline constexpr  ::cpp2::City TEnumTraits< ::cpp2::City>::max() {
-  return  ::cpp2::City::LON;
-}
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+  static constexpr type min() { return type::NYC; }
+  static constexpr type max() { return type::LON; }
+};
 
 
-template <> struct TEnumDataStorage< ::cpp2::Company>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::cpp2::Company>::size;
-template <> const folly::Range<const  ::cpp2::Company*> TEnumTraits< ::cpp2::Company>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::Company>::names;
-#endif
-template <> const char* TEnumTraits< ::cpp2::Company>::findName( ::cpp2::Company value);
-template <> bool TEnumTraits< ::cpp2::Company>::findValue(const char* name,  ::cpp2::Company* outValue);
+template <> struct TEnumDataStorage<::cpp2::Company>;
 
-template <> inline constexpr  ::cpp2::Company TEnumTraits< ::cpp2::Company>::min() {
-  return  ::cpp2::Company::FACEBOOK;
-}
+template <> struct TEnumTraits<::cpp2::Company> {
+  using type = ::cpp2::Company;
 
-template <> inline constexpr  ::cpp2::Company TEnumTraits< ::cpp2::Company>::max() {
-  return  ::cpp2::Company::INSTAGRAM;
-}
+  static constexpr std::size_t const size = 4;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+  static constexpr type min() { return type::FACEBOOK; }
+  static constexpr type max() { return type::INSTAGRAM; }
+};
 
 
 }} // apache::thrift
 
+namespace cpp2 {
+
+using _EmptyEnum_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<EmptyEnum>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _EmptyEnum_EnumMapFactory::ValuesToNamesMapType _EmptyEnum_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _EmptyEnum_EnumMapFactory::NamesToValuesMapType _EmptyEnum_NAMES_TO_VALUES;
+
+using _City_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<City>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _City_EnumMapFactory::ValuesToNamesMapType _City_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _City_EnumMapFactory::NamesToValuesMapType _City_NAMES_TO_VALUES;
+
+using _Company_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<Company>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _Company_EnumMapFactory::ValuesToNamesMapType _Company_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _Company_EnumMapFactory::NamesToValuesMapType _Company_NAMES_TO_VALUES;
+
+} // cpp2
 
 // END declare_enums
 // BEGIN struct_indirection
@@ -127,62 +264,155 @@ template <> inline constexpr  ::cpp2::Company TEnumTraits< ::cpp2::Company>::max
 // BEGIN forward_declare
 namespace cpp2 {
 class Internship;
-class UnEnumStruct;
 class Range;
 class struct1;
 class struct2;
 class struct3;
+class struct4;
 class union1;
 class union2;
 } // cpp2
 // END forward_declare
 // BEGIN typedefs
+namespace cpp2 {
+typedef  ::cpp2::Company MyCompany;
+typedef ::std::string MyStringIdentifier;
+typedef int32_t MyIntIdentifier;
+typedef ::std::map<::std::string, ::std::string> MyMapIdentifier;
 
+} // cpp2
 // END typedefs
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class Internship final : private apache::thrift::detail::st::ComparisonOperators<Internship> {
+class Internship final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Internship;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   Internship() :
       weeks(0),
       employer( ::cpp2::Company::FACEBOOK) {}
   // FragileConstructor for use in initialization lists only.
-  Internship(apache::thrift::FragileConstructor, int32_t weeks__arg, std::string title__arg,  ::cpp2::Company employer__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    weeks = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    title = arg.extract();
-    __isset.title = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    employer = arg.extract();
-    __isset.employer = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  Internship(apache::thrift::FragileConstructor, int32_t weeks__arg, ::std::string title__arg,  ::cpp2::Company employer__arg);
 
   Internship(Internship&&) = default;
 
   Internship(const Internship&) = default;
 
+
   Internship& operator=(Internship&&) = default;
 
   Internship& operator=(const Internship&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t weeks;
-  std::string title;
+ public:
+  ::std::string title;
+ private:
    ::cpp2::Company employer;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool title;
     bool employer;
   } __isset = {};
   bool operator==(const Internship& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Internship& __x, const Internship& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Internship& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Internship& __x, const Internship& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Internship& __x, const Internship& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Internship& __x, const Internship& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto weeks_ref() const& {
+    return ::apache::thrift::required_field_ref<const T&>{this->weeks};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto weeks_ref() const&& {
+    return ::apache::thrift::required_field_ref<const T&&>{std::move(this->weeks)};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto weeks_ref() & {
+    return ::apache::thrift::required_field_ref<T&>{this->weeks};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto weeks_ref() && {
+    return ::apache::thrift::required_field_ref<T&&>{std::move(this->weeks)};
+  }
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> title_ref() const& {
+    return {this->title, __isset.title};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> title_ref() const&& {
+    return {std::move(this->title), __isset.title};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> title_ref() & {
+    return {this->title, __isset.title};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> title_ref() && {
+    return {std::move(this->title), __isset.title};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::Company>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> employer_ref() const& {
+    return {this->employer, __isset.employer};
+  }
+
+  template <typename..., typename T =  ::cpp2::Company>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> employer_ref() const&& {
+    return {std::move(this->employer), __isset.employer};
+  }
+
+  template <typename..., typename T =  ::cpp2::Company>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> employer_ref() & {
+    return {this->employer, __isset.employer};
+  }
+
+  template <typename..., typename T =  ::cpp2::Company>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> employer_ref() && {
+    return {std::move(this->employer), __isset.employer};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_weeks() const {
     return weeks;
@@ -193,41 +423,37 @@ class Internship final : private apache::thrift::detail::st::ComparisonOperators
     return weeks;
   }
 
-  const std::string& get_title() const& {
+  const ::std::string& get_title() const& {
     return title;
   }
 
-  std::string get_title() && {
+  ::std::string get_title() && {
     return std::move(title);
   }
 
-  template <typename T_Internship_title_struct_setter = std::string>
-  std::string& set_title(T_Internship_title_struct_setter&& title_) {
+  template <typename T_Internship_title_struct_setter = ::std::string>
+  ::std::string& set_title(T_Internship_title_struct_setter&& title_) {
     title = std::forward<T_Internship_title_struct_setter>(title_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.title = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return title;
   }
 
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref<const  ::cpp2::Company> employer_ref() const& {
-    return {employer, __isset.employer};
-  }
-
-  THRIFT_NOLINK ::apache::thrift::optional_field_ref< ::cpp2::Company> employer_ref() & {
-    return {employer, __isset.employer};
-  }
-
   const  ::cpp2::Company* get_employer() const& {
-    return __isset.employer ? std::addressof(employer) : nullptr;
+    return employer_ref() ? std::addressof(employer) : nullptr;
   }
 
    ::cpp2::Company* get_employer() & {
-    return __isset.employer ? std::addressof(employer) : nullptr;
+    return employer_ref() ? std::addressof(employer) : nullptr;
   }
    ::cpp2::Company* get_employer() && = delete;
 
    ::cpp2::Company& set_employer( ::cpp2::Company employer_) {
     employer = employer_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.employer = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return employer;
   }
 
@@ -245,184 +471,114 @@ class Internship final : private apache::thrift::detail::st::ComparisonOperators
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Internship >;
+  friend void swap(Internship& a, Internship& b);
 };
-
-void swap(Internship& a, Internship& b);
-extern template void Internship::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Internship::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Internship::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Internship::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Internship::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Internship::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Internship::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Internship::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Internship::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Internship>::clear( ::cpp2::Internship* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Internship>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Internship>::write(Protocol* proto,  ::cpp2::Internship const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Internship>::read(Protocol* proto,  ::cpp2::Internship* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Internship>::serializedSize(Protocol const* proto,  ::cpp2::Internship const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Internship>::serializedSizeZC(Protocol const* proto,  ::cpp2::Internship const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class UnEnumStruct final : private apache::thrift::detail::st::ComparisonOperators<UnEnumStruct> {
- public:
-
-  UnEnumStruct() :
-      city(static_cast< ::cpp2::City>(-1)) {}
-  // FragileConstructor for use in initialization lists only.
-  UnEnumStruct(apache::thrift::FragileConstructor,  ::cpp2::City city__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    city = arg.extract();
-    __isset.city = true;
-  }
-
-  UnEnumStruct(UnEnumStruct&&) = default;
-
-  UnEnumStruct(const UnEnumStruct&) = default;
-
-  UnEnumStruct& operator=(UnEnumStruct&&) = default;
-
-  UnEnumStruct& operator=(const UnEnumStruct&) = default;
-  void __clear();
-   ::cpp2::City city;
-
-  struct __isset {
-    bool city;
-  } __isset = {};
-  bool operator==(const UnEnumStruct& rhs) const;
-  bool operator<(const UnEnumStruct& rhs) const;
-
-   ::cpp2::City get_city() const {
-    return city;
-  }
-
-   ::cpp2::City& set_city( ::cpp2::City city_) {
-    city = city_;
-    __isset.city = true;
-    return city;
-  }
-
-  template <class Protocol_>
-  uint32_t read(Protocol_* iprot);
-  template <class Protocol_>
-  uint32_t serializedSize(Protocol_ const* prot_) const;
-  template <class Protocol_>
-  uint32_t serializedSizeZC(Protocol_ const* prot_) const;
-  template <class Protocol_>
-  uint32_t write(Protocol_* prot_) const;
-
+class Range final  {
  private:
-  template <class Protocol_>
-  void readNoXfer(Protocol_* iprot);
+  friend struct ::apache::thrift::detail::st::struct_private_access;
 
-  friend class ::apache::thrift::Cpp2Ops< UnEnumStruct >;
-};
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
 
-void swap(UnEnumStruct& a, UnEnumStruct& b);
-extern template void UnEnumStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t UnEnumStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t UnEnumStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t UnEnumStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void UnEnumStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t UnEnumStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t UnEnumStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t UnEnumStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+ public:
+  using __fbthrift_cpp2_type = Range;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
 
-template <class Protocol_>
-uint32_t UnEnumStruct::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
-  readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
-}
 
-} // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::UnEnumStruct>::clear( ::cpp2::UnEnumStruct* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::UnEnumStruct>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::UnEnumStruct>::write(Protocol* proto,  ::cpp2::UnEnumStruct const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::UnEnumStruct>::read(Protocol* proto,  ::cpp2::UnEnumStruct* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::UnEnumStruct>::serializedSize(Protocol const* proto,  ::cpp2::UnEnumStruct const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::UnEnumStruct>::serializedSizeZC(Protocol const* proto,  ::cpp2::UnEnumStruct const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
-namespace cpp2 {
-class Range final : private apache::thrift::detail::st::ComparisonOperators<Range> {
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   Range() :
       min(0),
       max(0) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   Range(apache::thrift::FragileConstructor, int32_t min__arg, int32_t max__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    min = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    max = arg.extract();
-  }
 
   Range(Range&&) = default;
 
   Range(const Range&) = default;
 
+
   Range& operator=(Range&&) = default;
 
   Range& operator=(const Range&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t min;
+ public:
   int32_t max;
+
+ public:
   bool operator==(const Range& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Range& __x, const Range& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Range& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Range& __x, const Range& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Range& __x, const Range& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Range& __x, const Range& __y) {
+    return !(__x < __y);
+  }
+#endif
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto min_ref() const& {
+    return ::apache::thrift::required_field_ref<const T&>{this->min};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto min_ref() const&& {
+    return ::apache::thrift::required_field_ref<const T&&>{std::move(this->min)};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto min_ref() & {
+    return ::apache::thrift::required_field_ref<T&>{this->min};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto min_ref() && {
+    return ::apache::thrift::required_field_ref<T&&>{std::move(this->min)};
+  }
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto max_ref() const& {
+    return ::apache::thrift::required_field_ref<const T&>{this->max};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto max_ref() const&& {
+    return ::apache::thrift::required_field_ref<const T&&>{std::move(this->max)};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto max_ref() & {
+    return ::apache::thrift::required_field_ref<T&>{this->max};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE auto max_ref() && {
+    return ::apache::thrift::required_field_ref<T&&>{std::move(this->max)};
+  }
 
   int32_t get_min() const {
     return min;
@@ -456,90 +612,125 @@ class Range final : private apache::thrift::detail::st::ComparisonOperators<Rang
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Range >;
+  friend void swap(Range& a, Range& b);
 };
-
-void swap(Range& a, Range& b);
-extern template void Range::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Range::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Range::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Range::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Range::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Range::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Range::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Range::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Range::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Range>::clear( ::cpp2::Range* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Range>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Range>::write(Protocol* proto,  ::cpp2::Range const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Range>::read(Protocol* proto,  ::cpp2::Range* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Range>::serializedSize(Protocol const* proto,  ::cpp2::Range const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Range>::serializedSizeZC(Protocol const* proto,  ::cpp2::Range const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class struct1 final : private apache::thrift::detail::st::ComparisonOperators<struct1> {
+class struct1 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = struct1;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   struct1() :
       a(1234567),
       b(apache::thrift::StringTraits< std::string>::fromStringLiteral("<uninitialized>")) {}
   // FragileConstructor for use in initialization lists only.
-  struct1(apache::thrift::FragileConstructor, int32_t a__arg, std::string b__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    a = arg.extract();
-    __isset.a = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    b = arg.extract();
-    __isset.b = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  struct1(apache::thrift::FragileConstructor, int32_t a__arg, ::std::string b__arg);
 
   struct1(struct1&&) = default;
 
   struct1(const struct1&) = default;
 
+
   struct1& operator=(struct1&&) = default;
 
   struct1& operator=(const struct1&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t a;
-  std::string b;
+ public:
+  ::std::string b;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool a;
     bool b;
   } __isset = {};
   bool operator==(const struct1& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const struct1& __x, const struct1& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const struct1& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const struct1& __x, const struct1& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const struct1& __x, const struct1& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const struct1& __x, const struct1& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> a_ref() const& {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> a_ref() const&& {
+    return {std::move(this->a), __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> a_ref() & {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> a_ref() && {
+    return {std::move(this->a), __isset.a};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> b_ref() const& {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> b_ref() const&& {
+    return {std::move(this->b), __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> b_ref() & {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> b_ref() && {
+    return {std::move(this->b), __isset.b};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_a() const {
     return a;
@@ -547,22 +738,26 @@ class struct1 final : private apache::thrift::detail::st::ComparisonOperators<st
 
   int32_t& set_a(int32_t a_) {
     a = a_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.a = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return a;
   }
 
-  const std::string& get_b() const& {
+  const ::std::string& get_b() const& {
     return b;
   }
 
-  std::string get_b() && {
+  ::std::string get_b() && {
     return std::move(b);
   }
 
-  template <typename T_struct1_b_struct_setter = std::string>
-  std::string& set_b(T_struct1_b_struct_setter&& b_) {
+  template <typename T_struct1_b_struct_setter = ::std::string>
+  ::std::string& set_b(T_struct1_b_struct_setter&& b_) {
     b = std::forward<T_struct1_b_struct_setter>(b_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.b = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return b;
   }
 
@@ -580,95 +775,62 @@ class struct1 final : private apache::thrift::detail::st::ComparisonOperators<st
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< struct1 >;
+  friend void swap(struct1& a, struct1& b);
 };
-
-void swap(struct1& a, struct1& b);
-extern template void struct1::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t struct1::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t struct1::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t struct1::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void struct1::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t struct1::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t struct1::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t struct1::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t struct1::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::struct1>::clear( ::cpp2::struct1* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::struct1>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct1>::write(Protocol* proto,  ::cpp2::struct1 const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::struct1>::read(Protocol* proto,  ::cpp2::struct1* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct1>::serializedSize(Protocol const* proto,  ::cpp2::struct1 const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct1>::serializedSizeZC(Protocol const* proto,  ::cpp2::struct1 const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class struct2 final : private apache::thrift::detail::st::ComparisonOperators<struct2> {
+class struct2 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = struct2;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   struct2() :
       a(0) {}
   // FragileConstructor for use in initialization lists only.
-  struct2(apache::thrift::FragileConstructor, int32_t a__arg, std::string b__arg,  ::cpp2::struct1 c__arg, std::vector<int32_t> d__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    a = arg.extract();
-    __isset.a = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    b = arg.extract();
-    __isset.b = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    c = arg.extract();
-    __isset.c = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    d = arg.extract();
-    __isset.d = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  struct2(apache::thrift::FragileConstructor, int32_t a__arg, ::std::string b__arg,  ::cpp2::struct1 c__arg, ::std::vector<int32_t> d__arg);
 
   struct2(struct2&&) = default;
 
   struct2(const struct2&) = default;
 
+
   struct2& operator=(struct2&&) = default;
 
   struct2& operator=(const struct2&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t a;
-  std::string b;
+ public:
+  ::std::string b;
+ public:
    ::cpp2::struct1 c;
-  std::vector<int32_t> d;
+ public:
+  ::std::vector<int32_t> d;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool a;
     bool b;
@@ -676,7 +838,111 @@ class struct2 final : private apache::thrift::detail::st::ComparisonOperators<st
     bool d;
   } __isset = {};
   bool operator==(const struct2& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const struct2& __x, const struct2& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const struct2& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const struct2& __x, const struct2& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const struct2& __x, const struct2& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const struct2& __x, const struct2& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> a_ref() const& {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> a_ref() const&& {
+    return {std::move(this->a), __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> a_ref() & {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> a_ref() && {
+    return {std::move(this->a), __isset.a};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> b_ref() const& {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> b_ref() const&& {
+    return {std::move(this->b), __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> b_ref() & {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> b_ref() && {
+    return {std::move(this->b), __isset.b};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> c_ref() const& {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> c_ref() const&& {
+    return {std::move(this->c), __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> c_ref() & {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> c_ref() && {
+    return {std::move(this->c), __isset.c};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::vector<int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> d_ref() const& {
+    return {this->d, __isset.d};
+  }
+
+  template <typename..., typename T = ::std::vector<int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> d_ref() const&& {
+    return {std::move(this->d), __isset.d};
+  }
+
+  template <typename..., typename T = ::std::vector<int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> d_ref() & {
+    return {this->d, __isset.d};
+  }
+
+  template <typename..., typename T = ::std::vector<int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> d_ref() && {
+    return {std::move(this->d), __isset.d};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_a() const {
     return a;
@@ -684,22 +950,26 @@ class struct2 final : private apache::thrift::detail::st::ComparisonOperators<st
 
   int32_t& set_a(int32_t a_) {
     a = a_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.a = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return a;
   }
 
-  const std::string& get_b() const& {
+  const ::std::string& get_b() const& {
     return b;
   }
 
-  std::string get_b() && {
+  ::std::string get_b() && {
     return std::move(b);
   }
 
-  template <typename T_struct2_b_struct_setter = std::string>
-  std::string& set_b(T_struct2_b_struct_setter&& b_) {
+  template <typename T_struct2_b_struct_setter = ::std::string>
+  ::std::string& set_b(T_struct2_b_struct_setter&& b_) {
     b = std::forward<T_struct2_b_struct_setter>(b_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.b = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return b;
   }
   const  ::cpp2::struct1& get_c() const&;
@@ -708,16 +978,20 @@ class struct2 final : private apache::thrift::detail::st::ComparisonOperators<st
   template <typename T_struct2_c_struct_setter =  ::cpp2::struct1>
    ::cpp2::struct1& set_c(T_struct2_c_struct_setter&& c_) {
     c = std::forward<T_struct2_c_struct_setter>(c_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.c = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return c;
   }
-  const std::vector<int32_t>& get_d() const&;
-  std::vector<int32_t> get_d() &&;
+  const ::std::vector<int32_t>& get_d() const&;
+  ::std::vector<int32_t> get_d() &&;
 
-  template <typename T_struct2_d_struct_setter = std::vector<int32_t>>
-  std::vector<int32_t>& set_d(T_struct2_d_struct_setter&& d_) {
+  template <typename T_struct2_d_struct_setter = ::std::vector<int32_t>>
+  ::std::vector<int32_t>& set_d(T_struct2_d_struct_setter&& d_) {
     d = std::forward<T_struct2_d_struct_setter>(d_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.d = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return d;
   }
 
@@ -735,109 +1009,164 @@ class struct2 final : private apache::thrift::detail::st::ComparisonOperators<st
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< struct2 >;
+  friend void swap(struct2& a, struct2& b);
 };
-
-void swap(struct2& a, struct2& b);
-extern template void struct2::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t struct2::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t struct2::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t struct2::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void struct2::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t struct2::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t struct2::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t struct2::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t struct2::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::struct2>::clear( ::cpp2::struct2* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::struct2>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct2>::write(Protocol* proto,  ::cpp2::struct2 const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::struct2>::read(Protocol* proto,  ::cpp2::struct2* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct2>::serializedSize(Protocol const* proto,  ::cpp2::struct2 const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct2>::serializedSizeZC(Protocol const* proto,  ::cpp2::struct2 const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class struct3 final : private apache::thrift::detail::st::ComparisonOperators<struct3> {
+class struct3 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = struct3;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   struct3() :
       b(0) {}
   // FragileConstructor for use in initialization lists only.
-  struct3(apache::thrift::FragileConstructor, std::string a__arg, int32_t b__arg,  ::cpp2::struct2 c__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    a = arg.extract();
-    __isset.a = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    b = arg.extract();
-    __isset.b = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    c = arg.extract();
-    __isset.c = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  struct3(apache::thrift::FragileConstructor, ::std::string a__arg, int32_t b__arg,  ::cpp2::struct2 c__arg);
 
   struct3(struct3&&) = default;
 
   struct3(const struct3&) = default;
 
+
   struct3& operator=(struct3&&) = default;
 
   struct3& operator=(const struct3&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
-  std::string a;
+ public:
+  ::std::string a;
+ public:
   int32_t b;
+ public:
    ::cpp2::struct2 c;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool a;
     bool b;
     bool c;
   } __isset = {};
   bool operator==(const struct3& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const struct3& __x, const struct3& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const struct3& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const struct3& __x, const struct3& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const struct3& __x, const struct3& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const struct3& __x, const struct3& __y) {
+    return !(__x < __y);
+  }
+#endif
 
-  const std::string& get_a() const& {
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> a_ref() const& {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> a_ref() const&& {
+    return {std::move(this->a), __isset.a};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> a_ref() & {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> a_ref() && {
+    return {std::move(this->a), __isset.a};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> b_ref() const& {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> b_ref() const&& {
+    return {std::move(this->b), __isset.b};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> b_ref() & {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> b_ref() && {
+    return {std::move(this->b), __isset.b};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::struct2>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> c_ref() const& {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct2>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> c_ref() const&& {
+    return {std::move(this->c), __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct2>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> c_ref() & {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct2>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> c_ref() && {
+    return {std::move(this->c), __isset.c};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+  const ::std::string& get_a() const& {
     return a;
   }
 
-  std::string get_a() && {
+  ::std::string get_a() && {
     return std::move(a);
   }
 
-  template <typename T_struct3_a_struct_setter = std::string>
-  std::string& set_a(T_struct3_a_struct_setter&& a_) {
+  template <typename T_struct3_a_struct_setter = ::std::string>
+  ::std::string& set_a(T_struct3_a_struct_setter&& a_) {
     a = std::forward<T_struct3_a_struct_setter>(a_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.a = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return a;
   }
 
@@ -847,7 +1176,9 @@ class struct3 final : private apache::thrift::detail::st::ComparisonOperators<st
 
   int32_t& set_b(int32_t b_) {
     b = b_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.b = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return b;
   }
   const  ::cpp2::struct2& get_c() const&;
@@ -856,7 +1187,9 @@ class struct3 final : private apache::thrift::detail::st::ComparisonOperators<st
   template <typename T_struct3_c_struct_setter =  ::cpp2::struct2>
    ::cpp2::struct2& set_c(T_struct3_c_struct_setter&& c_) {
     c = std::forward<T_struct3_c_struct_setter>(c_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.c = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return c;
   }
 
@@ -874,57 +1207,240 @@ class struct3 final : private apache::thrift::detail::st::ComparisonOperators<st
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< struct3 >;
+  friend void swap(struct3& a, struct3& b);
 };
-
-void swap(struct3& a, struct3& b);
-extern template void struct3::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t struct3::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t struct3::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t struct3::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void struct3::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t struct3::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t struct3::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t struct3::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t struct3::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::struct3>::clear( ::cpp2::struct3* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::struct3>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct3>::write(Protocol* proto,  ::cpp2::struct3 const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::struct3>::read(Protocol* proto,  ::cpp2::struct3* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct3>::serializedSize(Protocol const* proto,  ::cpp2::struct3 const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::struct3>::serializedSizeZC(Protocol const* proto,  ::cpp2::struct3 const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class union1 final : private apache::thrift::detail::st::ComparisonOperators<union1> {
+class struct4 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
  public:
-  enum Type {
+  using __fbthrift_cpp2_type = struct4;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
+ public:
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  struct4() :
+      a(0),
+      b(0),
+      c(0) {}
+  // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
+  struct4(apache::thrift::FragileConstructor, int32_t a__arg, double b__arg, int8_t c__arg);
+
+  struct4(struct4&&) = default;
+
+  struct4(const struct4&) = default;
+
+
+  struct4& operator=(struct4&&) = default;
+
+  struct4& operator=(const struct4&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+  void __clear();
+ public:
+  int32_t a;
+ private:
+  double b;
+ private:
+  int8_t c;
+
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
+  struct __isset {
+    bool a;
+    bool b;
+    bool c;
+  } __isset = {};
+  bool operator==(const struct4& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const struct4& __x, const struct4& __y) {
+    return !(__x == __y);
+  }
+#endif
+  bool operator<(const struct4& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const struct4& __x, const struct4& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const struct4& __x, const struct4& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const struct4& __x, const struct4& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> a_ref() const& {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> a_ref() const&& {
+    return {std::move(this->a), __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> a_ref() & {
+    return {this->a, __isset.a};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> a_ref() && {
+    return {std::move(this->a), __isset.a};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> b_ref() const& {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> b_ref() const&& {
+    return {std::move(this->b), __isset.b};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> b_ref() & {
+    return {this->b, __isset.b};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> b_ref() && {
+    return {std::move(this->b), __isset.b};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int8_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> c_ref() const& {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T = int8_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> c_ref() const&& {
+    return {std::move(this->c), __isset.c};
+  }
+
+  template <typename..., typename T = int8_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> c_ref() & {
+    return {this->c, __isset.c};
+  }
+
+  template <typename..., typename T = int8_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> c_ref() && {
+    return {std::move(this->c), __isset.c};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+  int32_t get_a() const {
+    return a;
+  }
+
+  int32_t& set_a(int32_t a_) {
+    a = a_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.a = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return a;
+  }
+
+  const double* get_b() const& {
+    return b_ref() ? std::addressof(b) : nullptr;
+  }
+
+  double* get_b() & {
+    return b_ref() ? std::addressof(b) : nullptr;
+  }
+  double* get_b() && = delete;
+
+  double& set_b(double b_) {
+    b = b_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.b = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return b;
+  }
+
+  const int8_t* get_c() const& {
+    return c_ref() ? std::addressof(c) : nullptr;
+  }
+
+  int8_t* get_c() & {
+    return c_ref() ? std::addressof(c) : nullptr;
+  }
+  int8_t* get_c() && = delete;
+
+  int8_t& set_c(int8_t c_) {
+    c = c_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.c = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return c;
+  }
+
+  template <class Protocol_>
+  uint32_t read(Protocol_* iprot);
+  template <class Protocol_>
+  uint32_t serializedSize(Protocol_ const* prot_) const;
+  template <class Protocol_>
+  uint32_t serializedSizeZC(Protocol_ const* prot_) const;
+  template <class Protocol_>
+  uint32_t write(Protocol_* prot_) const;
+
+ private:
+  template <class Protocol_>
+  void readNoXfer(Protocol_* iprot);
+
+  friend class ::apache::thrift::Cpp2Ops< struct4 >;
+  friend void swap(struct4& a, struct4& b);
+};
+
+template <class Protocol_>
+uint32_t struct4::read(Protocol_* iprot) {
+  auto _xferStart = iprot->getCursorPosition();
+  readNoXfer(iprot);
+  return iprot->getCursorPosition() - _xferStart;
+}
+
+} // cpp2
+namespace cpp2 {
+class union1 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = union1;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    true;
+
+
+ public:
+  enum Type : int {
     __EMPTY__ = 0,
     i = 1,
     d = 2,
@@ -1028,14 +1544,6 @@ class union1 final : private apache::thrift::detail::st::ComparisonOperators<uni
     }
     return *this;
   }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    set_i(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    set_d(arg.extract());
-  }
   void __clear();
 
   ~union1() {
@@ -1049,7 +1557,23 @@ class union1 final : private apache::thrift::detail::st::ComparisonOperators<uni
     ~storage_type() {}
   } ;
   bool operator==(const union1& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const union1& __x, const union1& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const union1& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const union1& __x, const union1& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const union1& __x, const union1& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const union1& __x, const union1& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   int32_t& set_i(int32_t t = int32_t()) {
     __clear();
@@ -1095,7 +1619,45 @@ class union1 final : private apache::thrift::detail::st::ComparisonOperators<uni
     return std::move(value_.d);
   }
 
-  Type getType() const { return type_; }
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> i_ref() const& {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> i_ref() const&& {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> i_ref() & {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> i_ref() && {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> d_ref() const& {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> d_ref() const&& {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> d_ref() & {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> d_ref() && {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  Type getType() const { return static_cast<Type>(type_); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1111,7 +1673,7 @@ class union1 final : private apache::thrift::detail::st::ComparisonOperators<uni
     (&val)->~T();
   }
 
-  Type type_;
+  std::underlying_type_t<Type> type_;
   storage_type value_;
 
  private:
@@ -1119,57 +1681,34 @@ class union1 final : private apache::thrift::detail::st::ComparisonOperators<uni
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< union1 >;
+  friend void swap(union1& a, union1& b);
 };
-
-void swap(union1& a, union1& b);
-extern template void union1::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t union1::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t union1::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t union1::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void union1::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t union1::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t union1::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t union1::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t union1::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::union1>::clear( ::cpp2::union1* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::union1>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union1>::write(Protocol* proto,  ::cpp2::union1 const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::union1>::read(Protocol* proto,  ::cpp2::union1* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union1>::serializedSize(Protocol const* proto,  ::cpp2::union1 const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union1>::serializedSizeZC(Protocol const* proto,  ::cpp2::union1 const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class union2 final : private apache::thrift::detail::st::ComparisonOperators<union2> {
+class union2 final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
  public:
-  enum Type {
+  using __fbthrift_cpp2_type = union2;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    true;
+
+
+ public:
+  enum Type : int {
     __EMPTY__ = 0,
     i = 1,
     d = 2,
@@ -1315,22 +1854,6 @@ class union2 final : private apache::thrift::detail::st::ComparisonOperators<uni
     }
     return *this;
   }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    set_i(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    set_d(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    set_s(arg.extract());
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    set_u(arg.extract());
-  }
   void __clear();
 
   ~union2() {
@@ -1346,7 +1869,23 @@ class union2 final : private apache::thrift::detail::st::ComparisonOperators<uni
     ~storage_type() {}
   } ;
   bool operator==(const union2& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const union2& __x, const union2& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const union2& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const union2& __x, const union2& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const union2& __x, const union2& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const union2& __x, const union2& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   int32_t& set_i(int32_t t = int32_t()) {
     __clear();
@@ -1464,7 +2003,83 @@ class union2 final : private apache::thrift::detail::st::ComparisonOperators<uni
     return std::move(value_.u);
   }
 
-  Type getType() const { return type_; }
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> i_ref() const& {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> i_ref() const&& {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> i_ref() & {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> i_ref() && {
+    return {value_.i, type_, i, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> d_ref() const& {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> d_ref() const&& {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> d_ref() & {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> d_ref() && {
+    return {value_.d, type_, d, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> s_ref() const& {
+    return {value_.s, type_, s, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> s_ref() const&& {
+    return {value_.s, type_, s, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> s_ref() & {
+    return {value_.s, type_, s, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::struct1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> s_ref() && {
+    return {value_.s, type_, s, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  template <typename..., typename T =  ::cpp2::union1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&> u_ref() const& {
+    return {value_.u, type_, u, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::union1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<const T&&> u_ref() const&& {
+    return {value_.u, type_, u, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::union1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&> u_ref() & {
+    return {value_.u, type_, u, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+
+  template <typename..., typename T =  ::cpp2::union1>
+  FOLLY_ERASE ::apache::thrift::union_field_ref<T&&> u_ref() && {
+    return {value_.u, type_, u, this, ::apache::thrift::detail::union_field_ref_owner_vtable_for<decltype(*this)>};
+  }
+  Type getType() const { return static_cast<Type>(type_); }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -1480,7 +2095,7 @@ class union2 final : private apache::thrift::detail::st::ComparisonOperators<uni
     (&val)->~T();
   }
 
-  Type type_;
+  std::underlying_type_t<Type> type_;
   storage_type value_;
 
  private:
@@ -1488,50 +2103,45 @@ class union2 final : private apache::thrift::detail::st::ComparisonOperators<uni
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< union2 >;
+  friend void swap(union2& a, union2& b);
 };
-
-void swap(union2& a, union2& b);
-extern template void union2::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t union2::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t union2::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t union2::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void union2::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t union2::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t union2::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t union2::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t union2::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
+
 namespace apache { namespace thrift {
 
-template <> inline void Cpp2Ops< ::cpp2::union2>::clear( ::cpp2::union2* obj) {
-  return obj->__clear();
-}
+template <> struct TEnumDataStorage<::cpp2::union1::Type>;
 
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::union2>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
+template <> struct TEnumTraits<::cpp2::union1::Type> {
+  using type = ::cpp2::union1::Type;
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union2>::write(Protocol* proto,  ::cpp2::union2 const* obj) {
-  return obj->write(proto);
-}
+  static constexpr std::size_t const size = 2;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
 
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::union2>::read(Protocol* proto,  ::cpp2::union2* obj) {
-  return obj->readNoXfer(proto);
-}
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union2>::serializedSize(Protocol const* proto,  ::cpp2::union2 const* obj) {
-  return obj->serializedSize(proto);
-}
+};
 
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::union2>::serializedSizeZC(Protocol const* proto,  ::cpp2::union2 const* obj) {
-  return obj->serializedSizeZC(proto);
-}
+template <> struct TEnumDataStorage<::cpp2::union2::Type>;
 
+template <> struct TEnumTraits<::cpp2::union2::Type> {
+  using type = ::cpp2::union2::Type;
+
+  static constexpr std::size_t const size = 4;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+};
 }} // apache::thrift

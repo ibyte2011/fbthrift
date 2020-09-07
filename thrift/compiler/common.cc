@@ -1,25 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 #include <thrift/compiler/common.h>
 #include <thrift/compiler/parse/parsing_driver.h>
+
+#include <cstdarg>
 
 #include <boost/filesystem.hpp>
 
@@ -31,11 +29,6 @@ namespace compiler {
  * Current compilation stage. One of: arguments, parse, generation
  */
 std::string g_stage;
-
-/**
- * Directory containing template files
- */
-std::string g_template_dir;
 
 /**
  * Should C++ include statements use path prefixes for other thrift-generated
@@ -71,7 +64,7 @@ int g_doctext_lineno;
 std::string compute_absolute_path(const std::string& path) {
   boost::filesystem::path abspath{path};
   try {
-    abspath = boost::filesystem::canonical(abspath);
+    abspath = boost::filesystem::absolute(abspath);
     return abspath.string();
   } catch (const boost::filesystem::filesystem_error& e) {
     failure("Could not find file: %s. Error: %s", path.c_str(), e.what());
@@ -180,23 +173,23 @@ void dump_docstrings(t_program* program) {
   }
 }
 
-/**
- * Parse with the given parameters, and dump all the diagnostic messages
- * returned.
- *
- * If the parsing fails, this function will exit(1).
- */
 std::unique_ptr<t_program_bundle> parse_and_dump_diagnostics(
     std::string path,
-    apache::thrift::parsing_params params) {
-  apache::thrift::parsing_driver driver{path, std::move(params)};
+    parsing_params params) {
+  parsing_driver driver{path, std::move(params)};
 
-  std::vector<apache::thrift::diagnostic_message> diagnostic_messages;
+  std::vector<diagnostic_message> diagnostic_messages;
   auto program = driver.parse(diagnostic_messages);
+  dump_diagnostics(diagnostic_messages);
 
+  return program;
+}
+
+void dump_diagnostics(
+    const std::vector<diagnostic_message>& diagnostic_messages) {
   for (auto const& message : diagnostic_messages) {
     switch (message.level) {
-      case apache::thrift::diagnostic_level::YY_ERROR:
+      case diagnostic_level::YY_ERROR:
         fprintf(
             stderr,
             "[ERROR:%s:%d] (last token was '%s')\n%s\n",
@@ -205,7 +198,7 @@ std::unique_ptr<t_program_bundle> parse_and_dump_diagnostics(
             message.last_token.c_str(),
             message.message.c_str());
         break;
-      case apache::thrift::diagnostic_level::WARNING:
+      case diagnostic_level::WARNING:
         fprintf(
             stderr,
             "[WARNING:%s:%d] %s\n",
@@ -213,14 +206,14 @@ std::unique_ptr<t_program_bundle> parse_and_dump_diagnostics(
             message.lineno,
             message.message.c_str());
         break;
-      case apache::thrift::diagnostic_level::VERBOSE:
+      case diagnostic_level::VERBOSE:
         fprintf(stderr, "%s", message.message.c_str());
         break;
-      case apache::thrift::diagnostic_level::DEBUG:
+      case diagnostic_level::DBG:
         fprintf(
             stderr, "[PARSE:%d] %s\n", message.lineno, message.message.c_str());
         break;
-      case apache::thrift::diagnostic_level::FAILURE:
+      case diagnostic_level::FAILURE:
         fprintf(
             stderr,
             "[FAILURE:%s:%d] %s\n",
@@ -230,12 +223,6 @@ std::unique_ptr<t_program_bundle> parse_and_dump_diagnostics(
         break;
     }
   }
-
-  if (!program) {
-    exit(1);
-  }
-
-  return program;
 }
 
 void mark_file_executable(std::string const& path) {

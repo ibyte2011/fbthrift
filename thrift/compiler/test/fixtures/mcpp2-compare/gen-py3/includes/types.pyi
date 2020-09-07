@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -25,6 +25,12 @@ class AnEnum(thrift.py3.types.Enum):
 
 
 class AStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        FieldA: bool
+        pass
+
+    FieldA: Final[int] = ...
+
     def __init__(
         self, *,
         FieldA: _typing.Optional[int]=None
@@ -32,7 +38,7 @@ class AStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typin
 
     def __call__(
         self, *,
-        FieldA: _typing.Union[int, NOTSETTYPE, None]=NOTSET
+        FieldA: _typing.Union[int, __NotSet, None]=NOTSET
     ) -> AStruct: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['AStruct'], bytes]]: ...
@@ -45,11 +51,13 @@ class AStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typin
     def __le__(self, other: 'AStruct') -> bool: ...
     def __ge__(self, other: 'AStruct') -> bool: ...
 
-    @__property__
-    def FieldA(self) -> int: ...
-
 
 class AStructB(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        pass
+
+    FieldA: Final[_typing.Optional['AStruct']] = ...
+
     def __init__(
         self, *,
         FieldA: _typing.Optional['AStruct']=None
@@ -57,7 +65,7 @@ class AStructB(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
 
     def __call__(
         self, *,
-        FieldA: _typing.Union['AStruct', NOTSETTYPE, None]=NOTSET
+        FieldA: _typing.Union['AStruct', __NotSet, None]=NOTSET
     ) -> AStructB: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['AStructB'], bytes]]: ...
@@ -69,9 +77,6 @@ class AStructB(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
     def __gt__(self, other: 'AStructB') -> bool: ...
     def __le__(self, other: 'AStructB') -> bool: ...
     def __ge__(self, other: 'AStructB') -> bool: ...
-
-    @__property__
-    def FieldA(self) -> _typing.Optional['AStruct']: ...
 
 
 IncludedConstant: int = ...

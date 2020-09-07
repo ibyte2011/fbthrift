@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef _THRIFT_TRANSPORT_TTRANSPORTEXCEPTION_H_
 #define _THRIFT_TRANSPORT_TTRANSPORTEXCEPTION_H_ 1
 
+#include <folly/Conv.h>
+#include <folly/io/async/AsyncSocketException.h>
+
 #include <thrift/lib/cpp/Thrift.h>
-#include <string>
 
 namespace apache {
 namespace thrift {
@@ -51,13 +54,13 @@ class TTransportException : public apache::thrift::TLibraryException {
     INVALID_FRAME_SIZE = 11,
     SSL_ERROR = 12,
     COULD_NOT_BIND = 13,
-    SASL_HANDSHAKE_TIMEOUT = 14,
     NETWORK_ERROR = 15,
-    EARLY_DATA_REJECTED = 16
+    EARLY_DATA_REJECTED = 16,
+    STREAMING_CONTRACT_VIOLATION = 17
     // Remember to update TTransportExceptionTypeSize if you add an entry here
   };
 
-  using TTransportExceptionTypeSize = std::integral_constant<std::size_t, 17>;
+  using TTransportExceptionTypeSize = std::integral_constant<std::size_t, 18>;
 
   TTransportException()
       : apache::thrift::TLibraryException(),
@@ -94,6 +97,12 @@ class TTransportException : public apache::thrift::TLibraryException {
         type_(type),
         errno_(errno_copy),
         options_(0) {}
+
+  explicit TTransportException(const folly::AsyncSocketException& ex)
+      : TTransportException(
+            TTransportExceptionType(ex.getType()),
+            ex.what(),
+            ex.getErrno()) {}
 
   ~TTransportException() throw() override {}
 
@@ -151,13 +160,12 @@ class TTransportException : public apache::thrift::TLibraryException {
           return "TTransportException: Invalid frame size";
         case SSL_ERROR:
           return "TTransportException: SSL error";
-        case SASL_HANDSHAKE_TIMEOUT:
-          return "TTransportException: SASL Handshake timeout";
         case NETWORK_ERROR:
           return "TTransportException: Network Error";
         case EARLY_DATA_REJECTED:
           return "TTransportException: Early data rejected";
-
+        case STREAMING_CONTRACT_VIOLATION:
+          return "TTransportException: Streaming contract violation";
         default:
           return "TTransportException: (Invalid exception type)";
       }
@@ -189,7 +197,7 @@ class TTransportException : public apache::thrift::TLibraryException {
     if (message.empty() &&
         static_cast<size_t>(type) >= TTransportExceptionTypeSize::value) {
       return "TTransportException: (Invalid exception type '" +
-          std::to_string(type) + "')";
+          folly::to<std::string>(type) + "')";
     } else {
       return std::move(message);
     }

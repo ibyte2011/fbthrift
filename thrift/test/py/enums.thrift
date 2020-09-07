@@ -1,20 +1,17 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 namespace py thrift.test.py.enums
@@ -39,11 +36,9 @@ enum MyEnum3 {
   ME3_1 = 1,
   ME3_N2 = -2,
   ME3_N1 = -1,
-  ME3_D0 = 0,
-  ME3_D1 = 1,
   ME3_9 = 9,
   ME3_10 = 10,
-} (thrift.duplicate_values)
+}
 
 enum MyEnum4 {
   ME4_A = 0x7ffffffd,
@@ -63,7 +58,6 @@ enum MyEnum5 {
 struct MyStruct {
   1: MyEnum2 me2_2 = ME2_2
   2: MyEnum3 me3_n2 = ME3_N2
-  3: MyEnum3 me3_d1 = ME3_D1
   4: MyEnum1 me1_t1 = 1
   5: MyEnum1 me1_t2 = ME1_1
   6: MyEnum1 me1_t3 = MyEnum1.ME1_1

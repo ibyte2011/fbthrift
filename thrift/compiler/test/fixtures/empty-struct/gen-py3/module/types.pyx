@@ -4,152 +4,98 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 
+cimport module.types_reflection as _types_reflection
 
 
-cdef object __Nada_Union_TypeEnumMembers = None
+
+cdef __UnionTypeEnumData __Nada_union_type_enum_data  = __UnionTypeEnumData.create(
+    __createEnumDataForUnionType[cNada](),
+    __NadaType,
+)
 
 
 @__cython.internal
 @__cython.auto_pickle(False)
-cdef class __Nada_Union_TypeMeta(type):
-    def __call__(cls, value):
-        cdef int cvalue
-        if isinstance(value, cls) and value in __Nada_Union_TypeEnumMembers:
-            return value
+cdef class __Nada_Union_TypeMeta(thrift.py3.types.EnumMeta):
 
-        if isinstance(value, int):
-            cvalue = value
-            if cvalue == 0:
-                return __NadaType.EMPTY
+    def __get_by_name(cls, str name):
+        return __Nada_union_type_enum_data.get_by_name(name)
 
-        raise ValueError(f'{value} is not a valid Nada.Type')
+    def __get_by_value(cls, int value):
+        return __Nada_union_type_enum_data.get_by_value(value)
 
-    def __getitem__(cls, name):
-        if name == "EMPTY":
-            return __NadaType.EMPTY
-        raise KeyError(name)
-
-    def __dir__(cls):
-        return ['__class__', '__doc__', '__members__', '__module__', 'EMPTY',
-        ]
-
-    @property
-    def __members__(cls):
-        return {m.name: m for m in cls}
-
-    def __iter__(cls):
-        yield __NadaType.EMPTY
-        return iter(())
-
-    def __reversed__(cls):
-        return reversed(iter(cls))
-
-    def __contains__(cls, item):
-        if not isinstance(item, cls):
-            return False
-        return item in __Nada_Union_TypeEnumMembers
+    def __get_all_names(cls):
+        return __Nada_union_type_enum_data.get_all_names()
 
     def __len__(cls):
-        return 0+1  # For Empty
+        return __Nada_union_type_enum_data.size()
 
 
 @__cython.final
+@__cython.auto_pickle(False)
 cdef class __NadaType(thrift.py3.types.CompiledEnum):
-    EMPTY = __NadaType.__new__(__NadaType, 0, "EMPTY")
+    cdef get_by_name(self, str name):
+        return __Nada_union_type_enum_data.get_by_name(name)
 
-    def __cinit__(self, value, name):
-        if __Nada_Union_TypeEnumMembers is not None:
-            raise TypeError('For Safty we have disabled __new__')
-        self.value = value
-        self.name = name
-        self.__hash = hash(name)
-        self.__str = f"Nada.Type.{name}"
-        self.__repr = f"<{self.__str}: {value}>"
-
-    def __repr__(self):
-        return self.__repr
-
-    def __str__(self):
-        return self.__str
-
-    def __int__(self):
-        return self.value
-
-    def __eq__(self, other):
-        if not isinstance(other, __NadaType):
-            warnings.warn(f"comparison not supported between instances of { __NadaType } and {type(other)}", RuntimeWarning, stacklevel=2)
-            return False
-        return self is other
-
-    def __hash__(self):
-        return self.__hash
-
-    def __reduce__(self):
-        return __NadaType, (self.value,)
 
 __SetMetaClass(<PyTypeObject*> __NadaType, <PyTypeObject*> __Nada_Union_TypeMeta)
-__Nada_Union_TypeEnumMembers = set(__NadaType)
 
 
-cdef cEmpty _Empty_defaults = cEmpty()
-
+@__cython.auto_pickle(False)
 cdef class Empty(thrift.py3.types.Struct):
 
     def __init__(
         Empty self, *
     ):
-        self._cpp_obj = move(Empty._make_instance(
+        self._cpp_obj = __fbthrift_move(Empty._make_instance(
+          NULL,
           NULL,
         ))
 
     def __call__(
         Empty self
     ):
-        changes = any((        ))
-
-        if not changes:
-            return self
-        inst = <Empty>Empty.__new__(Empty)
-        inst._cpp_obj = move(Empty._make_instance(
-          self._cpp_obj.get(),
-        ))
-        return inst
+        return self
 
     @staticmethod
     cdef unique_ptr[cEmpty] _make_instance(
-        cEmpty* base_instance
+        cEmpty* base_instance,
+        bint* __isNOTSET
     ) except *:
         cdef unique_ptr[cEmpty] c_inst
         if base_instance:
@@ -162,7 +108,12 @@ cdef class Empty(thrift.py3.types.Struct):
             pass
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Empty", {
+        })
 
     def __iter__(self):
         return iter(())
@@ -172,9 +123,9 @@ cdef class Empty(thrift.py3.types.Struct):
 
     @staticmethod
     cdef create(shared_ptr[cEmpty] cpp_obj):
-        inst = <Empty>Empty.__new__(Empty)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <Empty>Empty.__new__(Empty)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
 
     def __hash__(Empty self):
@@ -190,7 +141,7 @@ cdef class Empty(thrift.py3.types.Struct):
         cdef shared_ptr[cEmpty] cpp_obj = make_shared[cEmpty](
             deref(self._cpp_obj)
         )
-        return Empty.create(move_shared(cpp_obj))
+        return Empty.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -204,56 +155,36 @@ cdef class Empty(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cEmpty cself = deref((<Empty>self)._cpp_obj)
-        cdef cEmpty cother = deref((<Empty>other)._cpp_obj)
+        cdef cEmpty* cself = (<Empty>self)._cpp_obj.get()
+        cdef cEmpty* cother = (<Empty>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(Empty self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cEmpty* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cEmpty](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cEmpty](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cEmpty](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cEmpty](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Empty()
 
-    cdef uint32_t _deserialize(Empty self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(Empty self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cEmpty](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(Empty self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cEmpty]()
-        cdef cEmpty* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cEmpty](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cEmpty](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cEmpty](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cEmpty](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cEmpty](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
@@ -262,13 +193,14 @@ cdef class Empty(thrift.py3.types.Struct):
 
 
 
+@__cython.auto_pickle(False)
 cdef class Nada(thrift.py3.types.Union):
     Type = __NadaType
 
     def __init__(
         self, *
     ):
-        self._cpp_obj = move(Nada._make_instance(
+        self._cpp_obj = __fbthrift_move(Nada._make_instance(
           NULL,
         ))
         self._load_cache()
@@ -287,17 +219,17 @@ cdef class Nada(thrift.py3.types.Union):
         cdef bint any_set = False
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
 
     def __bool__(self):
         return self.type is not __NadaType.EMPTY
 
     @staticmethod
     cdef create(shared_ptr[cNada] cpp_obj):
-        inst = <Nada>Nada.__new__(Nada)
-        inst._cpp_obj = move_shared(cpp_obj)
-        inst._load_cache()
-        return inst
+        __fbthrift_inst = <Nada>Nada.__new__(Nada)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        __fbthrift_inst._load_cache()
+        return __fbthrift_inst
 
 
     def __hash__(Nada self):
@@ -324,7 +256,7 @@ cdef class Nada(thrift.py3.types.Union):
         cdef shared_ptr[cNada] cpp_obj = make_shared[cNada](
             deref(self._cpp_obj)
         )
-        return Nada.create(move_shared(cpp_obj))
+        return Nada.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -338,56 +270,36 @@ cdef class Nada(thrift.py3.types.Union):
             else:
                 return NotImplemented
 
-        cdef cNada cself = deref((<Nada>self)._cpp_obj)
-        cdef cNada cother = deref((<Nada>other)._cpp_obj)
+        cdef cNada* cself = (<Nada>self)._cpp_obj.get()
+        cdef cNada* cother = (<Nada>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(Nada self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cNada* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cNada](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cNada](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cNada](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cNada](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Nada()
 
-    cdef uint32_t _deserialize(Nada self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(Nada self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cNada](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(Nada self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cNada]()
-        cdef cNada* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cNada](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cNada](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cNada](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cNada](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cNada](buf, self._cpp_obj.get(), proto)
         # force a cache reload since the underlying data's changed
         self._load_cache()
         return needed

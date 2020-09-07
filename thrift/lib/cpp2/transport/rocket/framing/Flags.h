@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <stdint.h>
+
+#include <fmt/core.h>
+#include <glog/logging.h>
+
 namespace apache {
 namespace thrift {
 namespace rocket {
@@ -25,8 +30,10 @@ class Flags {
   constexpr Flags() = default;
 
   constexpr explicit Flags(uint16_t flags) : flags_(static_cast<Bits>(flags)) {
-    DCHECK(flags == 0 || flags >= Bits::NEXT);
     DCHECK((flags & ~mask()) == 0);
+    if (flags != 0 && flags < Bits::NEXT) {
+      throw std::runtime_error(fmt::format("received invalid flags {}", flags));
+    }
   }
 
   // Flags and frame type are packed into 2 bytes on the wire. Flags occupy the
@@ -63,7 +70,8 @@ class Flags {
   THRIFT_ROCKET_CREATE_GETTER_SETTER(follows, Bits::FOLLOWS)
   THRIFT_ROCKET_CREATE_GETTER_SETTER(resumeToken, Bits::RESUME_TOKEN)
   THRIFT_ROCKET_CREATE_GETTER_SETTER(metadata, Bits::METADATA)
-  THRIFT_ROCKET_CREATE_GETTER_SETTER(ignore, Bits::IGNORE)
+  THRIFT_ROCKET_CREATE_GETTER_SETTER(ignore, Bits::IGNORE_)
+  THRIFT_ROCKET_CREATE_GETTER_SETTER(respond, Bits::RESPOND)
 
 #undef THRIFT_ROCKET_CREATE_GETTER_SETTER
 
@@ -79,8 +87,9 @@ class Flags {
     LEASE = 1 << 6,
     FOLLOWS = 1 << 7,
     RESUME_TOKEN = 1 << 7,
+    RESPOND = 1 << 7,
     METADATA = 1 << 8,
-    IGNORE = 1 << 9,
+    IGNORE_ = 1 << 9,
   };
   Bits flags_{Bits::NONE};
 

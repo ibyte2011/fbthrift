@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 #include <thrift/lib/cpp2/transport/inmemory/InMemoryConnection.h>
 
-#include <gflags/gflags.h>
+#include <folly/portability/GFlags.h>
 #include <glog/logging.h>
 
 #include <thrift/lib/cpp2/transport/inmemory/InMemoryChannel.h>
@@ -28,7 +28,7 @@ namespace thrift {
 
 InMemoryConnection::InMemoryConnection(
     std::shared_ptr<AsyncProcessorFactory> pFac,
-    const apache::thrift::server::ServerConfigs& serverConfigs) {
+    server::ServerConfigs& serverConfigs) {
   CHECK_GT(FLAGS_thrift_num_cpu_threads, 0);
   threadManager_ = PriorityThreadManager::newPriorityThreadManager(
       FLAGS_thrift_num_cpu_threads);
@@ -56,7 +56,7 @@ folly::EventBase* InMemoryConnection::getEventBase() const {
   return runner_.getEventBase();
 }
 
-apache::thrift::async::TAsyncTransport* InMemoryConnection::getTransport() {
+folly::AsyncTransport* InMemoryConnection::getTransport() {
   LOG(FATAL) << "Method should not be called";
 }
 
@@ -78,10 +78,6 @@ void InMemoryConnection::detachEventBase() {
 
 bool InMemoryConnection::isDetachable() {
   LOG(FATAL) << "Method should not be called";
-}
-
-bool InMemoryConnection::isSecurityActive() {
-  return false;
 }
 
 uint32_t InMemoryConnection::getTimeout() {

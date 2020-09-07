@@ -4,45 +4,50 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 cimport module0.types as _module0_types
 import module0.types as _module0_types
 cimport module1.types as _module1_types
 import module1.types as _module1_types
 
+cimport module2.types_reflection as _types_reflection
 
-cdef cStruct _Struct_defaults = cStruct()
 
+
+@__cython.auto_pickle(False)
 cdef class Struct(thrift.py3.types.Struct):
 
     def __init__(
@@ -50,7 +55,8 @@ cdef class Struct(thrift.py3.types.Struct):
         _module0_types.Struct first=None,
         _module1_types.Struct second=None
     ):
-        self._cpp_obj = move(Struct._make_instance(
+        self._cpp_obj = __fbthrift_move(Struct._make_instance(
+          NULL,
           NULL,
           first,
           second,
@@ -61,36 +67,51 @@ cdef class Struct(thrift.py3.types.Struct):
         first=__NOTSET,
         second=__NOTSET
     ):
-        changes = any((
-            first is not __NOTSET,
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[2] __isNOTSET  # so make_instance is typed
 
-            second is not __NOTSET,
-        ))
+        __fbthrift_changed = False
+        if first is ___NOTSET:
+            __isNOTSET[0] = True
+            first = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
 
-        if not changes:
+        if second is ___NOTSET:
+            __isNOTSET[1] = True
+            second = None
+        else:
+            __isNOTSET[1] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not first is not __NOTSET:
+        if first is not None:
             if not isinstance(first, _module0_types.Struct):
                 raise TypeError(f'first is not a { _module0_types.Struct !r}.')
 
-        if None is not second is not __NOTSET:
+        if second is not None:
             if not isinstance(second, _module1_types.Struct):
                 raise TypeError(f'second is not a { _module1_types.Struct !r}.')
 
-        inst = <Struct>Struct.__new__(Struct)
-        inst._cpp_obj = move(Struct._make_instance(
+        __fbthrift_inst = <Struct>Struct.__new__(Struct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(Struct._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           first,
           second,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cStruct] _make_instance(
         cStruct* base_instance,
-        object first,
-        object second
+        bint* __isNOTSET,
+        _module0_types.Struct first ,
+        _module1_types.Struct second 
     ) except *:
         cdef unique_ptr[cStruct] c_inst
         if base_instance:
@@ -100,56 +121,59 @@ cdef class Struct(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if first is None:
-                deref(c_inst).first = _Struct_defaults.first
+            if not __isNOTSET[0] and first is None:
+                deref(c_inst).first_ref().assign(default_inst[cStruct]().first_ref().value())
                 deref(c_inst).__isset.first = False
                 pass
-            elif first is __NOTSET:
-                first = None
 
-            if second is None:
-                deref(c_inst).second = _Struct_defaults.second
+            if not __isNOTSET[1] and second is None:
+                deref(c_inst).second_ref().assign(default_inst[cStruct]().second_ref().value())
                 deref(c_inst).__isset.second = False
                 pass
-            elif second is __NOTSET:
-                second = None
 
         if first is not None:
-            deref(c_inst).first = deref((<_module0_types.Struct?> first)._cpp_obj)
+            deref(c_inst).first_ref().assign(deref((<_module0_types.Struct?> first)._cpp_obj))
             deref(c_inst).__isset.first = True
         if second is not None:
-            deref(c_inst).second = deref((<_module1_types.Struct?> second)._cpp_obj)
+            deref(c_inst).second_ref().assign(deref((<_module1_types.Struct?> second)._cpp_obj))
             deref(c_inst).__isset.second = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Struct", {
+          "first": cpp_obj.first_ref().has_value(),
+          "second": cpp_obj.second_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'first', self.first
         yield 'second', self.second
 
     def __bool__(self):
-        return True or True
+        return True
 
     @staticmethod
     cdef create(shared_ptr[cStruct] cpp_obj):
-        inst = <Struct>Struct.__new__(Struct)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <Struct>Struct.__new__(Struct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def first(self):
 
-        if self.__first is None:
-            self.__first = _module0_types.Struct.create(reference_shared_ptr_first(self._cpp_obj, deref(self._cpp_obj).first))
-        return self.__first
+        if self.__field_first is None:
+            self.__field_first = _module0_types.Struct.create(reference_shared_ptr_first(self._cpp_obj, deref(self._cpp_obj).first_ref().value()))
+        return self.__field_first
 
     @property
     def second(self):
 
-        if self.__second is None:
-            self.__second = _module1_types.Struct.create(reference_shared_ptr_second(self._cpp_obj, deref(self._cpp_obj).second))
-        return self.__second
+        if self.__field_second is None:
+            self.__field_second = _module1_types.Struct.create(reference_shared_ptr_second(self._cpp_obj, deref(self._cpp_obj).second_ref().value()))
+        return self.__field_second
 
 
     def __hash__(Struct self):
@@ -166,7 +190,7 @@ cdef class Struct(thrift.py3.types.Struct):
         cdef shared_ptr[cStruct] cpp_obj = make_shared[cStruct](
             deref(self._cpp_obj)
         )
-        return Struct.create(move_shared(cpp_obj))
+        return Struct.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -180,64 +204,43 @@ cdef class Struct(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cStruct cself = deref((<Struct>self)._cpp_obj)
-        cdef cStruct cother = deref((<Struct>other)._cpp_obj)
+        cdef cStruct* cself = (<Struct>self)._cpp_obj.get()
+        cdef cStruct* cother = (<Struct>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(Struct self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Struct()
 
-    cdef uint32_t _deserialize(Struct self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(Struct self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cStruct](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(Struct self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cStruct]()
-        cdef cStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cStruct](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
         return (deserialize, (Struct, serialize(self)))
 
 
-cdef cBigStruct _BigStruct_defaults = cBigStruct()
-
+@__cython.auto_pickle(False)
 cdef class BigStruct(thrift.py3.types.Struct):
 
     def __init__(
@@ -248,9 +251,10 @@ cdef class BigStruct(thrift.py3.types.Struct):
         if id is not None:
             if not isinstance(id, int):
                 raise TypeError(f'id is not a { int !r}.')
-            id = <int32_t> id
+            id = <cint32_t> id
 
-        self._cpp_obj = move(BigStruct._make_instance(
+        self._cpp_obj = __fbthrift_move(BigStruct._make_instance(
+          NULL,
           NULL,
           s,
           id,
@@ -261,37 +265,52 @@ cdef class BigStruct(thrift.py3.types.Struct):
         s=__NOTSET,
         id=__NOTSET
     ):
-        changes = any((
-            s is not __NOTSET,
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[2] __isNOTSET  # so make_instance is typed
 
-            id is not __NOTSET,
-        ))
+        __fbthrift_changed = False
+        if s is ___NOTSET:
+            __isNOTSET[0] = True
+            s = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
 
-        if not changes:
+        if id is ___NOTSET:
+            __isNOTSET[1] = True
+            id = None
+        else:
+            __isNOTSET[1] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not s is not __NOTSET:
+        if s is not None:
             if not isinstance(s, Struct):
                 raise TypeError(f's is not a { Struct !r}.')
 
-        if None is not id is not __NOTSET:
+        if id is not None:
             if not isinstance(id, int):
                 raise TypeError(f'id is not a { int !r}.')
-            id = <int32_t> id
+            id = <cint32_t> id
 
-        inst = <BigStruct>BigStruct.__new__(BigStruct)
-        inst._cpp_obj = move(BigStruct._make_instance(
+        __fbthrift_inst = <BigStruct>BigStruct.__new__(BigStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(BigStruct._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           s,
           id,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cBigStruct] _make_instance(
         cBigStruct* base_instance,
-        object s,
-        object id
+        bint* __isNOTSET,
+        Struct s ,
+        object id 
     ) except *:
         cdef unique_ptr[cBigStruct] c_inst
         if base_instance:
@@ -301,54 +320,57 @@ cdef class BigStruct(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if s is None:
-                deref(c_inst).s = _BigStruct_defaults.s
+            if not __isNOTSET[0] and s is None:
+                deref(c_inst).s_ref().assign(default_inst[cBigStruct]().s_ref().value())
                 deref(c_inst).__isset.s = False
                 pass
-            elif s is __NOTSET:
-                s = None
 
-            if id is None:
-                deref(c_inst).id = _BigStruct_defaults.id
+            if not __isNOTSET[1] and id is None:
+                deref(c_inst).id_ref().assign(default_inst[cBigStruct]().id_ref().value())
                 deref(c_inst).__isset.id = False
                 pass
-            elif id is __NOTSET:
-                id = None
 
         if s is not None:
-            deref(c_inst).s = deref((<Struct?> s)._cpp_obj)
+            deref(c_inst).s_ref().assign(deref((<Struct?> s)._cpp_obj))
             deref(c_inst).__isset.s = True
         if id is not None:
-            deref(c_inst).id = id
+            deref(c_inst).id_ref().assign(id)
             deref(c_inst).__isset.id = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("BigStruct", {
+          "s": cpp_obj.s_ref().has_value(),
+          "id": cpp_obj.id_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 's', self.s
         yield 'id', self.id
 
     def __bool__(self):
-        return True or True
+        return True
 
     @staticmethod
     cdef create(shared_ptr[cBigStruct] cpp_obj):
-        inst = <BigStruct>BigStruct.__new__(BigStruct)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <BigStruct>BigStruct.__new__(BigStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def s(self):
 
-        if self.__s is None:
-            self.__s = Struct.create(reference_shared_ptr_s(self._cpp_obj, deref(self._cpp_obj).s))
-        return self.__s
+        if self.__field_s is None:
+            self.__field_s = Struct.create(reference_shared_ptr_s(self._cpp_obj, deref(self._cpp_obj).s_ref().value()))
+        return self.__field_s
 
     @property
     def id(self):
 
-        return deref(self._cpp_obj).id
+        return deref(self._cpp_obj).id_ref().value()
 
 
     def __hash__(BigStruct self):
@@ -365,7 +387,7 @@ cdef class BigStruct(thrift.py3.types.Struct):
         cdef shared_ptr[cBigStruct] cpp_obj = make_shared[cBigStruct](
             deref(self._cpp_obj)
         )
-        return BigStruct.create(move_shared(cpp_obj))
+        return BigStruct.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -379,56 +401,36 @@ cdef class BigStruct(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cBigStruct cself = deref((<BigStruct>self)._cpp_obj)
-        cdef cBigStruct cother = deref((<BigStruct>other)._cpp_obj)
+        cdef cBigStruct* cself = (<BigStruct>self)._cpp_obj.get()
+        cdef cBigStruct* cother = (<BigStruct>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(BigStruct self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cBigStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cBigStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cBigStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cBigStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cBigStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__BigStruct()
 
-    cdef uint32_t _deserialize(BigStruct self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(BigStruct self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cBigStruct](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(BigStruct self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cBigStruct]()
-        cdef cBigStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cBigStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cBigStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cBigStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cBigStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cBigStruct](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):

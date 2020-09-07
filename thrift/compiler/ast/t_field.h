@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -88,6 +88,10 @@ class t_field : public t_annotated {
     next_ = field;
   }
 
+  void mark_as_mixin() {
+    mixin_ = true;
+  }
+
   /**
    * t_field getters
    */
@@ -119,6 +123,10 @@ class t_field : public t_annotated {
     return req_;
   }
 
+  bool is_mixin() const {
+    return mixin_;
+  }
+
   /**
    * Thrift AST nodes are meant to be non-copyable and non-movable, and should
    * never be cloned. This method exists to grand-father specific uses in the
@@ -143,6 +151,7 @@ class t_field : public t_annotated {
   int32_t key_{0};
   std::unique_ptr<t_const_value> value_{nullptr};
   t_field* next_{nullptr};
+  bool mixin_{false};
 
   e_req req_{T_OPT_IN_REQ_OUT};
 };

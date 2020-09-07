@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 cpp_include "thrift/test/fatal_legacy_reflection_types.h"
 
 namespace cpp2 apache.thrift.test
@@ -44,4 +60,10 @@ struct SampleStruct {
   24: SampleSubStruct struct_unique_field (cpp.ref_type = 'unique'),
   25: SampleSubStruct struct_shared_field (cpp.ref_type = 'shared'),
   26: SampleSubStruct struct_shared_const_field (cpp.ref_type = 'shared_const'),
+
+  // integer custom types
+  27: byte (cpp.type = "std::uint8_t") ubyte_field,
+  28: i16 (cpp.type = "std::uint16_t") ui16_field,
+  29: i32 (cpp.type = "std::uint32_t") ui32_field,
+  30: i64 (cpp.type = "std::uint64_t") ui64_field,
 }

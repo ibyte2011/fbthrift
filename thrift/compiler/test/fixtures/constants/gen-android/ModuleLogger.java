@@ -64,19 +64,6 @@ public class ModuleLogger {
         break;
       }
       
-      case UnEnumStruct: {
-        oprot.writeStructBegin(new TStruct("UnEnumStruct"));
-        if (mMap.containsKey(Module.UnEnumStruct_city) && mMap.get(Module.UnEnumStruct_city) != null) {
-          writeFieldBegin(oprot, Module.UnEnumStruct_city);
-          oprot.writeI32(((ModuleEnum) mMap.get(Module.UnEnumStruct_city)).getValue());
-          oprot.writeFieldEnd();
-        }
-      
-        oprot.writeFieldStop();
-        oprot.writeStructEnd();
-        break;
-      }
-      
       case Range: {
         oprot.writeStructBegin(new TStruct("Range"));
         if (mMap.containsKey(Module.Range_min) && mMap.get(Module.Range_min) != null) {
@@ -172,6 +159,31 @@ public class ModuleLogger {
         if (mMap.containsKey(Module.struct3_c) && mMap.get(Module.struct3_c) != null) {
           writeFieldBegin(oprot, Module.struct3_c);
           ((ModuleLogger) mMap.get(Module.struct3_c)).write(oprot);
+          oprot.writeFieldEnd();
+        }
+      
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+        break;
+      }
+      
+      case struct4: {
+        oprot.writeStructBegin(new TStruct("struct4"));
+        if (mMap.containsKey(Module.struct4_a) && mMap.get(Module.struct4_a) != null) {
+          writeFieldBegin(oprot, Module.struct4_a);
+          oprot.writeI32((int) mMap.get(Module.struct4_a));
+          oprot.writeFieldEnd();
+        }
+      
+        if (mMap.containsKey(Module.struct4_b) && mMap.get(Module.struct4_b) != null) {
+          writeFieldBegin(oprot, Module.struct4_b);
+          oprot.writeDouble((double) mMap.get(Module.struct4_b));
+          oprot.writeFieldEnd();
+        }
+      
+        if (mMap.containsKey(Module.struct4_c) && mMap.get(Module.struct4_c) != null) {
+          writeFieldBegin(oprot, Module.struct4_c);
+          oprot.writeByte((byte) mMap.get(Module.struct4_c));
           oprot.writeFieldEnd();
         }
       

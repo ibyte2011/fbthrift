@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,12 @@
  */
 
 #include <thrift/compiler/generate/t_generator.h>
-#include <thrift/compiler/generate/t_mstch_generator.h>
 
 using namespace std;
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 void t_generator_registry::register_generator(t_generator_factory* factory) {
   gen_map_t& the_map = get_generator_map();
@@ -83,3 +86,7 @@ t_generator_factory::t_generator_factory(
       documentation_(documentation) {
   t_generator_registry::register_generator(this);
 }
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache

@@ -1,22 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <algorithm>
@@ -60,7 +55,8 @@ std::vector<std::string> get_gen_namespace_components(
 }
 
 std::string get_gen_namespace(t_program const& program) {
-  return boost::algorithm::join(get_gen_namespace_components(program), "::");
+  auto const components = get_gen_namespace_components(program);
+  return "::" + boost::algorithm::join(components, "::");
 }
 
 bool is_orderable(
@@ -137,6 +133,63 @@ bool is_orderable(t_type const& type) {
   std::unordered_set<t_type const*> seen;
   std::unordered_map<t_type const*, bool> memo;
   return is_orderable(seen, memo, type);
+}
+
+namespace {
+
+std::string const& map_find_first(
+    std::map<std::string, std::string> const& m,
+    std::initializer_list<char const*> keys) {
+  for (auto const& key : keys) {
+    auto const it = m.find(key);
+    if (it != m.end()) {
+      return it->second;
+    }
+  }
+  static auto const& empty = *new std::string();
+  return empty;
+}
+
+} // namespace
+
+std::string const& get_cpp_type(const t_type* type) {
+  return map_find_first(
+      type->annotations_,
+      {
+          "cpp.type",
+          "cpp2.type",
+      });
+}
+
+bool is_implicit_ref(const t_type* type) {
+  auto const* resolved_typedef = type->get_true_type();
+  return resolved_typedef != nullptr && resolved_typedef->is_binary() &&
+      get_cpp_type(resolved_typedef).find("std::unique_ptr") !=
+      std::string::npos &&
+      get_cpp_type(resolved_typedef).find("folly::IOBuf") != std::string::npos;
+}
+
+bool is_cpp_ref(const t_field* f) {
+  return f->annotations_.count("cpp.ref") ||
+      f->annotations_.count("cpp2.ref") ||
+      f->annotations_.count("cpp.ref_type") ||
+      f->annotations_.count("cpp2.ref_type") || is_implicit_ref(f->get_type());
+}
+
+bool is_stack_arguments(
+    std::map<std::string, std::string> const& options,
+    t_function const& function) {
+  auto it = function.annotations_.find("cpp.stack_arguments");
+  auto ptr = it == function.annotations_.end() ? nullptr : &it->second;
+  return ptr ? *ptr != "0" : options.count("stack_arguments") != 0;
+}
+
+int32_t get_split_count(std::map<std::string, std::string> const& options) {
+  auto iter = options.find("types_cpp_splits");
+  if (iter == options.end()) {
+    return 0;
+  }
+  return std::stoi(iter->second);
 }
 
 } // namespace cpp2

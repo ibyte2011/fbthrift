@@ -14,64 +14,52 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.*;
 import java.util.*;
 
+@SwiftGenerated
 @ThriftService("NestedContainers")
-public interface NestedContainers
-{
+public interface NestedContainers extends java.io.Closeable {
     @ThriftService("NestedContainers")
-    public interface Async
-    {
+    public interface Async extends java.io.Closeable {
+        @Override void close();
+
         @ThriftMethod(value = "mapList")
         ListenableFuture<Void> mapList(
-            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, List<Integer>> foo
-        );
+            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, List<Integer>> foo);
 
         @ThriftMethod(value = "mapSet")
         ListenableFuture<Void> mapSet(
-            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, Set<Integer>> foo
-        );
+            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, Set<Integer>> foo);
 
         @ThriftMethod(value = "listMap")
         ListenableFuture<Void> listMap(
-            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Map<Integer, Integer>> foo
-        );
+            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Map<Integer, Integer>> foo);
 
         @ThriftMethod(value = "listSet")
         ListenableFuture<Void> listSet(
-            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Set<Integer>> foo
-        );
+            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Set<Integer>> foo);
 
         @ThriftMethod(value = "turtles")
         ListenableFuture<Void> turtles(
-            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<List<Map<Integer, Map<Integer, Set<Integer>>>>> foo
-        );
+            @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<List<Map<Integer, Map<Integer, Set<Integer>>>>> foo);
     }
+    @Override void close();
+
     @ThriftMethod(value = "mapList")
     void mapList(
-        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, List<Integer>> foo
-    );
-
+        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, List<Integer>> foo) throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "mapSet")
     void mapSet(
-        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, Set<Integer>> foo
-    );
-
+        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final Map<Integer, Set<Integer>> foo) throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "listMap")
     void listMap(
-        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Map<Integer, Integer>> foo
-    );
-
+        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Map<Integer, Integer>> foo) throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "listSet")
     void listSet(
-        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Set<Integer>> foo
-    );
-
+        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<Set<Integer>> foo) throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "turtles")
     void turtles(
-        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<List<Map<Integer, Map<Integer, Set<Integer>>>>> foo
-    );
-
+        @ThriftField(value=1, name="foo", requiredness=Requiredness.NONE) final List<List<Map<Integer, Map<Integer, Set<Integer>>>>> foo) throws org.apache.thrift.TException;
 }

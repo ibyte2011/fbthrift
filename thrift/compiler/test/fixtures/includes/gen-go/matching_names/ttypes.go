@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	IncludesAlso0 "IncludesAlso"
 
 )
@@ -113,6 +113,13 @@ func (p *IncludesAlso) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("IncludesAlso(%+v)", *p)
+
+  var alsoVal string
+  if p.Also == nil {
+    alsoVal = "<nil>"
+  } else {
+    alsoVal = fmt.Sprintf("%v", p.Also)
+  }
+  return fmt.Sprintf("IncludesAlso({Also:%s})", alsoVal)
 }
 

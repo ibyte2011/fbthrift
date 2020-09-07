@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_TEST_MOCKTASYNCSSLSOCKET_H_
 #define THRIFT_TEST_MOCKTASYNCSSLSOCKET_H_ 1
 
-#include <gmock/gmock.h>
+#include <folly/portability/GMock.h>
 
 #include <thrift/lib/cpp/async/TAsyncSSLSocket.h>
 
@@ -31,7 +32,7 @@ class MockTAsyncSSLSocket : public apache::thrift::async::TAsyncSSLSocket {
   MockTAsyncSSLSocket(
       const std::shared_ptr<folly::SSLContext> ctx,
       folly::EventBase* base)
-      : AsyncSocket(base), TAsyncSSLSocket(ctx, base) {}
+      : TAsyncSSLSocket(ctx, base) {}
 
   static MockTAsyncSSLSocket::UniquePtr newSocket(
       const std::shared_ptr<folly::SSLContext> ctx,
@@ -48,7 +49,7 @@ class MockTAsyncSSLSocket : public apache::thrift::async::TAsyncSSLSocket {
           AsyncSocket::ConnectCallback*,
           const folly::SocketAddress&,
           int,
-          const OptionMap&,
+          const folly::SocketOptionMap&,
           const folly::SocketAddress&));
 
   GMOCK_METHOD6_(
@@ -61,14 +62,14 @@ class MockTAsyncSSLSocket : public apache::thrift::async::TAsyncSSLSocket {
           const folly::SocketAddress&,
           std::chrono::milliseconds,
           std::chrono::milliseconds,
-          const OptionMap&,
+          const folly::SocketOptionMap&,
           const folly::SocketAddress&));
 
   void connect(
       AsyncSocket::ConnectCallback* callback,
       const folly::SocketAddress& addr,
       int timeout = 0,
-      const OptionMap& options = emptyOptionMap,
+      const folly::SocketOptionMap& options = folly::emptySocketOptionMap,
       const folly::SocketAddress& bindAddr = anyAddress()) noexcept override {
     connectInternal(callback, addr, timeout, options, bindAddr);
   }
@@ -78,7 +79,7 @@ class MockTAsyncSSLSocket : public apache::thrift::async::TAsyncSSLSocket {
       const folly::SocketAddress& addr,
       std::chrono::milliseconds connectTimeout,
       std::chrono::milliseconds totalConnectTimeout,
-      const OptionMap& options = emptyOptionMap,
+      const folly::SocketOptionMap& options = folly::emptySocketOptionMap,
       const folly::SocketAddress& bindAddr = anyAddress()) noexcept override {
     connectInternalWithTimeouts(
         callback, addr, connectTimeout, totalConnectTimeout, options, bindAddr);
@@ -90,43 +91,15 @@ class MockTAsyncSSLSocket : public apache::thrift::async::TAsyncSSLSocket {
   MOCK_CONST_METHOD0(good, bool());
   MOCK_CONST_METHOD0(readable, bool());
   MOCK_CONST_METHOD0(hangup, bool());
-  MOCK_CONST_METHOD3(
+  MOCK_CONST_METHOD2(
       getSelectedNextProtocol,
-      void(
-          const unsigned char**,
-          unsigned*,
-          folly::SSLContext::NextProtocolType*));
-  MOCK_CONST_METHOD3(
+      void(const unsigned char**, unsigned*));
+  MOCK_CONST_METHOD2(
       getSelectedNextProtocolNoThrow,
-      bool(
-          const unsigned char**,
-          unsigned*,
-          folly::SSLContext::NextProtocolType*));
-
-  void sslConnect(
-      TAsyncSSLSocket::HandshakeCallback* cb,
-      uint64_t timeout,
-      const apache::thrift::transport::SSLContext::SSLVerifyPeerEnum& verify)
-      override {
-    if (timeout > 0) {
-      handshakeTimeout_.scheduleTimeout((uint32_t)timeout);
-    }
-
-    state_ = StateEnum::ESTABLISHED;
-    sslState_ = STATE_CONNECTING;
-    handshakeCallback_ = cb;
-
-    sslConnectMockable(cb, timeout, verify);
-  }
-  MOCK_METHOD3(
-      sslConnectMockable,
-      void(
-          TAsyncSSLSocket::HandshakeCallback*,
-          uint64_t,
-          const apache::thrift::transport::SSLContext::SSLVerifyPeerEnum&));
+      bool(const unsigned char**, unsigned*));
 };
-}
-}
-}
+} // namespace test
+} // namespace thrift
+} // namespace apache
 
 #endif

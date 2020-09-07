@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@
 #include <folly/FBVector.h>
 #include <folly/io/Cursor.h>
 #include <folly/io/IOBuf.h>
+#include <folly/lang/Bits.h>
 #include <folly/portability/GFlags.h>
 #include <thrift/lib/cpp/protocol/TProtocol.h>
 #include <thrift/lib/cpp2/protocol/Protocol.h>
@@ -42,10 +43,10 @@ using folly::io::QueueAppender;
 namespace detail {
 namespace compact {
 
-static const int8_t COMPACT_PROTOCOL_VERSION = static_cast<int8_t>(0x02);
+static const int8_t COMPACT_PROTOCOL_VERSION = 0x02;
 static const int32_t VERSION_2 = 0x82020000;
-static const int8_t PROTOCOL_ID = static_cast<int8_t>(0x82);
-static const int8_t TYPE_MASK = static_cast<int8_t>(0xE0);
+static const int8_t PROTOCOL_ID = int8_t(0x82);
+static const int8_t TYPE_MASK = int8_t(0xE0);
 static const int32_t TYPE_SHIFT_AMOUNT = 5;
 
 // Simple stack with an inline buffer for built-in types
@@ -109,6 +110,10 @@ class CompactProtocolWriter {
     return ProtocolType::T_COMPACT_PROTOCOL;
   }
 
+  static constexpr bool kSortKeys() {
+    return false;
+  }
+
   /**
    * The IOBufQueue itself is managed by the caller.
    * It must exist for the life of the CompactProtocol as well,
@@ -128,7 +133,7 @@ class CompactProtocolWriter {
   }
 
   inline uint32_t writeMessageBegin(
-      const std::string& name,
+      folly::StringPiece name,
       MessageType messageType,
       int32_t seqid);
   inline uint32_t writeMessageEnd();
@@ -170,9 +175,20 @@ class CompactProtocolWriter {
 
   /**
    * Functions that return the serialized size
+   *
+   * Notes:
+   *  * Serialized size is intended to be an upper bound, rather than an exact
+   *    value, since we don't want to unnecessarily pay varint encoding costs.
+   *    Don't use rely on these values as more than an estimate.
+   *
+   *  * ZC versions are the preallocated estimate if any IOBufs are shared (i.e.
+   *    there are IOBuf fields, and their sizes aren't too small to be packed),
+   *    and won't count in the ZC estimate.
+   *
+   *    Note that we still may not pre-allocate ideally for the IOBuf case,
+   *    since the IOBuf might be in the middle of the serialized stream.
    */
-
-  inline uint32_t serializedMessageSize(const std::string& name) const;
+  inline uint32_t serializedMessageSize(folly::StringPiece name) const;
   inline uint32_t
   serializedFieldSize(const char* name, TType fieldType, int16_t fieldId) const;
   inline uint32_t serializedStructSize(const char* name) const;
@@ -327,8 +343,12 @@ class CompactProtocolReader {
     return false;
   }
 
-  const Cursor& getCurrentPosition() const {
+  const Cursor& getCursor() const {
     return in_;
+  }
+
+  size_t getCursorPosition() const {
+    return in_.getCurrentPosition();
   }
 
   inline uint32_t readFromPositionAndAppend(
@@ -342,6 +362,8 @@ class CompactProtocolReader {
     int16_t fieldId;
     apache::thrift::protocol::TType fieldType;
     // bool boolValue;
+
+    constexpr static bool kAcceptsContext = false;
 
     void readStructBegin(CompactProtocolReader* iprot) {
       iprot->readStructBeginWithState(*this);
@@ -368,7 +390,37 @@ class CompactProtocolReader {
           currFieldId, nextFieldId, nextFieldType, *this);
     }
 
+    void afterAdvanceFailure(CompactProtocolReader* /*iprot*/) {}
+
+    void beforeSubobject(CompactProtocolReader* /* iprot */) {}
+    void afterSubobject(CompactProtocolReader* /* iprot */) {}
+
+    bool atStop() {
+      return fieldType == apache::thrift::protocol::T_STOP;
+    }
+
+    /*
+     * This is used in generated deserialization code only. When deserializing
+     * fields in "non-advanceToNextField" case, we delegate the type check to
+     * each protocol since some protocol (such as NimbleProtocol) may not encode
+     * type information.
+     */
+    FOLLY_ALWAYS_INLINE bool isCompatibleWithType(
+        CompactProtocolReader* /*iprot*/,
+        TType expectedFieldType) {
+      return fieldType == expectedFieldType;
+    }
+
+    inline void skip(CompactProtocolReader* iprot) {
+      iprot->skip(fieldType);
+    }
+
     std::string& fieldName() {
+      throw std::logic_error("CompactProtocol doesn't support field names");
+    }
+
+    template <typename StructTraits>
+    void fillFieldTraitsFromName() {
       throw std::logic_error("CompactProtocol doesn't support field names");
     }
   };
@@ -440,6 +492,6 @@ struct ProtocolReaderStructReadState<CompactProtocolReader>
 } // namespace thrift
 } // namespace apache
 
-#include <thrift/lib/cpp2/protocol/CompactProtocol.tcc>
+#include <thrift/lib/cpp2/protocol/CompactProtocol-inl.h>
 
 #endif // #ifndef CPP2_PROTOCOL_COMPACTPROTOCOL_H_

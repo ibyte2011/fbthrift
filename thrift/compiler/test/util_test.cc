@@ -1,32 +1,29 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <thrift/compiler/util.h>
 
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <boost/regex.hpp>
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 using namespace apache::thrift::compiler;
 
@@ -199,7 +196,14 @@ TEST(String, strip_left_margin_no_post_whitespace) {
   EXPECT_EQ(expected, strip_left_margin(input));
 }
 
-TEST_F(UtilTest, json_quote_ascii) {
+TEST_F(UtilTest, json_quote_ascii_string) {
+  auto const input = "the\bquick\"brown\nfox\001jumps\201over";
+  auto const expected = "\"the\\bquick\\\"brown\\nfox\\u0001jumps\\u0081over\"";
+  auto actual = json_quote_ascii(input);
+  EXPECT_EQ(expected, actual);
+}
+
+TEST_F(UtilTest, json_quote_ascii_stream) {
   auto const input = "the\bquick\"brown\nfox\001jumps\201over";
   auto const expected = "\"the\\bquick\\\"brown\\nfox\\u0001jumps\\u0081over\"";
   std::ostringstream actual;
@@ -255,4 +259,24 @@ TEST_F(UtilTest, scope_guard_throws_death) {
   auto func = [=] { throw std::runtime_error(msg); };
   EXPECT_NO_THROW(make_scope_guard(func).dismiss()) << "sanity check";
   EXPECT_DEATH(make_scope_guard(func), msg);
+}
+
+TEST_F(UtilTest, topological_sort_example) {
+  std::map<std::string, std::set<std::string>> graph{
+      {"e", {"c", "a"}},
+      {"d", {"b", "c"}},
+      {"c", {"d", "b", "a"}},
+      {"b", {}},
+      {"a", {"b"}},
+  };
+  std::vector<std::string> vertices;
+  vertices.reserve(graph.size());
+  for (const auto& kvp : graph) {
+    vertices.push_back(kvp.first);
+  }
+  auto result = topological_sort<std::string>(
+      vertices.begin(), vertices.end(), [&](auto item) {
+        return std::vector<std::string>(graph[item].begin(), graph[item].end());
+      });
+  EXPECT_EQ(std::vector<std::string>({"b", "a", "d", "c", "e"}), result);
 }

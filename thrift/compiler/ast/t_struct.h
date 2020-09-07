@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,10 +35,16 @@ class t_program;
 
 /**
  * A struct is a container for a set of member fields that has a name. Structs
- * are also used to implement exception types.
+ * are also used to implement exception and union types.
  *
  */
 class t_struct : public t_type {
+ private:
+  struct mixin_member {
+    t_field* mixin;
+    t_field* member;
+  };
+
  public:
   explicit t_struct(t_program* program) : t_type(program) {}
 
@@ -63,7 +69,7 @@ class t_struct : public t_type {
   void set_stream_field(std::unique_ptr<t_field> stream_field) {
     assert(is_paramlist_);
     assert(!stream_field_);
-    assert(stream_field->get_type()->is_pubsub_stream());
+    assert(stream_field->get_type()->is_streamresponse());
 
     stream_field_ = stream_field.get();
     members_raw_.insert(members_raw_.begin(), stream_field_);
@@ -115,10 +121,6 @@ class t_struct : public t_type {
     return members_in_id_order_;
   }
 
-  bool is_union() const {
-    return is_union_;
-  }
-
   bool is_paramlist() const {
     return is_paramlist_;
   }
@@ -137,6 +139,10 @@ class t_struct : public t_type {
 
   bool is_struct() const override {
     return !is_xception_;
+  }
+
+  bool is_union() const override {
+    return is_union_;
   }
 
   bool is_xception() const override {
@@ -218,7 +224,25 @@ class t_struct : public t_type {
     return clone;
   }
 
+  /**
+   * Returns a list of pairs of mixin and mixin's members
+   * e.g. for Thrift IDL
+   *
+   * struct Mixin1 { 1: i32 m1; }
+   * struct Mixin2 { 1: i32 m2; }
+   * struct Strct {
+   *   1: mixin Mixin1 f1;
+   *   2: mixin Mixin2 f2;
+   *   3: i32 m3;
+   * }
+   *
+   * this returns {{.mixin="f1", .member="m1"}, {.mixin="f2", .member="m2"}}
+   */
+  std::vector<mixin_member> get_mixins_and_members() const;
+
  private:
+  void get_mixins_and_members_impl(t_field*, std::vector<mixin_member>&) const;
+
   std::vector<std::unique_ptr<t_field>> members_;
   std::vector<t_field*> members_raw_;
   std::vector<t_field*> members_in_id_order_;
@@ -232,7 +256,7 @@ class t_struct : public t_type {
   bool is_paramlist_{false};
 
   const t_struct* view_parent_ = nullptr;
-}; // namespace compiler
+};
 
 } // namespace compiler
 } // namespace thrift

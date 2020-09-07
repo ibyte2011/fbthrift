@@ -1,37 +1,34 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <thrift/lib/cpp/concurrency/Util.h>
 
-#include <thrift/lib/cpp/thrift_config.h>
-
-#if defined(THRIFT_HAVE_CLOCK_GETTIME)
-#include <time.h>
-#elif defined(THRIFT_HAVE_GETTIMEOFDAY)
-#include <folly/portability/SysTime.h>
-#endif // defined(THRIFT_HAVE_CLOCK_GETTIME)
-#include <errno.h>
-#include <assert.h>
+#include <cassert>
+#include <cerrno>
+#include <ctime>
 
 #include <glog/logging.h>
 
-namespace apache { namespace thrift { namespace concurrency {
+#include <folly/portability/SysTime.h>
+
+#include <thrift/lib/cpp/thrift_config.h>
+
+namespace apache {
+namespace thrift {
+namespace concurrency {
 
 int64_t Util::currentTimeTicks(int64_t ticksPerSec) {
   int64_t result;
@@ -44,7 +41,7 @@ int64_t Util::currentTimeTicks(int64_t ticksPerSec) {
 #elif defined(THRIFT_HAVE_GETTIMEOFDAY)
   struct timeval now;
   int ret = gettimeofday(&now, nullptr);
-  assert(ret == 0);
+  DCHECK(ret == 0);
   toTicks(result, now, ticksPerSec);
 #else
 #error "No high-precision clock is available."
@@ -77,4 +74,6 @@ int64_t Util::monotonicTimeTicks(int64_t ticksPerSec) {
 #endif // defined(THRIFT_HAVE_CLOCK_GETTIME)
 }
 
-}}} // apache::thrift::concurrency
+} // namespace concurrency
+} // namespace thrift
+} // namespace apache

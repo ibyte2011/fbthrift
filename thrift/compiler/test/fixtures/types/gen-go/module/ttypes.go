@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	include0 "include"
 
 )
@@ -129,6 +129,41 @@ func MyForwardRefEnumFromString(s string) (MyForwardRefEnum, error) {
 
 func MyForwardRefEnumPtr(v MyForwardRefEnum) *MyForwardRefEnum { return &v }
 
+type MyEnumA int64
+const (
+  MyEnumA_fieldA MyEnumA = 1
+  MyEnumA_fieldB MyEnumA = 2
+  MyEnumA_fieldC MyEnumA = 4
+)
+
+var MyEnumAToName = map[MyEnumA]string {
+  MyEnumA_fieldA: "fieldA",
+  MyEnumA_fieldB: "fieldB",
+  MyEnumA_fieldC: "fieldC",
+}
+
+var MyEnumAToValue = map[string]MyEnumA {
+  "fieldA": MyEnumA_fieldA,
+  "fieldB": MyEnumA_fieldB,
+  "fieldC": MyEnumA_fieldC,
+}
+
+func (p MyEnumA) String() string {
+  if v, ok := MyEnumAToName[p]; ok {
+    return v
+  }
+  return "<UNSET>"
+}
+
+func MyEnumAFromString(s string) (MyEnumA, error) {
+  if v, ok := MyEnumAToValue[s]; ok {
+    return v, nil
+  }
+  return MyEnumA(0), fmt.Errorf("not a valid MyEnumA string")
+}
+
+func MyEnumAPtr(v MyEnumA) *MyEnumA { return &v }
+
 type TBinary = []byte
 
 func TBinaryPtr(v TBinary) *TBinary { return &v }
@@ -213,7 +248,9 @@ func (p *DecoratedStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("DecoratedStruct(%+v)", *p)
+
+  fieldVal := fmt.Sprintf("%v", p.Field)
+  return fmt.Sprintf("DecoratedStruct({Field:%s})", fieldVal)
 }
 
 // Attributes:
@@ -699,7 +736,16 @@ func (p *ContainerStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("ContainerStruct(%+v)", *p)
+
+  fieldBVal := fmt.Sprintf("%v", p.FieldB)
+  fieldCVal := fmt.Sprintf("%v", p.FieldC)
+  fieldDVal := fmt.Sprintf("%v", p.FieldD)
+  fieldEVal := fmt.Sprintf("%v", p.FieldE)
+  fieldFVal := fmt.Sprintf("%v", p.FieldF)
+  fieldGVal := fmt.Sprintf("%v", p.FieldG)
+  fieldHVal := fmt.Sprintf("%v", p.FieldH)
+  fieldAVal := fmt.Sprintf("%v", p.FieldA)
+  return fmt.Sprintf("ContainerStruct({FieldB:%s FieldC:%s FieldD:%s FieldE:%s FieldF:%s FieldG:%s FieldH:%s FieldA:%s})", fieldBVal, fieldCVal, fieldDVal, fieldEVal, fieldFVal, fieldGVal, fieldHVal, fieldAVal)
 }
 
 // Attributes:
@@ -803,7 +849,9 @@ func (p *CppTypeStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("CppTypeStruct(%+v)", *p)
+
+  fieldAVal := fmt.Sprintf("%v", p.FieldA)
+  return fmt.Sprintf("CppTypeStruct({FieldA:%s})", fieldAVal)
 }
 
 // Attributes:
@@ -886,7 +934,9 @@ func (p *VirtualStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("VirtualStruct(%+v)", *p)
+
+  myIntFieldVal := fmt.Sprintf("%v", p.MyIntField)
+  return fmt.Sprintf("VirtualStruct({MyIntField:%s})", myIntFieldVal)
 }
 
 // Attributes:
@@ -1005,7 +1055,10 @@ func (p *MyStructWithForwardRefEnum) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("MyStructWithForwardRefEnum(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  return fmt.Sprintf("MyStructWithForwardRefEnum({A:%s B:%s})", aVal, bVal)
 }
 
 // Attributes:
@@ -1118,7 +1171,10 @@ func (p *TrivialNumeric) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("TrivialNumeric(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  return fmt.Sprintf("TrivialNumeric({A:%s B:%s})", aVal, bVal)
 }
 
 // Attributes:
@@ -1245,7 +1301,15 @@ func (p *TrivialNestedWithDefault) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("TrivialNestedWithDefault(%+v)", *p)
+
+  zVal := fmt.Sprintf("%v", p.Z)
+  var nVal string
+  if p.N == nil {
+    nVal = "<nil>"
+  } else {
+    nVal = fmt.Sprintf("%v", p.N)
+  }
+  return fmt.Sprintf("TrivialNestedWithDefault({Z:%s N:%s})", zVal, nVal)
 }
 
 // Attributes:
@@ -1387,7 +1451,10 @@ func (p *ComplexString) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("ComplexString(%+v)", *p)
+
+  aVal := fmt.Sprintf("%v", p.A)
+  bVal := fmt.Sprintf("%v", p.B)
+  return fmt.Sprintf("ComplexString({A:%s B:%s})", aVal, bVal)
 }
 
 // Attributes:
@@ -1516,7 +1583,15 @@ func (p *ComplexNestedWithDefault) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("ComplexNestedWithDefault(%+v)", *p)
+
+  zVal := fmt.Sprintf("%v", p.Z)
+  var nVal string
+  if p.N == nil {
+    nVal = "<nil>"
+  } else {
+    nVal = fmt.Sprintf("%v", p.N)
+  }
+  return fmt.Sprintf("ComplexNestedWithDefault({Z:%s N:%s})", zVal, nVal)
 }
 
 // Attributes:
@@ -1746,18 +1821,24 @@ func (p *MinPadding) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("MinPadding(%+v)", *p)
+
+  smallVal := fmt.Sprintf("%v", p.Small)
+  bigVal := fmt.Sprintf("%v", p.Big)
+  mediumVal := fmt.Sprintf("%v", p.Medium)
+  biggishVal := fmt.Sprintf("%v", p.Biggish)
+  tinyVal := fmt.Sprintf("%v", p.Tiny)
+  return fmt.Sprintf("MinPadding({Small:%s Big:%s Medium:%s Biggish:%s Tiny:%s})", smallVal, bigVal, mediumVal, biggishVal, tinyVal)
 }
 
 // Attributes:
 //  - MyIntField
 //  - MyStringField
-//  - Major
+//  - MajorVer
 //  - Data
 type MyStruct struct {
   MyIntField int64 `thrift:"MyIntField,1" db:"MyIntField" json:"MyIntField"`
   MyStringField string `thrift:"MyStringField,2" db:"MyStringField" json:"MyStringField"`
-  Major int64 `thrift:"major,3" db:"major" json:"major"`
+  MajorVer int64 `thrift:"majorVer,3" db:"majorVer" json:"majorVer"`
   Data *MyDataItem `thrift:"data,4" db:"data" json:"data"`
 }
 
@@ -1774,8 +1855,8 @@ func (p *MyStruct) GetMyStringField() string {
   return p.MyStringField
 }
 
-func (p *MyStruct) GetMajor() int64 {
-  return p.Major
+func (p *MyStruct) GetMajorVer() int64 {
+  return p.MajorVer
 }
 var MyStruct_Data_DEFAULT *MyDataItem
 func (p *MyStruct) GetData() *MyDataItem {
@@ -1854,7 +1935,7 @@ func (p *MyStruct)  ReadField3(iprot thrift.Protocol) error {
   if v, err := iprot.ReadI64(); err != nil {
   return thrift.PrependError("error reading field 3: ", err)
 } else {
-  p.Major = v
+  p.MajorVer = v
 }
   return nil
 }
@@ -1902,12 +1983,12 @@ func (p *MyStruct) writeField2(oprot thrift.Protocol) (err error) {
 }
 
 func (p *MyStruct) writeField3(oprot thrift.Protocol) (err error) {
-  if err := oprot.WriteFieldBegin("major", thrift.I64, 3); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:major: ", p), err) }
-  if err := oprot.WriteI64(int64(p.Major)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.major (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin("majorVer", thrift.I64, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:majorVer: ", p), err) }
+  if err := oprot.WriteI64(int64(p.MajorVer)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.majorVer (3) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:major: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:majorVer: ", p), err) }
   return err
 }
 
@@ -1926,7 +2007,17 @@ func (p *MyStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("MyStruct(%+v)", *p)
+
+  myIntFieldVal := fmt.Sprintf("%v", p.MyIntField)
+  myStringFieldVal := fmt.Sprintf("%v", p.MyStringField)
+  majorVerVal := fmt.Sprintf("%v", p.MajorVer)
+  var dataVal string
+  if p.Data == nil {
+    dataVal = "<nil>"
+  } else {
+    dataVal = fmt.Sprintf("%v", p.Data)
+  }
+  return fmt.Sprintf("MyStruct({MyIntField:%s MyStringField:%s MajorVer:%s Data:%s})", myIntFieldVal, myStringFieldVal, majorVerVal, dataVal)
 }
 
 type MyDataItem struct {
@@ -1975,7 +2066,8 @@ func (p *MyDataItem) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("MyDataItem(%+v)", *p)
+
+  return fmt.Sprintf("MyDataItem({})")
 }
 
 // Attributes:
@@ -2058,6 +2150,1587 @@ func (p *Renaming) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Renaming(%+v)", *p)
+
+  fooVal := fmt.Sprintf("%v", p.Foo)
+  return fmt.Sprintf("Renaming({Foo:%s})", fooVal)
+}
+
+// Attributes:
+//  - BinaryField
+//  - ListField
+type AnnotatedTypes struct {
+  BinaryField TBinary `thrift:"binary_field,1" db:"binary_field" json:"binary_field"`
+  ListField include0.SomeListOfTypeMap `thrift:"list_field,2" db:"list_field" json:"list_field"`
+}
+
+func NewAnnotatedTypes() *AnnotatedTypes {
+  return &AnnotatedTypes{}
+}
+
+
+func (p *AnnotatedTypes) GetBinaryField() TBinary {
+  return p.BinaryField
+}
+
+func (p *AnnotatedTypes) GetListField() include0.SomeListOfTypeMap {
+  return p.ListField
+}
+func (p *AnnotatedTypes) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *AnnotatedTypes)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadBinary(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  temp := TBinary(v)
+  p.BinaryField = temp
+}
+  return nil
+}
+
+func (p *AnnotatedTypes)  ReadField2(iprot thrift.Protocol) error {
+  _, size, err := iprot.ReadListBegin()
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make(include0.SomeListOfTypeMap, 0, size)
+  p.ListField =  tSlice
+  for i := 0; i < size; i ++ {
+    _, _, size, err := iprot.ReadMapBegin()
+    if err != nil {
+      return thrift.PrependError("error reading map begin: ", err)
+    }
+    tMap := make(include0.SomeMap, size)
+    _elem14 :=  tMap
+    for i := 0; i < size; i ++ {
+var _key15 int32
+      if v, err := iprot.ReadI32(); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
+} else {
+      _key15 = v
+}
+var _val16 string
+      if v, err := iprot.ReadString(); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
+} else {
+      _val16 = v
+}
+      _elem14[_key15] = _val16
+    }
+    if err := iprot.ReadMapEnd(); err != nil {
+      return thrift.PrependError("error reading map end: ", err)
+    }
+    p.ListField = append(p.ListField, _elem14)
+  }
+  if err := iprot.ReadListEnd(); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
+  }
+  return nil
+}
+
+func (p *AnnotatedTypes) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("AnnotatedTypes"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *AnnotatedTypes) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("binary_field", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:binary_field: ", p), err) }
+  if err := oprot.WriteBinary(p.BinaryField); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.binary_field (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:binary_field: ", p), err) }
+  return err
+}
+
+func (p *AnnotatedTypes) writeField2(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("list_field", thrift.LIST, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:list_field: ", p), err) }
+  if err := oprot.WriteListBegin(thrift.MAP, len(p.ListField)); err != nil {
+    return thrift.PrependError("error writing list begin: ", err)
+  }
+  for _, v := range p.ListField {
+    if err := oprot.WriteMapBegin(thrift.I32, thrift.STRING, len(v)); err != nil {
+      return thrift.PrependError("error writing map begin: ", err)
+    }
+    for k, v := range v {
+      if err := oprot.WriteI32(int32(k)); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+      if err := oprot.WriteString(string(v)); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+    }
+    if err := oprot.WriteMapEnd(); err != nil {
+      return thrift.PrependError("error writing map end: ", err)
+    }
+  }
+  if err := oprot.WriteListEnd(); err != nil {
+    return thrift.PrependError("error writing list end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:list_field: ", p), err) }
+  return err
+}
+
+func (p *AnnotatedTypes) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  binaryFieldVal := fmt.Sprintf("%v", p.BinaryField)
+  listFieldVal := fmt.Sprintf("%v", p.ListField)
+  return fmt.Sprintf("AnnotatedTypes({BinaryField:%s ListField:%s})", binaryFieldVal, listFieldVal)
+}
+
+// Attributes:
+//  - ForwardUsageStruct
+//  - ForwardUsageByRef
+type ForwardUsageRoot struct {
+  ForwardUsageStruct *ForwardUsageStruct `thrift:"ForwardUsageStruct,1" db:"ForwardUsageStruct" json:"ForwardUsageStruct,omitempty"`
+  ForwardUsageByRef *ForwardUsageByRef `thrift:"ForwardUsageByRef,2" db:"ForwardUsageByRef" json:"ForwardUsageByRef,omitempty"`
+}
+
+func NewForwardUsageRoot() *ForwardUsageRoot {
+  return &ForwardUsageRoot{}
+}
+
+var ForwardUsageRoot_ForwardUsageStruct_DEFAULT *ForwardUsageStruct
+func (p *ForwardUsageRoot) GetForwardUsageStruct() *ForwardUsageStruct {
+  if !p.IsSetForwardUsageStruct() {
+    return ForwardUsageRoot_ForwardUsageStruct_DEFAULT
+  }
+return p.ForwardUsageStruct
+}
+var ForwardUsageRoot_ForwardUsageByRef_DEFAULT *ForwardUsageByRef
+func (p *ForwardUsageRoot) GetForwardUsageByRef() *ForwardUsageByRef {
+  if !p.IsSetForwardUsageByRef() {
+    return ForwardUsageRoot_ForwardUsageByRef_DEFAULT
+  }
+return p.ForwardUsageByRef
+}
+func (p *ForwardUsageRoot) IsSetForwardUsageStruct() bool {
+  return p.ForwardUsageStruct != nil
+}
+
+func (p *ForwardUsageRoot) IsSetForwardUsageByRef() bool {
+  return p.ForwardUsageByRef != nil
+}
+
+func (p *ForwardUsageRoot) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageRoot)  ReadField1(iprot thrift.Protocol) error {
+  p.ForwardUsageStruct = NewForwardUsageStruct()
+  if err := p.ForwardUsageStruct.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.ForwardUsageStruct), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageRoot)  ReadField2(iprot thrift.Protocol) error {
+  p.ForwardUsageByRef = NewForwardUsageByRef()
+  if err := p.ForwardUsageByRef.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.ForwardUsageByRef), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageRoot) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("ForwardUsageRoot"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *ForwardUsageRoot) writeField1(oprot thrift.Protocol) (err error) {
+  if p.IsSetForwardUsageStruct() {
+    if err := oprot.WriteFieldBegin("ForwardUsageStruct", thrift.STRUCT, 1); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:ForwardUsageStruct: ", p), err) }
+    if err := p.ForwardUsageStruct.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.ForwardUsageStruct), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 1:ForwardUsageStruct: ", p), err) }
+  }
+  return err
+}
+
+func (p *ForwardUsageRoot) writeField2(oprot thrift.Protocol) (err error) {
+  if p.IsSetForwardUsageByRef() {
+    if err := oprot.WriteFieldBegin("ForwardUsageByRef", thrift.STRUCT, 2); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:ForwardUsageByRef: ", p), err) }
+    if err := p.ForwardUsageByRef.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.ForwardUsageByRef), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 2:ForwardUsageByRef: ", p), err) }
+  }
+  return err
+}
+
+func (p *ForwardUsageRoot) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  var forwardUsageStructVal string
+  if p.ForwardUsageStruct == nil {
+    forwardUsageStructVal = "<nil>"
+  } else {
+    forwardUsageStructVal = fmt.Sprintf("%v", p.ForwardUsageStruct)
+  }
+  var forwardUsageByRefVal string
+  if p.ForwardUsageByRef == nil {
+    forwardUsageByRefVal = "<nil>"
+  } else {
+    forwardUsageByRefVal = fmt.Sprintf("%v", p.ForwardUsageByRef)
+  }
+  return fmt.Sprintf("ForwardUsageRoot({ForwardUsageStruct:%s ForwardUsageByRef:%s})", forwardUsageStructVal, forwardUsageByRefVal)
+}
+
+// Attributes:
+//  - Foo
+type ForwardUsageStruct struct {
+  Foo *ForwardUsageRoot `thrift:"foo,1" db:"foo" json:"foo,omitempty"`
+}
+
+func NewForwardUsageStruct() *ForwardUsageStruct {
+  return &ForwardUsageStruct{}
+}
+
+var ForwardUsageStruct_Foo_DEFAULT *ForwardUsageRoot
+func (p *ForwardUsageStruct) GetFoo() *ForwardUsageRoot {
+  if !p.IsSetFoo() {
+    return ForwardUsageStruct_Foo_DEFAULT
+  }
+return p.Foo
+}
+func (p *ForwardUsageStruct) IsSetFoo() bool {
+  return p.Foo != nil
+}
+
+func (p *ForwardUsageStruct) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageStruct)  ReadField1(iprot thrift.Protocol) error {
+  p.Foo = NewForwardUsageRoot()
+  if err := p.Foo.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.Foo), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageStruct) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("ForwardUsageStruct"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *ForwardUsageStruct) writeField1(oprot thrift.Protocol) (err error) {
+  if p.IsSetFoo() {
+    if err := oprot.WriteFieldBegin("foo", thrift.STRUCT, 1); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:foo: ", p), err) }
+    if err := p.Foo.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.Foo), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 1:foo: ", p), err) }
+  }
+  return err
+}
+
+func (p *ForwardUsageStruct) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  var fooVal string
+  if p.Foo == nil {
+    fooVal = "<nil>"
+  } else {
+    fooVal = fmt.Sprintf("%v", p.Foo)
+  }
+  return fmt.Sprintf("ForwardUsageStruct({Foo:%s})", fooVal)
+}
+
+// Attributes:
+//  - Foo
+type ForwardUsageByRef struct {
+  Foo *ForwardUsageRoot `thrift:"foo,1" db:"foo" json:"foo,omitempty"`
+}
+
+func NewForwardUsageByRef() *ForwardUsageByRef {
+  return &ForwardUsageByRef{}
+}
+
+var ForwardUsageByRef_Foo_DEFAULT *ForwardUsageRoot
+func (p *ForwardUsageByRef) GetFoo() *ForwardUsageRoot {
+  if !p.IsSetFoo() {
+    return ForwardUsageByRef_Foo_DEFAULT
+  }
+return p.Foo
+}
+func (p *ForwardUsageByRef) IsSetFoo() bool {
+  return p.Foo != nil
+}
+
+func (p *ForwardUsageByRef) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageByRef)  ReadField1(iprot thrift.Protocol) error {
+  p.Foo = NewForwardUsageRoot()
+  if err := p.Foo.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.Foo), err)
+  }
+  return nil
+}
+
+func (p *ForwardUsageByRef) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("ForwardUsageByRef"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *ForwardUsageByRef) writeField1(oprot thrift.Protocol) (err error) {
+  if p.IsSetFoo() {
+    if err := oprot.WriteFieldBegin("foo", thrift.STRUCT, 1); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:foo: ", p), err) }
+    if err := p.Foo.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.Foo), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 1:foo: ", p), err) }
+  }
+  return err
+}
+
+func (p *ForwardUsageByRef) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  var fooVal string
+  if p.Foo == nil {
+    fooVal = "<nil>"
+  } else {
+    fooVal = fmt.Sprintf("%v", p.Foo)
+  }
+  return fmt.Sprintf("ForwardUsageByRef({Foo:%s})", fooVal)
+}
+
+type NoexceptMoveEmpty struct {
+}
+
+func NewNoexceptMoveEmpty() *NoexceptMoveEmpty {
+  return &NoexceptMoveEmpty{}
+}
+
+func (p *NoexceptMoveEmpty) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    if err := iprot.Skip(fieldTypeId); err != nil {
+      return err
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *NoexceptMoveEmpty) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("NoexceptMoveEmpty"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *NoexceptMoveEmpty) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  return fmt.Sprintf("NoexceptMoveEmpty({})")
+}
+
+// Attributes:
+//  - BoolField
+type NoexceptMoveSimpleStruct struct {
+  BoolField int64 `thrift:"boolField,1" db:"boolField" json:"boolField"`
+}
+
+func NewNoexceptMoveSimpleStruct() *NoexceptMoveSimpleStruct {
+  return &NoexceptMoveSimpleStruct{}
+}
+
+
+func (p *NoexceptMoveSimpleStruct) GetBoolField() int64 {
+  return p.BoolField
+}
+func (p *NoexceptMoveSimpleStruct) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *NoexceptMoveSimpleStruct)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI64(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.BoolField = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveSimpleStruct) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("NoexceptMoveSimpleStruct"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *NoexceptMoveSimpleStruct) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("boolField", thrift.I64, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:boolField: ", p), err) }
+  if err := oprot.WriteI64(int64(p.BoolField)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.boolField (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:boolField: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveSimpleStruct) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  boolFieldVal := fmt.Sprintf("%v", p.BoolField)
+  return fmt.Sprintf("NoexceptMoveSimpleStruct({BoolField:%s})", boolFieldVal)
+}
+
+// Attributes:
+//  - MyBoolField
+//  - MyIntField
+//  - MyStringField
+//  - MyStringField2
+//  - MyBinaryField
+//  - MyBinaryField2
+//  - MyBinaryField3
+//  - MyBinaryListField4
+//  - MyMapEnumAndInt
+type NoexceptMoveComplexStruct struct {
+  MyBoolField bool `thrift:"MyBoolField,1" db:"MyBoolField" json:"MyBoolField"`
+  MyIntField int64 `thrift:"MyIntField,2" db:"MyIntField" json:"MyIntField"`
+  MyStringField string `thrift:"MyStringField,3" db:"MyStringField" json:"MyStringField"`
+  MyStringField2 string `thrift:"MyStringField2,4" db:"MyStringField2" json:"MyStringField2"`
+  MyBinaryField []byte `thrift:"MyBinaryField,5" db:"MyBinaryField" json:"MyBinaryField"`
+  MyBinaryField2 []byte `thrift:"MyBinaryField2,6" db:"MyBinaryField2" json:"MyBinaryField2,omitempty"`
+  MyBinaryField3 []byte `thrift:"MyBinaryField3,7,required" db:"MyBinaryField3" json:"MyBinaryField3"`
+  MyBinaryListField4 [][]byte `thrift:"MyBinaryListField4,8" db:"MyBinaryListField4" json:"MyBinaryListField4"`
+  MyMapEnumAndInt map[MyEnumA]string `thrift:"MyMapEnumAndInt,9" db:"MyMapEnumAndInt" json:"MyMapEnumAndInt"`
+}
+
+func NewNoexceptMoveComplexStruct() *NoexceptMoveComplexStruct {
+  return &NoexceptMoveComplexStruct{
+MyIntField: 12,
+
+MyStringField: "test",
+
+MyMapEnumAndInt: map[MyEnumA]string{
+    1: "fieldA",
+    4: "fieldC",
+},
+}
+}
+
+
+func (p *NoexceptMoveComplexStruct) GetMyBoolField() bool {
+  return p.MyBoolField
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyIntField() int64 {
+  return p.MyIntField
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyStringField() string {
+  return p.MyStringField
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyStringField2() string {
+  return p.MyStringField2
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyBinaryField() []byte {
+  return p.MyBinaryField
+}
+var NoexceptMoveComplexStruct_MyBinaryField2_DEFAULT []byte
+
+func (p *NoexceptMoveComplexStruct) GetMyBinaryField2() []byte {
+  return p.MyBinaryField2
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyBinaryField3() []byte {
+  return p.MyBinaryField3
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyBinaryListField4() [][]byte {
+  return p.MyBinaryListField4
+}
+
+func (p *NoexceptMoveComplexStruct) GetMyMapEnumAndInt() map[MyEnumA]string {
+  return p.MyMapEnumAndInt
+}
+func (p *NoexceptMoveComplexStruct) IsSetMyBinaryField2() bool {
+  return p.MyBinaryField2 != nil
+}
+
+func (p *NoexceptMoveComplexStruct) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+  var issetMyBinaryField3 bool = false;
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    case 3:
+      if err := p.ReadField3(iprot); err != nil {
+        return err
+      }
+    case 4:
+      if err := p.ReadField4(iprot); err != nil {
+        return err
+      }
+    case 5:
+      if err := p.ReadField5(iprot); err != nil {
+        return err
+      }
+    case 6:
+      if err := p.ReadField6(iprot); err != nil {
+        return err
+      }
+    case 7:
+      if err := p.ReadField7(iprot); err != nil {
+        return err
+      }
+      issetMyBinaryField3 = true
+    case 8:
+      if err := p.ReadField8(iprot); err != nil {
+        return err
+      }
+    case 9:
+      if err := p.ReadField9(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  if !issetMyBinaryField3{
+    return thrift.NewProtocolExceptionWithType(thrift.INVALID_DATA, fmt.Errorf("Required field MyBinaryField3 is not set"));
+  }
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadBool(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.MyBoolField = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField2(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI64(); err != nil {
+  return thrift.PrependError("error reading field 2: ", err)
+} else {
+  p.MyIntField = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField3(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 3: ", err)
+} else {
+  p.MyStringField = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField4(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 4: ", err)
+} else {
+  p.MyStringField2 = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField5(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadBinary(); err != nil {
+  return thrift.PrependError("error reading field 5: ", err)
+} else {
+  p.MyBinaryField = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField6(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadBinary(); err != nil {
+  return thrift.PrependError("error reading field 6: ", err)
+} else {
+  p.MyBinaryField2 = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField7(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadBinary(); err != nil {
+  return thrift.PrependError("error reading field 7: ", err)
+} else {
+  p.MyBinaryField3 = v
+}
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField8(iprot thrift.Protocol) error {
+  _, size, err := iprot.ReadListBegin()
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make([][]byte, 0, size)
+  p.MyBinaryListField4 =  tSlice
+  for i := 0; i < size; i ++ {
+var _elem17 []byte
+    if v, err := iprot.ReadBinary(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _elem17 = v
+}
+    p.MyBinaryListField4 = append(p.MyBinaryListField4, _elem17)
+  }
+  if err := iprot.ReadListEnd(); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
+  }
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct)  ReadField9(iprot thrift.Protocol) error {
+  _, _, size, err := iprot.ReadMapBegin()
+  if err != nil {
+    return thrift.PrependError("error reading map begin: ", err)
+  }
+  tMap := make(map[MyEnumA]string, size)
+  p.MyMapEnumAndInt =  tMap
+  for i := 0; i < size; i ++ {
+var _key18 MyEnumA
+    if v, err := iprot.ReadI32(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    temp := MyEnumA(v)
+    _key18 = temp
+}
+var _val19 string
+    if v, err := iprot.ReadString(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _val19 = v
+}
+    p.MyMapEnumAndInt[_key18] = _val19
+  }
+  if err := iprot.ReadMapEnd(); err != nil {
+    return thrift.PrependError("error reading map end: ", err)
+  }
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("NoexceptMoveComplexStruct"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := p.writeField3(oprot); err != nil { return err }
+  if err := p.writeField4(oprot); err != nil { return err }
+  if err := p.writeField5(oprot); err != nil { return err }
+  if err := p.writeField6(oprot); err != nil { return err }
+  if err := p.writeField7(oprot); err != nil { return err }
+  if err := p.writeField8(oprot); err != nil { return err }
+  if err := p.writeField9(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *NoexceptMoveComplexStruct) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyBoolField", thrift.BOOL, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:MyBoolField: ", p), err) }
+  if err := oprot.WriteBool(bool(p.MyBoolField)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyBoolField (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:MyBoolField: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField2(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyIntField", thrift.I64, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:MyIntField: ", p), err) }
+  if err := oprot.WriteI64(int64(p.MyIntField)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyIntField (2) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:MyIntField: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField3(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyStringField", thrift.STRING, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:MyStringField: ", p), err) }
+  if err := oprot.WriteString(string(p.MyStringField)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyStringField (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:MyStringField: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField4(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyStringField2", thrift.STRING, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:MyStringField2: ", p), err) }
+  if err := oprot.WriteString(string(p.MyStringField2)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyStringField2 (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:MyStringField2: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField5(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyBinaryField", thrift.STRING, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:MyBinaryField: ", p), err) }
+  if err := oprot.WriteBinary(p.MyBinaryField); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyBinaryField (5) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:MyBinaryField: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField6(oprot thrift.Protocol) (err error) {
+  if p.IsSetMyBinaryField2() {
+    if err := oprot.WriteFieldBegin("MyBinaryField2", thrift.STRING, 6); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:MyBinaryField2: ", p), err) }
+    if err := oprot.WriteBinary(p.MyBinaryField2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.MyBinaryField2 (6) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 6:MyBinaryField2: ", p), err) }
+  }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField7(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyBinaryField3", thrift.STRING, 7); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:MyBinaryField3: ", p), err) }
+  if err := oprot.WriteBinary(p.MyBinaryField3); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.MyBinaryField3 (7) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:MyBinaryField3: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField8(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyBinaryListField4", thrift.LIST, 8); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 8:MyBinaryListField4: ", p), err) }
+  if err := oprot.WriteListBegin(thrift.STRING, len(p.MyBinaryListField4)); err != nil {
+    return thrift.PrependError("error writing list begin: ", err)
+  }
+  for _, v := range p.MyBinaryListField4 {
+    if err := oprot.WriteBinary(v); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+  }
+  if err := oprot.WriteListEnd(); err != nil {
+    return thrift.PrependError("error writing list end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 8:MyBinaryListField4: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) writeField9(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("MyMapEnumAndInt", thrift.MAP, 9); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 9:MyMapEnumAndInt: ", p), err) }
+  if err := oprot.WriteMapBegin(thrift.I32, thrift.STRING, len(p.MyMapEnumAndInt)); err != nil {
+    return thrift.PrependError("error writing map begin: ", err)
+  }
+  for k, v := range p.MyMapEnumAndInt {
+    if err := oprot.WriteI32(int32(k)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+    if err := oprot.WriteString(string(v)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+  }
+  if err := oprot.WriteMapEnd(); err != nil {
+    return thrift.PrependError("error writing map end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 9:MyMapEnumAndInt: ", p), err) }
+  return err
+}
+
+func (p *NoexceptMoveComplexStruct) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  myBoolFieldVal := fmt.Sprintf("%v", p.MyBoolField)
+  myIntFieldVal := fmt.Sprintf("%v", p.MyIntField)
+  myStringFieldVal := fmt.Sprintf("%v", p.MyStringField)
+  myStringField2Val := fmt.Sprintf("%v", p.MyStringField2)
+  myBinaryFieldVal := fmt.Sprintf("%v", p.MyBinaryField)
+  myBinaryField2Val := fmt.Sprintf("%v", p.MyBinaryField2)
+  myBinaryField3Val := fmt.Sprintf("%v", p.MyBinaryField3)
+  myBinaryListField4Val := fmt.Sprintf("%v", p.MyBinaryListField4)
+  myMapEnumAndIntVal := fmt.Sprintf("%v", p.MyMapEnumAndInt)
+  return fmt.Sprintf("NoexceptMoveComplexStruct({MyBoolField:%s MyIntField:%s MyStringField:%s MyStringField2:%s MyBinaryField:%s MyBinaryField2:%s MyBinaryField3:%s MyBinaryListField4:%s MyMapEnumAndInt:%s})", myBoolFieldVal, myIntFieldVal, myStringFieldVal, myStringField2Val, myBinaryFieldVal, myBinaryField2Val, myBinaryField3Val, myBinaryListField4Val, myMapEnumAndIntVal)
+}
+
+// Attributes:
+//  - StringField
+//  - I32Field
+type NoExceptMoveUnion struct {
+  StringField *string `thrift:"string_field,1" db:"string_field" json:"string_field,omitempty"`
+  I32Field *int32 `thrift:"i32_field,2" db:"i32_field" json:"i32_field,omitempty"`
+}
+
+func NewNoExceptMoveUnion() *NoExceptMoveUnion {
+  return &NoExceptMoveUnion{}
+}
+
+var NoExceptMoveUnion_StringField_DEFAULT string
+func (p *NoExceptMoveUnion) GetStringField() string {
+  if !p.IsSetStringField() {
+    return NoExceptMoveUnion_StringField_DEFAULT
+  }
+return *p.StringField
+}
+var NoExceptMoveUnion_I32Field_DEFAULT int32
+func (p *NoExceptMoveUnion) GetI32Field() int32 {
+  if !p.IsSetI32Field() {
+    return NoExceptMoveUnion_I32Field_DEFAULT
+  }
+return *p.I32Field
+}
+func (p *NoExceptMoveUnion) CountSetFieldsNoExceptMoveUnion() int {
+  count := 0
+  if (p.IsSetStringField()) {
+    count++
+  }
+  if (p.IsSetI32Field()) {
+    count++
+  }
+  return count
+
+}
+
+func (p *NoExceptMoveUnion) IsSetStringField() bool {
+  return p.StringField != nil
+}
+
+func (p *NoExceptMoveUnion) IsSetI32Field() bool {
+  return p.I32Field != nil
+}
+
+func (p *NoExceptMoveUnion) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *NoExceptMoveUnion)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.StringField = &v
+}
+  return nil
+}
+
+func (p *NoExceptMoveUnion)  ReadField2(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI32(); err != nil {
+  return thrift.PrependError("error reading field 2: ", err)
+} else {
+  p.I32Field = &v
+}
+  return nil
+}
+
+func (p *NoExceptMoveUnion) Write(oprot thrift.Protocol) error {
+  if c := p.CountSetFieldsNoExceptMoveUnion(); c != 1 {
+    return fmt.Errorf("%T write union: exactly one field must be set (%d set).", p, c)
+  }
+  if err := oprot.WriteStructBegin("NoExceptMoveUnion"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *NoExceptMoveUnion) writeField1(oprot thrift.Protocol) (err error) {
+  if p.IsSetStringField() {
+    if err := oprot.WriteFieldBegin("string_field", thrift.STRING, 1); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:string_field: ", p), err) }
+    if err := oprot.WriteString(string(*p.StringField)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.string_field (1) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 1:string_field: ", p), err) }
+  }
+  return err
+}
+
+func (p *NoExceptMoveUnion) writeField2(oprot thrift.Protocol) (err error) {
+  if p.IsSetI32Field() {
+    if err := oprot.WriteFieldBegin("i32_field", thrift.I32, 2); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:i32_field: ", p), err) }
+    if err := oprot.WriteI32(int32(*p.I32Field)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.i32_field (2) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 2:i32_field: ", p), err) }
+  }
+  return err
+}
+
+func (p *NoExceptMoveUnion) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  var stringFieldVal string
+  if p.StringField == nil {
+    stringFieldVal = "<nil>"
+  } else {
+    stringFieldVal = fmt.Sprintf("%v", *p.StringField)
+  }
+  var i32FieldVal string
+  if p.I32Field == nil {
+    i32FieldVal = "<nil>"
+  } else {
+    i32FieldVal = fmt.Sprintf("%v", *p.I32Field)
+  }
+  return fmt.Sprintf("NoExceptMoveUnion({StringField:%s I32Field:%s})", stringFieldVal, i32FieldVal)
+}
+
+// Attributes:
+//  - AaList
+//  - AaSet
+//  - AaMap
+//  - AaString
+//  - NotAContainer
+type AllocatorAware struct {
+  AaList []int32 `thrift:"aa_list,1" db:"aa_list" json:"aa_list"`
+  AaSet []int32 `thrift:"aa_set,2" db:"aa_set" json:"aa_set"`
+  AaMap map[int32]int32 `thrift:"aa_map,3" db:"aa_map" json:"aa_map"`
+  AaString string `thrift:"aa_string,4" db:"aa_string" json:"aa_string"`
+  NotAContainer int32 `thrift:"not_a_container,5" db:"not_a_container" json:"not_a_container"`
+}
+
+func NewAllocatorAware() *AllocatorAware {
+  return &AllocatorAware{}
+}
+
+
+func (p *AllocatorAware) GetAaList() []int32 {
+  return p.AaList
+}
+
+func (p *AllocatorAware) GetAaSet() []int32 {
+  return p.AaSet
+}
+
+func (p *AllocatorAware) GetAaMap() map[int32]int32 {
+  return p.AaMap
+}
+
+func (p *AllocatorAware) GetAaString() string {
+  return p.AaString
+}
+
+func (p *AllocatorAware) GetNotAContainer() int32 {
+  return p.NotAContainer
+}
+func (p *AllocatorAware) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    case 2:
+      if err := p.ReadField2(iprot); err != nil {
+        return err
+      }
+    case 3:
+      if err := p.ReadField3(iprot); err != nil {
+        return err
+      }
+    case 4:
+      if err := p.ReadField4(iprot); err != nil {
+        return err
+      }
+    case 5:
+      if err := p.ReadField5(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *AllocatorAware)  ReadField1(iprot thrift.Protocol) error {
+  _, size, err := iprot.ReadListBegin()
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make([]int32, 0, size)
+  p.AaList =  tSlice
+  for i := 0; i < size; i ++ {
+var _elem20 int32
+    if v, err := iprot.ReadI32(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _elem20 = v
+}
+    p.AaList = append(p.AaList, _elem20)
+  }
+  if err := iprot.ReadListEnd(); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
+  }
+  return nil
+}
+
+func (p *AllocatorAware)  ReadField2(iprot thrift.Protocol) error {
+  _, size, err := iprot.ReadSetBegin()
+  if err != nil {
+    return thrift.PrependError("error reading set begin: ", err)
+  }
+  tSet := make([]int32, 0, size)
+  p.AaSet =  tSet
+  for i := 0; i < size; i ++ {
+var _elem21 int32
+    if v, err := iprot.ReadI32(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _elem21 = v
+}
+    p.AaSet = append(p.AaSet, _elem21)
+  }
+  if err := iprot.ReadSetEnd(); err != nil {
+    return thrift.PrependError("error reading set end: ", err)
+  }
+  return nil
+}
+
+func (p *AllocatorAware)  ReadField3(iprot thrift.Protocol) error {
+  _, _, size, err := iprot.ReadMapBegin()
+  if err != nil {
+    return thrift.PrependError("error reading map begin: ", err)
+  }
+  tMap := make(map[int32]int32, size)
+  p.AaMap =  tMap
+  for i := 0; i < size; i ++ {
+var _key22 int32
+    if v, err := iprot.ReadI32(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _key22 = v
+}
+var _val23 int32
+    if v, err := iprot.ReadI32(); err != nil {
+    return thrift.PrependError("error reading field 0: ", err)
+} else {
+    _val23 = v
+}
+    p.AaMap[_key22] = _val23
+  }
+  if err := iprot.ReadMapEnd(); err != nil {
+    return thrift.PrependError("error reading map end: ", err)
+  }
+  return nil
+}
+
+func (p *AllocatorAware)  ReadField4(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 4: ", err)
+} else {
+  p.AaString = v
+}
+  return nil
+}
+
+func (p *AllocatorAware)  ReadField5(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI32(); err != nil {
+  return thrift.PrependError("error reading field 5: ", err)
+} else {
+  p.NotAContainer = v
+}
+  return nil
+}
+
+func (p *AllocatorAware) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("AllocatorAware"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := p.writeField2(oprot); err != nil { return err }
+  if err := p.writeField3(oprot); err != nil { return err }
+  if err := p.writeField4(oprot); err != nil { return err }
+  if err := p.writeField5(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *AllocatorAware) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("aa_list", thrift.LIST, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:aa_list: ", p), err) }
+  if err := oprot.WriteListBegin(thrift.I32, len(p.AaList)); err != nil {
+    return thrift.PrependError("error writing list begin: ", err)
+  }
+  for _, v := range p.AaList {
+    if err := oprot.WriteI32(int32(v)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+  }
+  if err := oprot.WriteListEnd(); err != nil {
+    return thrift.PrependError("error writing list end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:aa_list: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware) writeField2(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("aa_set", thrift.SET, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:aa_set: ", p), err) }
+  if err := oprot.WriteSetBegin(thrift.I32, len(p.AaSet)); err != nil {
+    return thrift.PrependError("error writing set begin: ", err)
+  }
+  set := make(map[int32]bool, len(p.AaSet))
+  for _, v := range p.AaSet {
+    if ok := set[v]; ok {
+      return thrift.PrependError("", fmt.Errorf("%T error writing set field: slice is not unique", v))
+    }
+    set[v] = true
+  }
+  for _, v := range p.AaSet {
+    if err := oprot.WriteI32(int32(v)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+  }
+  if err := oprot.WriteSetEnd(); err != nil {
+    return thrift.PrependError("error writing set end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:aa_set: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware) writeField3(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("aa_map", thrift.MAP, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:aa_map: ", p), err) }
+  if err := oprot.WriteMapBegin(thrift.I32, thrift.I32, len(p.AaMap)); err != nil {
+    return thrift.PrependError("error writing map begin: ", err)
+  }
+  for k, v := range p.AaMap {
+    if err := oprot.WriteI32(int32(k)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+    if err := oprot.WriteI32(int32(v)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+  }
+  if err := oprot.WriteMapEnd(); err != nil {
+    return thrift.PrependError("error writing map end: ", err)
+  }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:aa_map: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware) writeField4(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("aa_string", thrift.STRING, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:aa_string: ", p), err) }
+  if err := oprot.WriteString(string(p.AaString)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.aa_string (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:aa_string: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware) writeField5(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("not_a_container", thrift.I32, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:not_a_container: ", p), err) }
+  if err := oprot.WriteI32(int32(p.NotAContainer)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.not_a_container (5) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:not_a_container: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  aaListVal := fmt.Sprintf("%v", p.AaList)
+  aaSetVal := fmt.Sprintf("%v", p.AaSet)
+  aaMapVal := fmt.Sprintf("%v", p.AaMap)
+  aaStringVal := fmt.Sprintf("%v", p.AaString)
+  notAContainerVal := fmt.Sprintf("%v", p.NotAContainer)
+  return fmt.Sprintf("AllocatorAware({AaList:%s AaSet:%s AaMap:%s AaString:%s NotAContainer:%s})", aaListVal, aaSetVal, aaMapVal, aaStringVal, notAContainerVal)
+}
+
+// Attributes:
+//  - NotAContainer
+type AllocatorAware2 struct {
+  NotAContainer int32 `thrift:"not_a_container,1" db:"not_a_container" json:"not_a_container"`
+}
+
+func NewAllocatorAware2() *AllocatorAware2 {
+  return &AllocatorAware2{}
+}
+
+
+func (p *AllocatorAware2) GetNotAContainer() int32 {
+  return p.NotAContainer
+}
+func (p *AllocatorAware2) Read(iprot thrift.Protocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if err := p.ReadField1(iprot); err != nil {
+        return err
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *AllocatorAware2)  ReadField1(iprot thrift.Protocol) error {
+  if v, err := iprot.ReadI32(); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.NotAContainer = v
+}
+  return nil
+}
+
+func (p *AllocatorAware2) Write(oprot thrift.Protocol) error {
+  if err := oprot.WriteStructBegin("AllocatorAware2"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if err := p.writeField1(oprot); err != nil { return err }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *AllocatorAware2) writeField1(oprot thrift.Protocol) (err error) {
+  if err := oprot.WriteFieldBegin("not_a_container", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:not_a_container: ", p), err) }
+  if err := oprot.WriteI32(int32(p.NotAContainer)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.not_a_container (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:not_a_container: ", p), err) }
+  return err
+}
+
+func (p *AllocatorAware2) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+
+  notAContainerVal := fmt.Sprintf("%v", p.NotAContainer)
+  return fmt.Sprintf("AllocatorAware2({NotAContainer:%s})", notAContainerVal)
 }
 

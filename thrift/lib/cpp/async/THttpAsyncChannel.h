@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,14 @@
 #ifndef THRIFT_ASYNC_THTTPASYNCCHANNEL_H_
 #define THRIFT_ASYNC_THTTPASYNCCHANNEL_H_ 1
 
+#include <folly/io/IOBuf.h>
+#include <folly/io/async/AsyncTransport.h>
 #include <thrift/lib/cpp/async/TStreamAsyncChannel.h>
 #include <thrift/lib/cpp/util/THttpParser.h>
-#include <folly/io/IOBuf.h>
 
-namespace apache { namespace thrift { namespace async {
+namespace apache {
+namespace thrift {
+namespace async {
 
 class THttpAsyncChannel;
 
@@ -32,22 +35,25 @@ namespace detail {
 /**
  * Encapsulation of one outstanding write request on a THttpAsyncChannel.
  */
-class THttpACWriteRequest :
-      public TAsyncChannelWriteRequestBase<THttpACWriteRequest> {
+class THttpACWriteRequest
+    : public TAsyncChannelWriteRequestBase<THttpACWriteRequest> {
  public:
   typedef std::function<void()> VoidCallback;
 
-  THttpACWriteRequest(const VoidCallback& callback,
-                      const VoidCallback& errorCallback,
-                      transport::TMemoryBuffer* message,
-                      TAsyncEventChannel* channel);
+  THttpACWriteRequest(
+      const VoidCallback& callback,
+      const VoidCallback& errorCallback,
+      transport::TMemoryBuffer* message,
+      TAsyncEventChannel* channel);
 
-  void write(TAsyncTransport* transport,
-             TAsyncTransport::WriteCallback* callback) noexcept;
+  void write(
+      folly::AsyncTransport* transport,
+      folly::AsyncTransport::WriteCallback* callback) noexcept;
 
   void writeSuccess() noexcept;
-  void writeError(size_t bytesWritten,
-                  const transport::TTransportException& ex) noexcept;
+  void writeError(
+      size_t bytesWritten,
+      const transport::TTransportException& ex) noexcept;
 
  private:
   THttpAsyncChannel* channel_;
@@ -60,8 +66,7 @@ class THttpACReadState {
  public:
   typedef std::function<void()> VoidCallback;
 
-  THttpACReadState() {
-  }
+  THttpACReadState() {}
 
   // Methods required by TStreamAsyncChannel
 
@@ -88,6 +93,7 @@ class THttpACReadState {
   void setParser(std::shared_ptr<apache::thrift::util::THttpParser> parser) {
     parser_ = parser;
   }
+
  private:
   std::shared_ptr<apache::thrift::util::THttpParser> parser_;
 };
@@ -102,19 +108,20 @@ class THttpACReadState {
  *
  * Its messages are compatible with THttpTransport.
  */
-class THttpAsyncChannel :
-  public TStreamAsyncChannel<detail::THttpACWriteRequest,
-                             detail::THttpACReadState> {
+class THttpAsyncChannel : public TStreamAsyncChannel<
+                              detail::THttpACWriteRequest,
+                              detail::THttpACReadState> {
  private:
-  typedef TStreamAsyncChannel<detail::THttpACWriteRequest,
-                              detail::THttpACReadState> Parent;
+  typedef TStreamAsyncChannel<
+      detail::THttpACWriteRequest,
+      detail::THttpACReadState>
+      Parent;
   std::shared_ptr<apache::thrift::util::THttpParser> parser_;
 
  public:
   explicit THttpAsyncChannel(
-    const std::shared_ptr<TAsyncTransport>& transport)
-    : Parent(transport) {
-  }
+      const std::shared_ptr<folly::AsyncTransport>& transport)
+      : Parent(transport) {}
 
   /**
    * Helper function to create a shared_ptr<THttpAsyncChannel>.
@@ -123,7 +130,7 @@ class THttpAsyncChannel :
    * destructor is protected and cannot be invoked directly.
    */
   static std::shared_ptr<THttpAsyncChannel> newChannel(
-      const std::shared_ptr<TAsyncTransport>& transport) {
+      const std::shared_ptr<folly::AsyncTransport>& transport) {
     return std::shared_ptr<THttpAsyncChannel>(
         new THttpAsyncChannel(transport), Destructor());
   }
@@ -163,9 +170,7 @@ class THttpAsyncChannel :
 class THttpAsyncChannelFactory : public TStreamAsyncChannelFactory {
  public:
   THttpAsyncChannelFactory()
-    : maxHttpSize_(0x7fffffff)
-    , recvTimeout_(0)
-    , sendTimeout_(0) {}
+      : maxHttpSize_(0x7fffffff), recvTimeout_(0), sendTimeout_(0) {}
 
   void setMaxHttpSize(uint32_t bytes) {
     maxHttpSize_ = bytes;
@@ -180,7 +185,7 @@ class THttpAsyncChannelFactory : public TStreamAsyncChannelFactory {
   }
 
   std::shared_ptr<TAsyncEventChannel> newChannel(
-      const std::shared_ptr<TAsyncTransport>& transport) override {
+      const std::shared_ptr<folly::AsyncTransport>& transport) override {
     std::shared_ptr<THttpAsyncChannel> channel(
         THttpAsyncChannel::newChannel(transport));
     transport->setSendTimeout(sendTimeout_);
@@ -195,6 +200,8 @@ class THttpAsyncChannelFactory : public TStreamAsyncChannelFactory {
   uint32_t sendTimeout_;
 };
 
-}}} // apache::thrift::async
+} // namespace async
+} // namespace thrift
+} // namespace apache
 
 #endif // THRIFT_ASYNC_THTTPASYNCCHANNEL_H_

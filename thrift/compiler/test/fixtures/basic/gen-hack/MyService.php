@@ -110,6 +110,106 @@ interface MyServiceIf extends \IThriftSyncIf {
  * Original thrift service:-
  * MyService
  */
+interface MyServiceClientIf extends \IThriftSyncIf {
+  /**
+   * Original thrift definition:-
+   * void
+   *   ping();
+   */
+  public function ping(): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getRandomData();
+   */
+  public function getRandomData(): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * bool
+   *   hasDataById(1: i64 id);
+   */
+  public function hasDataById(int $id): Awaitable<bool>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getDataById(1: i64 id);
+   */
+  public function getDataById(int $id): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   putDataById(1: i64 id,
+   *               2: string data);
+   */
+  public function putDataById(int $id, string $data): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * oneway void
+   *   lobDataById(1: i64 id,
+   *               2: string data);
+   */
+  public function lobDataById(int $id, string $data): Awaitable<void>;
+}
+
+/**
+ * Original thrift service:-
+ * MyService
+ */
+interface MyServiceAsyncRpcOptionsIf extends \IThriftAsyncRpcOptionsIf {
+  /**
+   * Original thrift definition:-
+   * void
+   *   ping();
+   */
+  public function ping(\RpcOptions $rpc_options): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getRandomData();
+   */
+  public function getRandomData(\RpcOptions $rpc_options): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * bool
+   *   hasDataById(1: i64 id);
+   */
+  public function hasDataById(\RpcOptions $rpc_options, int $id): Awaitable<bool>;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getDataById(1: i64 id);
+   */
+  public function getDataById(\RpcOptions $rpc_options, int $id): Awaitable<string>;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   putDataById(1: i64 id,
+   *               2: string data);
+   */
+  public function putDataById(\RpcOptions $rpc_options, int $id, string $data): Awaitable<void>;
+
+  /**
+   * Original thrift definition:-
+   * oneway void
+   *   lobDataById(1: i64 id,
+   *               2: string data);
+   */
+  public function lobDataById(\RpcOptions $rpc_options, int $id, string $data): Awaitable<void>;
+}
+
+/**
+ * Original thrift service:-
+ * MyService
+ */
 trait MyServiceClientBase {
   require extends \ThriftClientBase;
 
@@ -119,11 +219,11 @@ trait MyServiceClientBase {
     );
     try {
       $this->eventHandler_->preSend('ping', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'ping', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'ping', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -156,9 +256,9 @@ trait MyServiceClientBase {
   protected function recvImpl_ping(?int $expectedsequenceid = null): void {
     try {
       $this->eventHandler_->preRecv('ping', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'MyService_ping_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'MyService_ping_result');
       }
@@ -168,7 +268,11 @@ trait MyServiceClientBase {
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -209,11 +313,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('getRandomData', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'getRandomData', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'getRandomData', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -246,9 +350,9 @@ return;
   protected function recvImpl_getRandomData(?int $expectedsequenceid = null): string {
     try {
       $this->eventHandler_->preRecv('getRandomData', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'MyService_getRandomData_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'MyService_getRandomData_result');
       }
@@ -258,7 +362,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -306,11 +414,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('hasDataById', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'hasDataById', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'hasDataById', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -343,9 +451,9 @@ return;
   protected function recvImpl_hasDataById(?int $expectedsequenceid = null): bool {
     try {
       $this->eventHandler_->preRecv('hasDataById', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'MyService_hasDataById_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'MyService_hasDataById_result');
       }
@@ -355,7 +463,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -403,11 +515,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('getDataById', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'getDataById', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'getDataById', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -440,9 +552,9 @@ return;
   protected function recvImpl_getDataById(?int $expectedsequenceid = null): string {
     try {
       $this->eventHandler_->preRecv('getDataById', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'MyService_getDataById_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'MyService_getDataById_result');
       }
@@ -452,7 +564,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -501,11 +617,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('putDataById', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'putDataById', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'putDataById', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -538,9 +654,9 @@ return;
   protected function recvImpl_putDataById(?int $expectedsequenceid = null): void {
     try {
       $this->eventHandler_->preRecv('putDataById', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'MyService_putDataById_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'MyService_putDataById_result');
       }
@@ -550,7 +666,11 @@ return;
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -593,11 +713,11 @@ return;
     );
     try {
       $this->eventHandler_->preSend('lobDataById', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'lobDataById', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), true);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'lobDataById', \TMessageType::CALL, $args, $currentseqid, true);
       }
@@ -638,8 +758,20 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *   ping();
    */
   public async function ping(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "ping");
     $currentseqid = $this->sendImpl_ping();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_ping($currentseqid);
   }
 
@@ -649,8 +781,20 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *   getRandomData();
    */
   public async function getRandomData(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getRandomData");
     $currentseqid = $this->sendImpl_getRandomData();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_getRandomData($currentseqid);
   }
 
@@ -660,8 +804,20 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *   hasDataById(1: i64 id);
    */
   public async function hasDataById(int $id): Awaitable<bool> {
+    await $this->asyncHandler_->genBefore("MyService", "hasDataById");
     $currentseqid = $this->sendImpl_hasDataById($id);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_hasDataById($currentseqid);
   }
 
@@ -671,8 +827,20 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *   getDataById(1: i64 id);
    */
   public async function getDataById(int $id): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getDataById");
     $currentseqid = $this->sendImpl_getDataById($id);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_getDataById($currentseqid);
   }
 
@@ -683,8 +851,20 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *               2: string data);
    */
   public async function putDataById(int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "putDataById");
     $currentseqid = $this->sendImpl_putDataById($id, $data);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_putDataById($currentseqid);
   }
 
@@ -695,35 +875,43 @@ class MyServiceAsyncClient extends \ThriftClientBase implements MyServiceAsyncIf
    *               2: string data);
    */
   public async function lobDataById(int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "lobDataById");
     $currentseqid = $this->sendImpl_lobDataById($id, $data);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      await $channel->genSendRequestNoResponse(new \RpcOptions(), $msg);
+    }
   }
 
 }
 
-class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
+class MyServiceClient extends \ThriftClientBase implements MyServiceClientIf {
   use MyServiceClientBase;
-
-  <<__Deprecated('use gen_ping()')>>
-  public function ping(): void {
-    $currentseqid = $this->sendImpl_ping();
-    $this->recvImpl_ping($currentseqid);
-  }
 
   /**
    * Original thrift definition:-
    * void
    *   ping();
    */
-  public async function gen_ping(): Awaitable<void> {
+  public async function ping(): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "ping");
     $currentseqid = $this->sendImpl_ping();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_ping($currentseqid);
-  }
-
-  <<__Deprecated('use gen_getRandomData()')>>
-  public function getRandomData(): string {
-    $currentseqid = $this->sendImpl_getRandomData();
-    return $this->recvImpl_getRandomData($currentseqid);
   }
 
   /**
@@ -731,16 +919,22 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
    * string
    *   getRandomData();
    */
-  public async function gen_getRandomData(): Awaitable<string> {
+  public async function getRandomData(): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getRandomData");
     $currentseqid = $this->sendImpl_getRandomData();
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_getRandomData($currentseqid);
-  }
-
-  <<__Deprecated('use gen_hasDataById()')>>
-  public function hasDataById(int $id): bool {
-    $currentseqid = $this->sendImpl_hasDataById($id);
-    return $this->recvImpl_hasDataById($currentseqid);
   }
 
   /**
@@ -748,16 +942,22 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
    * bool
    *   hasDataById(1: i64 id);
    */
-  public async function gen_hasDataById(int $id): Awaitable<bool> {
+  public async function hasDataById(int $id): Awaitable<bool> {
+    await $this->asyncHandler_->genBefore("MyService", "hasDataById");
     $currentseqid = $this->sendImpl_hasDataById($id);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_hasDataById($currentseqid);
-  }
-
-  <<__Deprecated('use gen_getDataById()')>>
-  public function getDataById(int $id): string {
-    $currentseqid = $this->sendImpl_getDataById($id);
-    return $this->recvImpl_getDataById($currentseqid);
   }
 
   /**
@@ -765,16 +965,22 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
    * string
    *   getDataById(1: i64 id);
    */
-  public async function gen_getDataById(int $id): Awaitable<string> {
+  public async function getDataById(int $id): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getDataById");
     $currentseqid = $this->sendImpl_getDataById($id);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_getDataById($currentseqid);
-  }
-
-  <<__Deprecated('use gen_putDataById()')>>
-  public function putDataById(int $id, string $data): void {
-    $currentseqid = $this->sendImpl_putDataById($id, $data);
-    $this->recvImpl_putDataById($currentseqid);
   }
 
   /**
@@ -783,15 +989,22 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
    *   putDataById(1: i64 id,
    *               2: string data);
    */
-  public async function gen_putDataById(int $id, string $data): Awaitable<void> {
+  public async function putDataById(int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "putDataById");
     $currentseqid = $this->sendImpl_putDataById($id, $data);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     $this->recvImpl_putDataById($currentseqid);
-  }
-
-  <<__Deprecated('use gen_lobDataById()')>>
-  public function lobDataById(int $id, string $data): void {
-    $currentseqid = $this->sendImpl_lobDataById($id, $data);
   }
 
   /**
@@ -800,8 +1013,16 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
    *   lobDataById(1: i64 id,
    *               2: string data);
    */
-  public async function gen_lobDataById(int $id, string $data): Awaitable<void> {
+  public async function lobDataById(int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "lobDataById");
     $currentseqid = $this->sendImpl_lobDataById($id, $data);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      await $channel->genSendRequestNoResponse(new \RpcOptions(), $msg);
+    }
   }
 
   /* send and recv functions */
@@ -840,7 +1061,146 @@ class MyServiceClient extends \ThriftClientBase implements MyServiceIf {
   }
 }
 
-abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
+class MyServiceAsyncRpcOptionsClient extends \ThriftClientBase implements MyServiceAsyncRpcOptionsIf {
+  use MyServiceClientBase;
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   ping();
+   */
+  public async function ping(\RpcOptions $rpc_options): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "ping");
+    $currentseqid = $this->sendImpl_ping();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    $this->recvImpl_ping($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getRandomData();
+   */
+  public async function getRandomData(\RpcOptions $rpc_options): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getRandomData");
+    $currentseqid = $this->sendImpl_getRandomData();
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_getRandomData($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * bool
+   *   hasDataById(1: i64 id);
+   */
+  public async function hasDataById(\RpcOptions $rpc_options, int $id): Awaitable<bool> {
+    await $this->asyncHandler_->genBefore("MyService", "hasDataById");
+    $currentseqid = $this->sendImpl_hasDataById($id);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_hasDataById($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   getDataById(1: i64 id);
+   */
+  public async function getDataById(\RpcOptions $rpc_options, int $id): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("MyService", "getDataById");
+    $currentseqid = $this->sendImpl_getDataById($id);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_getDataById($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * void
+   *   putDataById(1: i64 id,
+   *               2: string data);
+   */
+  public async function putDataById(\RpcOptions $rpc_options, int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "putDataById");
+    $currentseqid = $this->sendImpl_putDataById($id, $data);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    $this->recvImpl_putDataById($currentseqid);
+  }
+
+  /**
+   * Original thrift definition:-
+   * oneway void
+   *   lobDataById(1: i64 id,
+   *               2: string data);
+   */
+  public async function lobDataById(\RpcOptions $rpc_options, int $id, string $data): Awaitable<void> {
+    await $this->asyncHandler_->genBefore("MyService", "lobDataById");
+    $currentseqid = $this->sendImpl_lobDataById($id, $data);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      await $channel->genSendRequestNoResponse($rpc_options, $msg);
+    }
+  }
+
+}
+
+abstract class MyServiceAsyncProcessorBase extends \ThriftAsyncProcessor {
   abstract const type TThriftIf as MyServiceAsyncIf;
   protected async function process_ping(int $seqid, \TProtocol $input, \TProtocol $output): Awaitable<void> {
     $handler_ctx = $this->eventHandler_->getHandlerContext('ping');
@@ -848,9 +1208,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'ping', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_ping_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_ping_args');
     } else {
       $args = new MyService_ping_args();
@@ -869,11 +1229,11 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'ping', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'ping', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'ping', $reply_type, $result, $seqid);
     }
@@ -892,9 +1252,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'getRandomData', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_getRandomData_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_getRandomData_args');
     } else {
       $args = new MyService_getRandomData_args();
@@ -913,11 +1273,11 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'getRandomData', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'getRandomData', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'getRandomData', $reply_type, $result, $seqid);
     }
@@ -936,9 +1296,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'hasDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_hasDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_hasDataById_args');
     } else {
       $args = new MyService_hasDataById_args();
@@ -957,11 +1317,11 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'hasDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'hasDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'hasDataById', $reply_type, $result, $seqid);
     }
@@ -980,9 +1340,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'getDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_getDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_getDataById_args');
     } else {
       $args = new MyService_getDataById_args();
@@ -1001,11 +1361,11 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'getDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'getDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'getDataById', $reply_type, $result, $seqid);
     }
@@ -1024,9 +1384,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'putDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_putDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_putDataById_args');
     } else {
       $args = new MyService_putDataById_args();
@@ -1045,11 +1405,11 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'putDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'putDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'putDataById', $reply_type, $result, $seqid);
     }
@@ -1068,9 +1428,9 @@ abstract class MyServiceAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'lobDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_lobDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_lobDataById_args');
     } else {
       $args = new MyService_lobDataById_args();
@@ -1093,7 +1453,7 @@ class MyServiceAsyncProcessor extends MyServiceAsyncProcessorBase {
   const type TThriftIf = MyServiceAsyncIf;
 }
 
-abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
+abstract class MyServiceSyncProcessorBase extends \ThriftSyncProcessor {
   abstract const type TThriftIf as MyServiceIf;
   protected function process_ping(int $seqid, \TProtocol $input, \TProtocol $output): void {
     $handler_ctx = $this->eventHandler_->getHandlerContext('ping');
@@ -1101,9 +1461,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'ping', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_ping_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_ping_args');
     } else {
       $args = new MyService_ping_args();
@@ -1122,11 +1482,11 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'ping', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'ping', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'ping', $reply_type, $result, $seqid);
     }
@@ -1145,9 +1505,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'getRandomData', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_getRandomData_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_getRandomData_args');
     } else {
       $args = new MyService_getRandomData_args();
@@ -1166,11 +1526,11 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'getRandomData', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'getRandomData', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'getRandomData', $reply_type, $result, $seqid);
     }
@@ -1189,9 +1549,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'hasDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_hasDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_hasDataById_args');
     } else {
       $args = new MyService_hasDataById_args();
@@ -1210,11 +1570,11 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'hasDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'hasDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'hasDataById', $reply_type, $result, $seqid);
     }
@@ -1233,9 +1593,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'getDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_getDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_getDataById_args');
     } else {
       $args = new MyService_getDataById_args();
@@ -1254,11 +1614,11 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'getDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'getDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'getDataById', $reply_type, $result, $seqid);
     }
@@ -1277,9 +1637,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'putDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_putDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_putDataById_args');
     } else {
       $args = new MyService_putDataById_args();
@@ -1298,11 +1658,11 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'putDataById', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'putDataById', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'putDataById', $reply_type, $result, $seqid);
     }
@@ -1321,9 +1681,9 @@ abstract class MyServiceSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'lobDataById', dict[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'MyService_lobDataById_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'MyService_lobDataById_args');
     } else {
       $args = new MyService_lobDataById_args();
@@ -1353,27 +1713,52 @@ class MyServiceProcessor extends MyServiceSyncProcessor {}
 class MyService_ping_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const type TShape = shape(
     ...
   );
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'MyService_ping_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
     );
@@ -1381,7 +1766,7 @@ class MyService_ping_args implements \IThriftStruct, \IThriftShapishStruct {
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
@@ -1392,23 +1777,47 @@ class MyService_ping_args implements \IThriftStruct, \IThriftShapishStruct {
 class MyService_ping_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'MyService_ping_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
@@ -1419,27 +1828,52 @@ class MyService_ping_result implements \IThriftStruct {
 class MyService_getRandomData_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const type TShape = shape(
     ...
   );
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'MyService_getRandomData_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
     );
@@ -1447,7 +1881,7 @@ class MyService_getRandomData_args implements \IThriftStruct, \IThriftShapishStr
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
@@ -1458,34 +1892,64 @@ class MyService_getRandomData_args implements \IThriftStruct, \IThriftShapishStr
 class MyService_getRandomData_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    0 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => string,
+  );
+
   const int STRUCTURAL_ID = 1365128170602685579;
   public ?string $success;
 
+  <<__Rx>>
   public function __construct(?string $success = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_getRandomData_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'success') !== null) {
-      $this->success = $parsed['success'];
+      $this->success = /* HH_FIXME[4110] */ $parsed['success'];
     }    
   }
 
@@ -1494,15 +1958,20 @@ class MyService_getRandomData_result implements \IThriftStruct {
 class MyService_hasDataById_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'id',
       'type' => \TType::I64,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'id' => 1,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'id' => int,
+  );
+
   const type TShape = shape(
     'id' => int,
     ...
@@ -1510,24 +1979,46 @@ class MyService_hasDataById_args implements \IThriftStruct, \IThriftShapishStruc
   const int STRUCTURAL_ID = 3807211151619655933;
   public int $id;
 
+  <<__Rx>>
   public function __construct(?int $id = null  ) {
-    if ($id === null) {
-      $this->id = 0;
-    } else {
-      $this->id = $id;
-    }
+    $this->id = $id ?? 0;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'id'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_hasDataById_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'id' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     $me->id = $shape['id'];
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'id' => $this->id,
@@ -1536,12 +2027,12 @@ class MyService_hasDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'id') !== null) {
-      $this->id = $parsed['id'];
+      $this->id = /* HH_FIXME[4110] */ $parsed['id'];
     }    
   }
 
@@ -1550,34 +2041,64 @@ class MyService_hasDataById_args implements \IThriftStruct, \IThriftShapishStruc
 class MyService_hasDataById_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    0 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::BOOL,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => bool,
+  );
+
   const int STRUCTURAL_ID = 8594383818423018844;
   public ?bool $success;
 
+  <<__Rx>>
   public function __construct(?bool $success = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_hasDataById_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'success') !== null) {
-      $this->success = $parsed['success'];
+      $this->success = /* HH_FIXME[4110] */ $parsed['success'];
     }    
   }
 
@@ -1586,15 +2107,20 @@ class MyService_hasDataById_result implements \IThriftStruct {
 class MyService_getDataById_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'id',
       'type' => \TType::I64,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'id' => 1,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'id' => int,
+  );
+
   const type TShape = shape(
     'id' => int,
     ...
@@ -1602,24 +2128,46 @@ class MyService_getDataById_args implements \IThriftStruct, \IThriftShapishStruc
   const int STRUCTURAL_ID = 3807211151619655933;
   public int $id;
 
+  <<__Rx>>
   public function __construct(?int $id = null  ) {
-    if ($id === null) {
-      $this->id = 0;
-    } else {
-      $this->id = $id;
-    }
+    $this->id = $id ?? 0;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'id'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_getDataById_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'id' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     $me->id = $shape['id'];
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'id' => $this->id,
@@ -1628,12 +2176,12 @@ class MyService_getDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'id') !== null) {
-      $this->id = $parsed['id'];
+      $this->id = /* HH_FIXME[4110] */ $parsed['id'];
     }    
   }
 
@@ -1642,34 +2190,64 @@ class MyService_getDataById_args implements \IThriftStruct, \IThriftShapishStruc
 class MyService_getDataById_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    0 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => string,
+  );
+
   const int STRUCTURAL_ID = 1365128170602685579;
   public ?string $success;
 
+  <<__Rx>>
   public function __construct(?string $success = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_getDataById_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'success') !== null) {
-      $this->success = $parsed['success'];
+      $this->success = /* HH_FIXME[4110] */ $parsed['success'];
     }    
   }
 
@@ -1678,20 +2256,26 @@ class MyService_getDataById_result implements \IThriftStruct {
 class MyService_putDataById_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'id',
       'type' => \TType::I64,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'data',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'id' => 1,
     'data' => 2,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'id' => int,
+    ?'data' => string,
+  );
+
   const type TShape = shape(
     'id' => int,
     'data' => string,
@@ -1701,30 +2285,53 @@ class MyService_putDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public int $id;
   public string $data;
 
+  <<__Rx>>
   public function __construct(?int $id = null, ?string $data = null  ) {
-    if ($id === null) {
-      $this->id = 0;
-    } else {
-      $this->id = $id;
-    }
-    if ($data === null) {
-      $this->data = '';
-    } else {
-      $this->data = $data;
-    }
+    $this->id = $id ?? 0;
+    $this->data = $data ?? '';
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'id'),
+      Shapes::idx($shape, 'data'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_putDataById_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'id' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'data' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     $me->id = $shape['id'];
     $me->data = $shape['data'];
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'id' => $this->id,
@@ -1734,15 +2341,15 @@ class MyService_putDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'id') !== null) {
-      $this->id = $parsed['id'];
+      $this->id = /* HH_FIXME[4110] */ $parsed['id'];
     }    
     if (idx($parsed, 'data') !== null) {
-      $this->data = $parsed['data'];
+      $this->data = /* HH_FIXME[4110] */ $parsed['data'];
     }    
   }
 
@@ -1751,23 +2358,47 @@ class MyService_putDataById_args implements \IThriftStruct, \IThriftShapishStruc
 class MyService_putDataById_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
-  };
+  const dict<int, this::TFieldSpec> SPEC = dict[
+  ];
+  const dict<string, int> FIELDMAP = dict[
+  ];
+
+  const type TConstructorShape = shape(
+  );
+
   const int STRUCTURAL_ID = 957977401221134810;
 
+  <<__Rx>>
   public function __construct(  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+    );
   }
 
   public function getName(): string {
     return 'MyService_putDataById_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
@@ -1778,20 +2409,26 @@ class MyService_putDataById_result implements \IThriftStruct {
 class MyService_lobDataById_args implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'id',
       'type' => \TType::I64,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'data',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'id' => 1,
     'data' => 2,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'id' => int,
+    ?'data' => string,
+  );
+
   const type TShape = shape(
     'id' => int,
     'data' => string,
@@ -1801,30 +2438,53 @@ class MyService_lobDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public int $id;
   public string $data;
 
+  <<__Rx>>
   public function __construct(?int $id = null, ?string $data = null  ) {
-    if ($id === null) {
-      $this->id = 0;
-    } else {
-      $this->id = $id;
-    }
-    if ($data === null) {
-      $this->data = '';
-    } else {
-      $this->data = $data;
-    }
+    $this->id = $id ?? 0;
+    $this->data = $data ?? '';
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'id'),
+      Shapes::idx($shape, 'data'),
+    );
   }
 
   public function getName(): string {
     return 'MyService_lobDataById_args';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'id' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'data' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     $me->id = $shape['id'];
     $me->data = $shape['data'];
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'id' => $this->id,
@@ -1834,17 +2494,33 @@ class MyService_lobDataById_args implements \IThriftStruct, \IThriftShapishStruc
   public function readFromJson(string $jsonText): void {
     $parsed = json_decode($jsonText, true);
 
-    if ($parsed === null || !is_array($parsed)) {
+    if ($parsed === null || !($parsed is KeyedContainer<_, _>)) {
       throw new \TProtocolException("Cannot parse the given json string.");
     }
 
     if (idx($parsed, 'id') !== null) {
-      $this->id = $parsed['id'];
+      $this->id = /* HH_FIXME[4110] */ $parsed['id'];
     }    
     if (idx($parsed, 'data') !== null) {
-      $this->data = $parsed['data'];
+      $this->data = /* HH_FIXME[4110] */ $parsed['data'];
     }    
   }
 
+}
+
+class MyServiceStaticMetadata implements \IThriftServiceStaticMetadata {
+  public static function getAllStructuredAnnotations(): \TServiceAnnotations {
+    return shape(
+      'service' => dict[],
+      'functions' => dict[
+        'ping' => dict[],
+        'getRandomData' => dict[],
+        'hasDataById' => dict[],
+        'getDataById' => dict[],
+        'putDataById' => dict[],
+        'lobDataById' => dict[],
+      ],
+    );
+  }
 }
 

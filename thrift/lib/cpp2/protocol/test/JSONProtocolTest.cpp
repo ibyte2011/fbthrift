@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <thrift/lib/cpp2/protocol/JSONProtocol.h>
 #include <thrift/lib/cpp2/protocol/Serializer.h>
@@ -387,6 +387,14 @@ TEST_F(JSONProtocolTest, readString_raw) {
 TEST_F(JSONProtocolTest, readString_utf8) {
   auto input = R"("\u263A")";
   auto expected = string(u8"\u263A");
+  EXPECT_EQ(expected, reading_cpp2<string>(input, [](R& p) {
+              return returning([&](string& _) { p.readString(_); });
+            }));
+}
+
+TEST_F(JSONProtocolTest, readString_utf8_surrogate_pair) {
+  auto input = R"("\uD989\uDE3A")";
+  auto expected = string(u8"\U0007263A");
   EXPECT_EQ(expected, reading_cpp2<string>(input, [](R& p) {
               return returning([&](string& _) { p.readString(_); });
             }));

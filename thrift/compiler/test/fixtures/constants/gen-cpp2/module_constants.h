@@ -6,9 +6,9 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+#include <thrift/lib/cpp2/gen/module_constants_h.h>
 
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/constants/gen-cpp2/module_types.h"
 
 namespace cpp2 {
 
@@ -30,7 +30,7 @@ struct module_constants {
     return name_;
   }
 
-  static std::vector<std::map<std::string, int32_t>> const& states();
+  static ::std::vector<::std::map<::std::string, int32_t>> const& states();
 
   static constexpr double const x_ = 1;
 
@@ -62,19 +62,57 @@ struct module_constants {
     return longDoubleValue_;
   }
 
+  static constexpr  ::cpp2::MyCompany const my_company_ =  ::cpp2::Company::FACEBOOK;
+
+  static constexpr  ::cpp2::MyCompany my_company() {
+    return my_company_;
+  }
+
+  // consider using folly::StringPiece instead of std::string whenever possible
+  // to referencing this statically allocated string constant, in order to
+  // prevent unnecessary allocations
+
+  static constexpr char const * const foo_ = "foo";
+
+  static constexpr char const * foo() {
+    return foo_;
+  }
+
+  static constexpr  ::cpp2::MyIntIdentifier const bar_ = 42;
+
+  static constexpr  ::cpp2::MyIntIdentifier bar() {
+    return bar_;
+  }
+
+  static  ::cpp2::MyMapIdentifier const& mymap();
+
   static  ::cpp2::Internship const& instagram();
 
-  static std::vector< ::cpp2::Range> const& kRanges();
+  static  ::cpp2::Internship const& partial_const();
 
-  static std::vector< ::cpp2::Internship> const& internList();
+  static ::std::vector< ::cpp2::Range> const& kRanges();
+
+  static ::std::vector< ::cpp2::Internship> const& internList();
 
   static  ::cpp2::struct1 const& pod_0();
 
+  static  ::cpp2::struct1 const& pod_s_0();
+
   static  ::cpp2::struct1 const& pod_1();
+
+  static  ::cpp2::struct1 const& pod_s_1();
 
   static  ::cpp2::struct2 const& pod_2();
 
+  static  ::cpp2::struct2 const& pod_trailing_commas();
+
+  static  ::cpp2::struct2 const& pod_s_2();
+
   static  ::cpp2::struct3 const& pod_3();
+
+  static  ::cpp2::struct3 const& pod_s_3();
+
+  static  ::cpp2::struct4 const& pod_4();
 
   static  ::cpp2::union1 const& u_1_1();
 
@@ -144,9 +182,9 @@ struct module_constants {
     return escaped_a_;
   }
 
-  static std::map<std::string, int32_t> const& char2ascii();
+  static ::std::map<::std::string, int32_t> const& char2ascii();
 
-  static std::vector<std::string> const& escaped_strings();
+  static ::std::vector<::std::string> const& escaped_strings();
 
   static constexpr bool const false_c_ = false;
 
@@ -200,21 +238,21 @@ struct module_constants {
     return empty_string_;
   }
 
-  static std::vector<int32_t> const& empty_int_list();
+  static ::std::vector<int32_t> const& empty_int_list();
 
-  static std::vector<std::string> const& empty_string_list();
+  static ::std::vector<::std::string> const& empty_string_list();
 
-  static std::set<int32_t> const& empty_int_set();
+  static ::std::set<int32_t> const& empty_int_set();
 
-  static std::set<std::string> const& empty_string_set();
+  static ::std::set<::std::string> const& empty_string_set();
 
-  static std::map<int32_t, int32_t> const& empty_int_int_map();
+  static ::std::map<int32_t, int32_t> const& empty_int_int_map();
 
-  static std::map<int32_t, std::string> const& empty_int_string_map();
+  static ::std::map<int32_t, ::std::string> const& empty_int_string_map();
 
-  static std::map<std::string, int32_t> const& empty_string_int_map();
+  static ::std::map<::std::string, int32_t> const& empty_string_int_map();
 
-  static std::map<std::string, std::string> const& empty_string_string_map();
+  static ::std::map<::std::string, ::std::string> const& empty_string_string_map();
 
 };
 

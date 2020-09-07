@@ -1,20 +1,17 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package thrift
@@ -22,6 +19,7 @@ package thrift
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 // Processor exposes access to processor functions which
@@ -143,13 +141,7 @@ func ProcessContext(ctx context.Context, processor ProcessorContext, iprot, opro
 		}
 		// for ONEWAY, we have no way to report that the processing failed.
 		if messageType != ONEWAY {
-			if e2 := oprot.WriteMessageBegin(name, EXCEPTION, seqID); e2 != nil {
-				return false, e2
-			} else if e2 := err.Write(oprot); e2 != nil {
-				return false, e2
-			} else if e2 := oprot.WriteMessageEnd(); e2 != nil {
-				return false, e2
-			} else if e2 := oprot.Flush(); e2 != nil {
+			if e2 := sendException(oprot, name, seqID, err); e2 != nil {
 				return false, e2
 			}
 		}
@@ -171,17 +163,31 @@ func ProcessContext(ctx context.Context, processor ProcessorContext, iprot, opro
 	// for ONEWAY messages, never send a response
 	if messageType == CALL {
 		// protect message writing
-		if err != nil && result == nil {
-			// if the Run function generates an error, synthesize an application
-			// error
-			result = NewApplicationException(INTERNAL_ERROR, "Internal error: "+err.Error())
+		if err != nil {
+			switch oprotHeader := oprot.(type) {
+			case *HeaderProtocol:
+				// get type name without package or pointer information
+				fqet := strings.Replace(fmt.Sprintf("%T", err), "*", "", -1)
+				et := strings.Split(fqet, ".")
+				errorType := et[len(et)-1]
+
+				// set header for ServiceRouter
+				oprotHeader.SetHeader("uex", errorType)
+				oprotHeader.SetHeader("uexw", err.Error())
+			}
+			// it's an application generated error, so serialize it
+			// to the client
+			result = err
 		}
+
 		if e2 := pfunc.Write(seqID, result, oprot); e2 != nil {
 			// close connection on write failure
 			return false, err
 		}
 	}
 
-	// keep the connection open, but let the client know if an error occurred
-	return true, err
+	// keep the connection open and ignore errors
+	// if type was CALL, error has already been serialized to client
+	// if type was ONEWAY, no exception is to be thrown
+	return true, nil
 }

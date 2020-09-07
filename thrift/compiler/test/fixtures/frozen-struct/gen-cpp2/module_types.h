@@ -6,24 +6,68 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+
 
 #include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/include1_types.h"
 #include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/include2_types.h"
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct i32Field;
+struct strField;
+struct listField;
+struct mapField;
+struct inclAField;
+struct inclBField;
+struct i32Field;
+struct inclEnumB;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_i32Field
+#define APACHE_THRIFT_ACCESSOR_i32Field
+APACHE_THRIFT_DEFINE_ACCESSOR(i32Field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_strField
+#define APACHE_THRIFT_ACCESSOR_strField
+APACHE_THRIFT_DEFINE_ACCESSOR(strField);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_listField
+#define APACHE_THRIFT_ACCESSOR_listField
+APACHE_THRIFT_DEFINE_ACCESSOR(listField);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_mapField
+#define APACHE_THRIFT_ACCESSOR_mapField
+APACHE_THRIFT_DEFINE_ACCESSOR(mapField);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_inclAField
+#define APACHE_THRIFT_ACCESSOR_inclAField
+APACHE_THRIFT_DEFINE_ACCESSOR(inclAField);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_inclBField
+#define APACHE_THRIFT_ACCESSOR_inclBField
+APACHE_THRIFT_DEFINE_ACCESSOR(inclBField);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_i32Field
+#define APACHE_THRIFT_ACCESSOR_i32Field
+APACHE_THRIFT_DEFINE_ACCESSOR(i32Field);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_inclEnumB
+#define APACHE_THRIFT_ACCESSOR_inclEnumB
+APACHE_THRIFT_DEFINE_ACCESSOR(inclEnumB);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 namespace some { namespace ns {
 
 enum class EnumB {
-  EMPTY = 1
+  EMPTY = 1,
 };
 
-using _EnumB_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<EnumB, EnumB>;
-extern const _EnumB_EnumMapFactory::ValuesToNamesMapType _EnumB_VALUES_TO_NAMES;
-extern const _EnumB_EnumMapFactory::NamesToValuesMapType _EnumB_NAMES_TO_VALUES;
 
 
 
@@ -31,8 +75,8 @@ extern const _EnumB_EnumMapFactory::NamesToValuesMapType _EnumB_NAMES_TO_VALUES;
 namespace std {
 
 
-template<> struct hash<typename  ::some::ns::EnumB> : public apache::thrift::detail::enum_hash<typename  ::some::ns::EnumB> {};
-template<> struct equal_to<typename  ::some::ns::EnumB> : public apache::thrift::detail::enum_equal_to<typename  ::some::ns::EnumB> {};
+template<> struct hash<typename ::some::ns::EnumB> : public apache::thrift::detail::enum_hash<typename ::some::ns::EnumB> {};
+template<> struct equal_to<typename ::some::ns::EnumB> : public apache::thrift::detail::enum_equal_to<typename ::some::ns::EnumB> {};
 
 
 } // std
@@ -40,26 +84,34 @@ template<> struct equal_to<typename  ::some::ns::EnumB> : public apache::thrift:
 namespace apache { namespace thrift {
 
 
-template <> struct TEnumDataStorage< ::some::ns::EnumB>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::some::ns::EnumB>::size;
-template <> const folly::Range<const  ::some::ns::EnumB*> TEnumTraits< ::some::ns::EnumB>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::some::ns::EnumB>::names;
-#endif
-template <> const char* TEnumTraits< ::some::ns::EnumB>::findName( ::some::ns::EnumB value);
-template <> bool TEnumTraits< ::some::ns::EnumB>::findValue(const char* name,  ::some::ns::EnumB* outValue);
+template <> struct TEnumDataStorage<::some::ns::EnumB>;
 
-template <> inline constexpr  ::some::ns::EnumB TEnumTraits< ::some::ns::EnumB>::min() {
-  return  ::some::ns::EnumB::EMPTY;
-}
+template <> struct TEnumTraits<::some::ns::EnumB> {
+  using type = ::some::ns::EnumB;
 
-template <> inline constexpr  ::some::ns::EnumB TEnumTraits< ::some::ns::EnumB>::max() {
-  return  ::some::ns::EnumB::EMPTY;
-}
+  static constexpr std::size_t const size = 1;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+  static constexpr type min() { return type::EMPTY; }
+  static constexpr type max() { return type::EMPTY; }
+};
 
 
 }} // apache::thrift
 
+namespace some { namespace ns {
+
+using _EnumB_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<EnumB>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _EnumB_EnumMapFactory::ValuesToNamesMapType _EnumB_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _EnumB_EnumMapFactory::NamesToValuesMapType _EnumB_NAMES_TO_VALUES;
+
+}} // some::ns
 
 // END declare_enums
 // BEGIN struct_indirection
@@ -77,62 +129,57 @@ class ModuleB;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace some { namespace ns {
-class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<ModuleA> {
+class ModuleA final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = ModuleA;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
   ModuleA();
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 
   // FragileConstructor for use in initialization lists only.
-  ModuleA(apache::thrift::FragileConstructor, int32_t i32Field__arg, std::string strField__arg, std::vector<int16_t> listField__arg, std::map<std::string, int32_t> mapField__arg,  ::some::ns::IncludedA inclAField__arg,  ::some::ns::IncludedB inclBField__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    i32Field = arg.extract();
-    __isset.i32Field = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    strField = arg.extract();
-    __isset.strField = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    listField = arg.extract();
-    __isset.listField = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    mapField = arg.extract();
-    __isset.mapField = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<5, _T> arg) {
-    inclAField = arg.extract();
-    __isset.inclAField = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<6, _T> arg) {
-    inclBField = arg.extract();
-    __isset.inclBField = true;
-  }
+  [[deprecated("This constructor is deprecated")]]
+  ModuleA(apache::thrift::FragileConstructor, int32_t i32Field__arg, ::std::string strField__arg, ::std::vector<int16_t> listField__arg, ::std::map<::std::string, int32_t> mapField__arg,  ::some::ns::IncludedA inclAField__arg,  ::some::ns::IncludedB inclBField__arg);
 
   ModuleA(ModuleA&&) = default;
 
   ModuleA(const ModuleA&) = default;
 
+
   ModuleA& operator=(ModuleA&&) = default;
 
   ModuleA& operator=(const ModuleA&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
 
   ~ModuleA();
 
+ public:
   int32_t i32Field;
-  std::string strField;
-  std::vector<int16_t> listField;
-  std::map<std::string, int32_t> mapField;
+ public:
+  ::std::string strField;
+ public:
+  ::std::vector<int16_t> listField;
+ public:
+  ::std::map<::std::string, int32_t> mapField;
+ public:
    ::some::ns::IncludedA inclAField;
+ public:
    ::some::ns::IncludedB inclBField;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool i32Field;
     bool strField;
@@ -142,7 +189,155 @@ class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<Mo
     bool inclBField;
   } __isset = {};
   bool operator==(const ModuleA& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const ModuleA& __x, const ModuleA& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const ModuleA& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const ModuleA& __x, const ModuleA& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const ModuleA& __x, const ModuleA& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const ModuleA& __x, const ModuleA& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> i32Field_ref() const& {
+    return {this->i32Field, __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> i32Field_ref() const&& {
+    return {std::move(this->i32Field), __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> i32Field_ref() & {
+    return {this->i32Field, __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> i32Field_ref() && {
+    return {std::move(this->i32Field), __isset.i32Field};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> strField_ref() const& {
+    return {this->strField, __isset.strField};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> strField_ref() const&& {
+    return {std::move(this->strField), __isset.strField};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> strField_ref() & {
+    return {this->strField, __isset.strField};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> strField_ref() && {
+    return {std::move(this->strField), __isset.strField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::vector<int16_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> listField_ref() const& {
+    return {this->listField, __isset.listField};
+  }
+
+  template <typename..., typename T = ::std::vector<int16_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> listField_ref() const&& {
+    return {std::move(this->listField), __isset.listField};
+  }
+
+  template <typename..., typename T = ::std::vector<int16_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> listField_ref() & {
+    return {this->listField, __isset.listField};
+  }
+
+  template <typename..., typename T = ::std::vector<int16_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> listField_ref() && {
+    return {std::move(this->listField), __isset.listField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::map<::std::string, int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> mapField_ref() const& {
+    return {this->mapField, __isset.mapField};
+  }
+
+  template <typename..., typename T = ::std::map<::std::string, int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> mapField_ref() const&& {
+    return {std::move(this->mapField), __isset.mapField};
+  }
+
+  template <typename..., typename T = ::std::map<::std::string, int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> mapField_ref() & {
+    return {this->mapField, __isset.mapField};
+  }
+
+  template <typename..., typename T = ::std::map<::std::string, int32_t>>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> mapField_ref() && {
+    return {std::move(this->mapField), __isset.mapField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::some::ns::IncludedA>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> inclAField_ref() const& {
+    return {this->inclAField, __isset.inclAField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedA>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> inclAField_ref() const&& {
+    return {std::move(this->inclAField), __isset.inclAField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedA>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> inclAField_ref() & {
+    return {this->inclAField, __isset.inclAField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedA>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> inclAField_ref() && {
+    return {std::move(this->inclAField), __isset.inclAField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::some::ns::IncludedB>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> inclBField_ref() const& {
+    return {this->inclBField, __isset.inclBField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedB>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> inclBField_ref() const&& {
+    return {std::move(this->inclBField), __isset.inclBField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedB>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> inclBField_ref() & {
+    return {this->inclBField, __isset.inclBField};
+  }
+
+  template <typename..., typename T =  ::some::ns::IncludedB>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> inclBField_ref() && {
+    return {std::move(this->inclBField), __isset.inclBField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_i32Field() const {
     return i32Field;
@@ -150,40 +345,48 @@ class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<Mo
 
   int32_t& set_i32Field(int32_t i32Field_) {
     i32Field = i32Field_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.i32Field = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return i32Field;
   }
 
-  const std::string& get_strField() const& {
+  const ::std::string& get_strField() const& {
     return strField;
   }
 
-  std::string get_strField() && {
+  ::std::string get_strField() && {
     return std::move(strField);
   }
 
-  template <typename T_ModuleA_strField_struct_setter = std::string>
-  std::string& set_strField(T_ModuleA_strField_struct_setter&& strField_) {
+  template <typename T_ModuleA_strField_struct_setter = ::std::string>
+  ::std::string& set_strField(T_ModuleA_strField_struct_setter&& strField_) {
     strField = std::forward<T_ModuleA_strField_struct_setter>(strField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.strField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return strField;
   }
-  const std::vector<int16_t>& get_listField() const&;
-  std::vector<int16_t> get_listField() &&;
+  const ::std::vector<int16_t>& get_listField() const&;
+  ::std::vector<int16_t> get_listField() &&;
 
-  template <typename T_ModuleA_listField_struct_setter = std::vector<int16_t>>
-  std::vector<int16_t>& set_listField(T_ModuleA_listField_struct_setter&& listField_) {
+  template <typename T_ModuleA_listField_struct_setter = ::std::vector<int16_t>>
+  ::std::vector<int16_t>& set_listField(T_ModuleA_listField_struct_setter&& listField_) {
     listField = std::forward<T_ModuleA_listField_struct_setter>(listField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.listField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return listField;
   }
-  const std::map<std::string, int32_t>& get_mapField() const&;
-  std::map<std::string, int32_t> get_mapField() &&;
+  const ::std::map<::std::string, int32_t>& get_mapField() const&;
+  ::std::map<::std::string, int32_t> get_mapField() &&;
 
-  template <typename T_ModuleA_mapField_struct_setter = std::map<std::string, int32_t>>
-  std::map<std::string, int32_t>& set_mapField(T_ModuleA_mapField_struct_setter&& mapField_) {
+  template <typename T_ModuleA_mapField_struct_setter = ::std::map<::std::string, int32_t>>
+  ::std::map<::std::string, int32_t>& set_mapField(T_ModuleA_mapField_struct_setter&& mapField_) {
     mapField = std::forward<T_ModuleA_mapField_struct_setter>(mapField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.mapField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return mapField;
   }
   const  ::some::ns::IncludedA& get_inclAField() const&;
@@ -192,7 +395,9 @@ class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<Mo
   template <typename T_ModuleA_inclAField_struct_setter =  ::some::ns::IncludedA>
    ::some::ns::IncludedA& set_inclAField(T_ModuleA_inclAField_struct_setter&& inclAField_) {
     inclAField = std::forward<T_ModuleA_inclAField_struct_setter>(inclAField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.inclAField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return inclAField;
   }
   const  ::some::ns::IncludedB& get_inclBField() const&;
@@ -201,7 +406,9 @@ class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<Mo
   template <typename T_ModuleA_inclBField_struct_setter =  ::some::ns::IncludedB>
    ::some::ns::IncludedB& set_inclBField(T_ModuleA_inclBField_struct_setter&& inclBField_) {
     inclBField = std::forward<T_ModuleA_inclBField_struct_setter>(inclBField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.inclBField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return inclBField;
   }
 
@@ -219,90 +426,125 @@ class ModuleA final : private apache::thrift::detail::st::ComparisonOperators<Mo
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< ModuleA >;
+  friend void swap(ModuleA& a, ModuleA& b);
 };
-
-void swap(ModuleA& a, ModuleA& b);
-extern template void ModuleA::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t ModuleA::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t ModuleA::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t ModuleA::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void ModuleA::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t ModuleA::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t ModuleA::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t ModuleA::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t ModuleA::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 }} // some::ns
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::some::ns::ModuleA>::clear( ::some::ns::ModuleA* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::some::ns::ModuleA>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleA>::write(Protocol* proto,  ::some::ns::ModuleA const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::some::ns::ModuleA>::read(Protocol* proto,  ::some::ns::ModuleA* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleA>::serializedSize(Protocol const* proto,  ::some::ns::ModuleA const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleA>::serializedSizeZC(Protocol const* proto,  ::some::ns::ModuleA const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace some { namespace ns {
-class ModuleB final : private apache::thrift::detail::st::ComparisonOperators<ModuleB> {
+class ModuleB final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = ModuleB;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   ModuleB() :
       i32Field(0),
       inclEnumB(static_cast< ::some::ns::EnumB>(0)) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   ModuleB(apache::thrift::FragileConstructor, int32_t i32Field__arg,  ::some::ns::EnumB inclEnumB__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    i32Field = arg.extract();
-    __isset.i32Field = true;
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    inclEnumB = arg.extract();
-    __isset.inclEnumB = true;
-  }
 
   ModuleB(ModuleB&&) = default;
 
   ModuleB(const ModuleB&) = default;
 
+
   ModuleB& operator=(ModuleB&&) = default;
 
   ModuleB& operator=(const ModuleB&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   int32_t i32Field;
+ public:
    ::some::ns::EnumB inclEnumB;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool i32Field;
     bool inclEnumB;
   } __isset = {};
   bool operator==(const ModuleB& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const ModuleB& __x, const ModuleB& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const ModuleB& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const ModuleB& __x, const ModuleB& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const ModuleB& __x, const ModuleB& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const ModuleB& __x, const ModuleB& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> i32Field_ref() const& {
+    return {this->i32Field, __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> i32Field_ref() const&& {
+    return {std::move(this->i32Field), __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> i32Field_ref() & {
+    return {this->i32Field, __isset.i32Field};
+  }
+
+  template <typename..., typename T = int32_t>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> i32Field_ref() && {
+    return {std::move(this->i32Field), __isset.i32Field};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::some::ns::EnumB>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> inclEnumB_ref() const& {
+    return {this->inclEnumB, __isset.inclEnumB};
+  }
+
+  template <typename..., typename T =  ::some::ns::EnumB>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> inclEnumB_ref() const&& {
+    return {std::move(this->inclEnumB), __isset.inclEnumB};
+  }
+
+  template <typename..., typename T =  ::some::ns::EnumB>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> inclEnumB_ref() & {
+    return {this->inclEnumB, __isset.inclEnumB};
+  }
+
+  template <typename..., typename T =  ::some::ns::EnumB>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> inclEnumB_ref() && {
+    return {std::move(this->inclEnumB), __isset.inclEnumB};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 
   int32_t get_i32Field() const {
     return i32Field;
@@ -310,7 +552,9 @@ class ModuleB final : private apache::thrift::detail::st::ComparisonOperators<Mo
 
   int32_t& set_i32Field(int32_t i32Field_) {
     i32Field = i32Field_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.i32Field = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return i32Field;
   }
 
@@ -320,7 +564,9 @@ class ModuleB final : private apache::thrift::detail::st::ComparisonOperators<Mo
 
    ::some::ns::EnumB& set_inclEnumB( ::some::ns::EnumB inclEnumB_) {
     inclEnumB = inclEnumB_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.inclEnumB = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return inclEnumB;
   }
 
@@ -338,50 +584,14 @@ class ModuleB final : private apache::thrift::detail::st::ComparisonOperators<Mo
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< ModuleB >;
+  friend void swap(ModuleB& a, ModuleB& b);
 };
-
-void swap(ModuleB& a, ModuleB& b);
-extern template void ModuleB::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t ModuleB::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t ModuleB::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t ModuleB::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void ModuleB::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t ModuleB::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t ModuleB::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t ModuleB::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t ModuleB::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 }} // some::ns
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::some::ns::ModuleB>::clear( ::some::ns::ModuleB* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::some::ns::ModuleB>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleB>::write(Protocol* proto,  ::some::ns::ModuleB const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::some::ns::ModuleB>::read(Protocol* proto,  ::some::ns::ModuleB* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleB>::serializedSize(Protocol const* proto,  ::some::ns::ModuleB const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::some::ns::ModuleB>::serializedSizeZC(Protocol const* proto,  ::some::ns::ModuleB const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift

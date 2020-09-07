@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,6 +46,8 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport module.types as _module_types
 import module.types as _module_types
+
+cimport module.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -52,6 +64,7 @@ cdef extern from "<utility>" namespace "std":
     cdef cFollyPromise[cFollyUnit] move_promise_cFollyUnit "std::move"(
         cFollyPromise[cFollyUnit])
 
+@cython.auto_pickle(False)
 cdef class Promise_cFollyUnit:
     cdef cFollyPromise[cFollyUnit] cPromise
 
@@ -65,6 +78,7 @@ cdef object _MyRoot_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class MyRootInterface(
     ServiceInterface
 ):
@@ -83,10 +97,16 @@ cdef class MyRootInterface(
     async def do_root(
             self):
         raise NotImplementedError("async def do_root is not implemented")
+
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__MyRoot(for_clients=False)
+
 cdef object _MyNode_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class MyNodeInterface(
 MyRootInterface
 ):
@@ -105,10 +125,16 @@ MyRootInterface
     async def do_mid(
             self):
         raise NotImplementedError("async def do_mid is not implemented")
+
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__MyNode(for_clients=False)
+
 cdef object _MyLeaf_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class MyLeafInterface(
 MyNodeInterface
 ):
@@ -128,18 +154,22 @@ MyNodeInterface
             self):
         raise NotImplementedError("async def do_leaf is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__MyLeaf(for_clients=False)
+
+
 
 cdef api void call_cy_MyRoot_do_root(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise
 ):
-    cdef MyRootInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    __context = None
-    if __iface._pass_context_do_root:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         MyRoot_do_root_coro(
             self,
@@ -147,6 +177,8 @@ cdef api void call_cy_MyRoot_do_root(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def MyRoot_do_root_coro(
     object self,
@@ -154,7 +186,7 @@ async def MyRoot_do_root_coro(
     Promise_cFollyUnit promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.do_root, "pass_context", False):
             result = await self.do_root(ctx,)
         else:
             result = await self.do_root()
@@ -179,12 +211,11 @@ cdef api void call_cy_MyNode_do_mid(
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise
 ):
-    cdef MyNodeInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    __context = None
-    if __iface._pass_context_do_mid:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         MyNode_do_mid_coro(
             self,
@@ -192,6 +223,8 @@ cdef api void call_cy_MyNode_do_mid(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def MyNode_do_mid_coro(
     object self,
@@ -199,7 +232,7 @@ async def MyNode_do_mid_coro(
     Promise_cFollyUnit promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.do_mid, "pass_context", False):
             result = await self.do_mid(ctx,)
         else:
             result = await self.do_mid()
@@ -224,12 +257,11 @@ cdef api void call_cy_MyLeaf_do_leaf(
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise
 ):
-    cdef MyLeafInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    __context = None
-    if __iface._pass_context_do_leaf:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         MyLeaf_do_leaf_coro(
             self,
@@ -237,6 +269,8 @@ cdef api void call_cy_MyLeaf_do_leaf(
             __promise
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def MyLeaf_do_leaf_coro(
     object self,
@@ -244,7 +278,7 @@ async def MyLeaf_do_leaf_coro(
     Promise_cFollyUnit promise
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.do_leaf, "pass_context", False):
             result = await self.do_leaf(ctx,)
         else:
             result = await self.do_leaf()

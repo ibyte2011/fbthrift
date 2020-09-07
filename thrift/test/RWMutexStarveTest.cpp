@@ -1,22 +1,17 @@
 /*
- * Copyright 2010-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <iostream>
@@ -29,7 +24,7 @@
 
 #include <folly/portability/Unistd.h>
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 using namespace std;
 using namespace apache::thrift::concurrency;
@@ -38,12 +33,15 @@ namespace {
 
 class Locker : public Runnable {
  protected:
-  Locker(shared_ptr<ReadWriteMutex> rwlock, bool writer) :
-    rwlock_(rwlock), writer_(writer),
-    started_(false), gotLock_(false), signaled_(false) { }
+  Locker(shared_ptr<ReadWriteMutex> rwlock, bool writer)
+      : rwlock_(rwlock),
+        writer_(writer),
+        started_(false),
+        gotLock_(false),
+        signaled_(false) {}
 
  public:
- void run() override {
+  void run() override {
     started_ = true;
     if (writer_) {
       rwlock_->acquireWrite();
@@ -57,9 +55,15 @@ class Locker : public Runnable {
     rwlock_->release();
   }
 
-  bool started() const { return started_; }
-  bool gotLock() const { return gotLock_; }
-  void signal() { signaled_ = true; }
+  bool started() const {
+    return started_;
+  }
+  bool gotLock() const {
+    return gotLock_;
+  }
+  void signal() {
+    signaled_ = true;
+  }
 
  protected:
   shared_ptr<ReadWriteMutex> rwlock_;
@@ -79,10 +83,10 @@ class Writer : public Locker {
   explicit Writer(shared_ptr<ReadWriteMutex> rwlock) : Locker(rwlock, true) {}
 };
 
-class RWMutexStarveTest :
-  public testing::TestWithParam<PosixThreadFactory::POLICY> {};
+class RWMutexStarveTest
+    : public testing::TestWithParam<PosixThreadFactory::POLICY> {};
 
-}
+} // namespace
 
 TEST_P(RWMutexStarveTest, test_starve) {
   // the man pages for pthread_wrlock_rdlock suggest that any OS guarantee about
@@ -155,6 +159,6 @@ INSTANTIATE_TEST_CASE_P(
     RWMutexStarveTest,
     RWMutexStarveTest,
     testing::Values(
-      PosixThreadFactory::POLICY::OTHER,
-      PosixThreadFactory::POLICY::FIFO,
-      PosixThreadFactory::POLICY::ROUND_ROBIN));
+        PosixThreadFactory::POLICY::OTHER,
+        PosixThreadFactory::POLICY::FIFO,
+        PosixThreadFactory::POLICY::ROUND_ROBIN));

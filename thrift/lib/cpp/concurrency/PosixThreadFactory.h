@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_CONCURRENCY_POSIXTHREADFACTORY_H_
 #define THRIFT_CONCURRENCY_POSIXTHREADFACTORY_H_ 1
 
@@ -25,12 +26,12 @@
 #include <thrift/lib/cpp/concurrency/Mutex.h>
 #include <thrift/lib/cpp/concurrency/Thread.h>
 
-
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache {
+namespace thrift {
+namespace concurrency {
 
 class PthreadThread : public Thread {
  public:
-
   enum STATE {
     uninitialized,
     starting,
@@ -55,9 +56,12 @@ class PthreadThread : public Thread {
   bool updateName();
 
  public:
-
-  PthreadThread(int policy, int priority, int stackSize, bool detached,
-                std::shared_ptr<Runnable> runnable);
+  PthreadThread(
+      int policy,
+      int priority,
+      int stackSize,
+      bool detached,
+      std::shared_ptr<Runnable> runnable);
   ~PthreadThread() override;
 
   void start() override;
@@ -75,16 +79,14 @@ class PthreadThread : public Thread {
  * @version $Id:$
  */
 class PosixThreadFactory : public ThreadFactory {
-
  public:
-
   /**
    * POSIX Thread scheduler policies
    */
   enum POLICY {
     OTHER,
     FIFO,
-    ROUND_ROBIN
+    ROUND_ROBIN,
   };
 
   /**
@@ -96,20 +98,20 @@ class PosixThreadFactory : public ThreadFactory {
    * value of the priority.
    */
   enum PRIORITY {
-    LOWEST = 0,
-    LOWER = 1,
-    LOW = 2,
-    NORMAL = 3,
-    HIGH = 4,
-    HIGHER = 5,
-    HIGHEST = 6,
+    LOWEST_PRI = 0,
+    LOWER_PRI = 1,
+    LOW_PRI = 2,
+    NORMAL_PRI = 3,
+    HIGH_PRI = 4,
+    HIGHER_PRI = 5,
+    HIGHEST_PRI = 6,
 
     // Inherit priority of caller thread (supported only for POLICY::OTHER).
-    INHERITED = 9,
+    INHERITED_PRI = 9,
   };
 
   static const POLICY kDefaultPolicy = OTHER;
-  static const PRIORITY kDefaultPriority = NORMAL;
+  static const PRIORITY kDefaultPriority = NORMAL_PRI;
   static const int kDefaultStackSizeMB = 1;
 
   /**
@@ -126,18 +128,20 @@ class PosixThreadFactory : public ThreadFactory {
    *
    * By default threads are not joinable.
    */
-  explicit PosixThreadFactory(POLICY policy=kDefaultPolicy,
-                              PRIORITY priority=kDefaultPriority,
-                              int stackSize=kDefaultStackSizeMB,
-                              bool detached=true);
+  explicit PosixThreadFactory(
+      POLICY policy = kDefaultPolicy,
+      PRIORITY priority = kDefaultPriority,
+      int stackSize = kDefaultStackSizeMB,
+      bool detached = true);
 
   explicit PosixThreadFactory(DetachState detached);
 
   // From ThreadFactory;
   std::shared_ptr<Thread> newThread(
       const std::shared_ptr<Runnable>& runnable) const override;
-  std::shared_ptr<Thread> newThread(const std::shared_ptr<Runnable>& runnable,
-                                    DetachState detachState) const override;
+  std::shared_ptr<Thread> newThread(
+      const std::shared_ptr<Runnable>& runnable,
+      DetachState detachState) const override;
 
   // From ThreadFactory;
   Thread::id_t getCurrentThreadId() const override;
@@ -201,9 +205,7 @@ class PosixThreadFactory : public ThreadFactory {
     static int toPthreadPriority(POLICY policy, PRIORITY priority);
 
    public:
-
-    Impl(POLICY policy, PRIORITY priority,
-         int stackSize, DetachState detached);
+    Impl(POLICY policy, PRIORITY priority, int stackSize, DetachState detached);
     virtual ~Impl() {}
 
     /**
@@ -212,8 +214,8 @@ class PosixThreadFactory : public ThreadFactory {
      * @param runnable A runnable object
      */
     virtual std::shared_ptr<Thread> newThread(
-      const std::shared_ptr<Runnable>& runnable,
-      DetachState detachState) const;
+        const std::shared_ptr<Runnable>& runnable,
+        DetachState detachState) const;
 
     int getStackSize() const;
     void setStackSize(int value);
@@ -230,13 +232,14 @@ class PosixThreadFactory : public ThreadFactory {
     DetachState getDetachState() const;
     void setDetachState(DetachState value);
     Thread::id_t getCurrentThreadId() const;
-
   };
 
  protected:
   std::shared_ptr<Impl> impl_;
 };
 
-}}} // apache::thrift::concurrency
+} // namespace concurrency
+} // namespace thrift
+} // namespace apache
 
 #endif // #ifndef _THRIFT_CONCURRENCY_POSIXTHREADFACTORY_H_

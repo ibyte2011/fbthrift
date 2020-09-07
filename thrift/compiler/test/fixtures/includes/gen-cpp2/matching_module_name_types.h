@@ -6,12 +6,24 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+
 
 #include "other/gen-cpp2/matching_module_name_types.h"
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct OtherStructField;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_OtherStructField
+#define APACHE_THRIFT_ACCESSOR_OtherStructField
+APACHE_THRIFT_DEFINE_ACCESSOR(OtherStructField);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 
@@ -30,40 +42,95 @@ class MyStruct;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace matching_module_name {
-class MyStruct final : private apache::thrift::detail::st::ComparisonOperators<MyStruct> {
+class MyStruct final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = MyStruct;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   MyStruct() {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   MyStruct(apache::thrift::FragileConstructor,  ::matching_module_name::OtherStruct OtherStructField__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    OtherStructField = arg.extract();
-    __isset.OtherStructField = true;
-  }
 
   MyStruct(MyStruct&&) = default;
 
   MyStruct(const MyStruct&) = default;
 
+
   MyStruct& operator=(MyStruct&&) = default;
 
   MyStruct& operator=(const MyStruct&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
    ::matching_module_name::OtherStruct OtherStructField;
 
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
   struct __isset {
     bool OtherStructField;
   } __isset = {};
   bool operator==(const MyStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const MyStruct& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const MyStruct& __x, const MyStruct& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const MyStruct& __x, const MyStruct& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::matching_module_name::OtherStruct>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> OtherStructField_ref() const& {
+    return {this->OtherStructField, __isset.OtherStructField};
+  }
+
+  template <typename..., typename T =  ::matching_module_name::OtherStruct>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> OtherStructField_ref() const&& {
+    return {std::move(this->OtherStructField), __isset.OtherStructField};
+  }
+
+  template <typename..., typename T =  ::matching_module_name::OtherStruct>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> OtherStructField_ref() & {
+    return {this->OtherStructField, __isset.OtherStructField};
+  }
+
+  template <typename..., typename T =  ::matching_module_name::OtherStruct>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> OtherStructField_ref() && {
+    return {std::move(this->OtherStructField), __isset.OtherStructField};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   const  ::matching_module_name::OtherStruct& get_OtherStructField() const&;
    ::matching_module_name::OtherStruct get_OtherStructField() &&;
 
   template <typename T_MyStruct_OtherStructField_struct_setter =  ::matching_module_name::OtherStruct>
    ::matching_module_name::OtherStruct& set_OtherStructField(T_MyStruct_OtherStructField_struct_setter&& OtherStructField_) {
     OtherStructField = std::forward<T_MyStruct_OtherStructField_struct_setter>(OtherStructField_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
     __isset.OtherStructField = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
     return OtherStructField;
   }
 
@@ -81,50 +148,14 @@ class MyStruct final : private apache::thrift::detail::st::ComparisonOperators<M
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< MyStruct >;
+  friend void swap(MyStruct& a, MyStruct& b);
 };
-
-void swap(MyStruct& a, MyStruct& b);
-extern template void MyStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t MyStruct::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t MyStruct::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void MyStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t MyStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t MyStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t MyStruct::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // matching_module_name
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::matching_module_name::MyStruct>::clear( ::matching_module_name::MyStruct* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::matching_module_name::MyStruct>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::matching_module_name::MyStruct>::write(Protocol* proto,  ::matching_module_name::MyStruct const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::matching_module_name::MyStruct>::read(Protocol* proto,  ::matching_module_name::MyStruct* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::matching_module_name::MyStruct>::serializedSize(Protocol const* proto,  ::matching_module_name::MyStruct const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::matching_module_name::MyStruct>::serializedSizeZC(Protocol const* proto,  ::matching_module_name::MyStruct const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift

@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -20,20 +20,33 @@ __property__ = property
 
 
 class Foo(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        myString: bool
+        myBools: bool
+        pass
+
+    myInteger: Final[int] = ...
+
+    myString: Final[_typing.Optional[str]] = ...
+
+    myBools: Final[_typing.Sequence[bool]] = ...
+
+    myNumbers: Final[_typing.Sequence[int]] = ...
+
     def __init__(
         self, *,
-        myInteger: int,
+        myInteger: _typing.Optional[int]=None,
         myString: _typing.Optional[str]=None,
         myBools: _typing.Optional[_typing.Sequence[bool]]=None,
-        myNumbers: _typing.Sequence[int]
+        myNumbers: _typing.Optional[_typing.Sequence[int]]=None
     ) -> None: ...
 
     def __call__(
         self, *,
-        myInteger: _typing.Union[int, NOTSETTYPE]=NOTSET,
-        myString: _typing.Union[str, NOTSETTYPE, None]=NOTSET,
-        myBools: _typing.Union[_typing.Sequence[bool], NOTSETTYPE, None]=NOTSET,
-        myNumbers: _typing.Union[_typing.Sequence[int], NOTSETTYPE]=NOTSET
+        myInteger: _typing.Union[int, __NotSet, None]=NOTSET,
+        myString: _typing.Union[str, __NotSet, None]=NOTSET,
+        myBools: _typing.Union[_typing.Sequence[bool], __NotSet, None]=NOTSET,
+        myNumbers: _typing.Union[_typing.Sequence[int], __NotSet, None]=NOTSET
     ) -> Foo: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Foo'], bytes]]: ...
@@ -45,15 +58,6 @@ class Foo(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tu
     def __gt__(self, other: 'Foo') -> bool: ...
     def __le__(self, other: 'Foo') -> bool: ...
     def __ge__(self, other: 'Foo') -> bool: ...
-
-    @__property__
-    def myInteger(self) -> int: ...
-    @__property__
-    def myString(self) -> _typing.Optional[str]: ...
-    @__property__
-    def myBools(self) -> _typing.Sequence[bool]: ...
-    @__property__
-    def myNumbers(self) -> _typing.Sequence[int]: ...
 
 
 _List__boolT = _typing.TypeVar('_List__boolT', bound=_typing.Sequence[bool])

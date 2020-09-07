@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,6 +46,8 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport module.types as _module_types
 import module.types as _module_types
+
+cimport module.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -50,6 +62,7 @@ cdef extern from "<utility>" namespace "std":
     cdef cFollyPromise[cFollyUnit] move_promise_cFollyUnit "std::move"(
         cFollyPromise[cFollyUnit])
 
+@cython.auto_pickle(False)
 cdef class Promise_cFollyUnit:
     cdef cFollyPromise[cFollyUnit] cPromise
 
@@ -63,6 +76,7 @@ cdef object _NestedContainers_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class NestedContainersInterface(
     ServiceInterface
 ):
@@ -119,20 +133,24 @@ cdef class NestedContainersInterface(
             foo):
         raise NotImplementedError("async def turtles is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__NestedContainers(for_clients=False)
+
+
 
 cdef api void call_cy_NestedContainers_mapList(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise,
-    unique_ptr[cmap[int32_t,vector[int32_t]]] foo
+    unique_ptr[cmap[cint32_t,vector[cint32_t]]] foo
 ):
-    cdef NestedContainersInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    arg_foo = _module_types.Map__i32_List__i32.create(_module_types.move(foo))
-    __context = None
-    if __iface._pass_context_mapList:
-        __context = RequestContext.create(ctx)
+    arg_foo = _module_types.Map__i32_List__i32.create(_module_types.__fbthrift_move(foo))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         NestedContainers_mapList_coro(
             self,
@@ -141,6 +159,8 @@ cdef api void call_cy_NestedContainers_mapList(
             arg_foo
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def NestedContainers_mapList_coro(
     object self,
@@ -149,7 +169,7 @@ async def NestedContainers_mapList_coro(
     foo
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.mapList, "pass_context", False):
             result = await self.mapList(ctx,
                       foo)
         else:
@@ -175,15 +195,14 @@ cdef api void call_cy_NestedContainers_mapSet(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise,
-    unique_ptr[cmap[int32_t,cset[int32_t]]] foo
+    unique_ptr[cmap[cint32_t,cset[cint32_t]]] foo
 ):
-    cdef NestedContainersInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    arg_foo = _module_types.Map__i32_Set__i32.create(_module_types.move(foo))
-    __context = None
-    if __iface._pass_context_mapSet:
-        __context = RequestContext.create(ctx)
+    arg_foo = _module_types.Map__i32_Set__i32.create(_module_types.__fbthrift_move(foo))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         NestedContainers_mapSet_coro(
             self,
@@ -192,6 +211,8 @@ cdef api void call_cy_NestedContainers_mapSet(
             arg_foo
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def NestedContainers_mapSet_coro(
     object self,
@@ -200,7 +221,7 @@ async def NestedContainers_mapSet_coro(
     foo
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.mapSet, "pass_context", False):
             result = await self.mapSet(ctx,
                       foo)
         else:
@@ -226,15 +247,14 @@ cdef api void call_cy_NestedContainers_listMap(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise,
-    unique_ptr[vector[cmap[int32_t,int32_t]]] foo
+    unique_ptr[vector[cmap[cint32_t,cint32_t]]] foo
 ):
-    cdef NestedContainersInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    arg_foo = _module_types.List__Map__i32_i32.create(_module_types.move(foo))
-    __context = None
-    if __iface._pass_context_listMap:
-        __context = RequestContext.create(ctx)
+    arg_foo = _module_types.List__Map__i32_i32.create(_module_types.__fbthrift_move(foo))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         NestedContainers_listMap_coro(
             self,
@@ -243,6 +263,8 @@ cdef api void call_cy_NestedContainers_listMap(
             arg_foo
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def NestedContainers_listMap_coro(
     object self,
@@ -251,7 +273,7 @@ async def NestedContainers_listMap_coro(
     foo
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.listMap, "pass_context", False):
             result = await self.listMap(ctx,
                       foo)
         else:
@@ -277,15 +299,14 @@ cdef api void call_cy_NestedContainers_listSet(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise,
-    unique_ptr[vector[cset[int32_t]]] foo
+    unique_ptr[vector[cset[cint32_t]]] foo
 ):
-    cdef NestedContainersInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    arg_foo = _module_types.List__Set__i32.create(_module_types.move(foo))
-    __context = None
-    if __iface._pass_context_listSet:
-        __context = RequestContext.create(ctx)
+    arg_foo = _module_types.List__Set__i32.create(_module_types.__fbthrift_move(foo))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         NestedContainers_listSet_coro(
             self,
@@ -294,6 +315,8 @@ cdef api void call_cy_NestedContainers_listSet(
             arg_foo
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def NestedContainers_listSet_coro(
     object self,
@@ -302,7 +325,7 @@ async def NestedContainers_listSet_coro(
     foo
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.listSet, "pass_context", False):
             result = await self.listSet(ctx,
                       foo)
         else:
@@ -328,15 +351,14 @@ cdef api void call_cy_NestedContainers_turtles(
     object self,
     Cpp2RequestContext* ctx,
     cFollyPromise[cFollyUnit] cPromise,
-    unique_ptr[vector[vector[cmap[int32_t,cmap[int32_t,cset[int32_t]]]]]] foo
+    unique_ptr[vector[vector[cmap[cint32_t,cmap[cint32_t,cset[cint32_t]]]]]] foo
 ):
-    cdef NestedContainersInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
-    arg_foo = _module_types.List__List__Map__i32_Map__i32_Set__i32.create(_module_types.move(foo))
-    __context = None
-    if __iface._pass_context_turtles:
-        __context = RequestContext.create(ctx)
+    arg_foo = _module_types.List__List__Map__i32_Map__i32_Set__i32.create(_module_types.__fbthrift_move(foo))
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         NestedContainers_turtles_coro(
             self,
@@ -345,6 +367,8 @@ cdef api void call_cy_NestedContainers_turtles(
             arg_foo
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def NestedContainers_turtles_coro(
     object self,
@@ -353,7 +377,7 @@ async def NestedContainers_turtles_coro(
     foo
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.turtles, "pass_context", False):
             result = await self.turtles(ctx,
                       foo)
         else:

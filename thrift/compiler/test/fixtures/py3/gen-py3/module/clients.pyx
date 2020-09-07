@@ -4,19 +4,25 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector as vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
 from cython.operator cimport dereference as deref, typeid
 from cpython.ref cimport PyObject
-from thrift.py3.client cimport cRequestChannel_ptr, makeClientWrapper
+from thrift.py3.client cimport cRequestChannel_ptr, makeClientWrapper, cClientWrapper
 from thrift.py3.exceptions cimport try_make_shared_exception, create_py_exception
 from folly cimport cFollyTry, cFollyUnit, c_unit
+from folly.cast cimport down_cast_ptr
 from libcpp.typeinfo cimport type_info
 import thrift.py3.types
 cimport thrift.py3.types
@@ -24,7 +30,6 @@ from thrift.py3.types cimport move
 import thrift.py3.client
 cimport thrift.py3.client
 from thrift.py3.common cimport RpcOptions as __RpcOptions
-from thrift.py3.common import RpcOptions as __RpcOptions
 
 from folly.futures cimport bridgeFutureWith
 from folly.executor cimport get_executor
@@ -40,13 +45,15 @@ from asyncio import get_event_loop as asyncio_get_event_loop, shield as asyncio_
 cimport module.types as _module_types
 import module.types as _module_types
 
+cimport module.services_reflection as _services_reflection
+
 from module.clients_wrapper cimport cSimpleServiceAsyncClient, cSimpleServiceClientWrapper
 from module.clients_wrapper cimport cDerivedServiceAsyncClient, cDerivedServiceClientWrapper
 from module.clients_wrapper cimport cRederivedServiceAsyncClient, cRederivedServiceClientWrapper
 
 
 cdef void SimpleService_get_five_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -59,7 +66,7 @@ cdef void SimpleService_get_five_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_add_five_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -93,12 +100,12 @@ cdef void SimpleService_concat_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(result.value().decode('UTF-8'))
+            pyfuture.set_result(result.value().data().decode('UTF-8'))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_get_value_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -124,7 +131,7 @@ cdef void SimpleService_negate_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_tiny_callback(
-    cFollyTry[int8_t]&& result,
+    cFollyTry[cint8_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -137,7 +144,7 @@ cdef void SimpleService_tiny_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_small_callback(
-    cFollyTry[int16_t]&& result,
+    cFollyTry[cint16_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -150,7 +157,7 @@ cdef void SimpleService_small_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_big_callback(
-    cFollyTry[int64_t]&& result,
+    cFollyTry[cint64_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -181,7 +188,12 @@ cdef void SimpleService_expected_exception_callback(
 ):
     client, pyfuture, options = <object> userdata  
     if result.hasException[_module_types.cSimpleException]():
-        pyfuture.set_exception(_module_types.SimpleException.create(try_make_shared_exception[_module_types.cSimpleException](result.exception())))
+        try:
+            exc = _module_types.SimpleException.create(try_make_shared_exception[_module_types.cSimpleException](result.exception()))
+        except Exception as ex:
+            pyfuture.set_exception(ex.with_traceback(None))
+        else:
+            pyfuture.set_exception(exc)
     elif result.hasException():
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
@@ -191,7 +203,7 @@ cdef void SimpleService_expected_exception_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_unexpected_exception_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -204,7 +216,7 @@ cdef void SimpleService_unexpected_exception_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_sum_i16_list_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -217,7 +229,7 @@ cdef void SimpleService_sum_i16_list_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_sum_i32_list_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -230,7 +242,7 @@ cdef void SimpleService_sum_i32_list_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_sum_i64_list_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -251,12 +263,12 @@ cdef void SimpleService_concat_many_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(result.value().decode('UTF-8'))
+            pyfuture.set_result(result.value().data().decode('UTF-8'))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_count_structs_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -269,7 +281,7 @@ cdef void SimpleService_count_structs_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_sum_set_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -303,12 +315,12 @@ cdef void SimpleService_get_map_value_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(result.value().decode('UTF-8'))
+            pyfuture.set_result(result.value().data().decode('UTF-8'))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_map_length_callback(
-    cFollyTry[int16_t]&& result,
+    cFollyTry[cint16_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -321,7 +333,7 @@ cdef void SimpleService_map_length_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_sum_map_values_callback(
-    cFollyTry[int16_t]&& result,
+    cFollyTry[cint16_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -334,7 +346,7 @@ cdef void SimpleService_sum_map_values_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_complex_sum_i32_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -355,7 +367,7 @@ cdef void SimpleService_repeat_name_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(result.value().decode('UTF-8'))
+            pyfuture.set_result(result.value().data().decode('UTF-8'))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
@@ -373,7 +385,7 @@ cdef void SimpleService_get_struct_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_fib_callback(
-    cFollyTry[vector[int32_t]]&& result,
+    cFollyTry[vector[cint32_t]]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -381,7 +393,7 @@ cdef void SimpleService_fib_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(_module_types.List__i32.create(make_shared[vector[int32_t]](result.value())))
+            pyfuture.set_result(_module_types.List__i32.create(make_shared[vector[cint32_t]](result.value())))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
@@ -399,7 +411,7 @@ cdef void SimpleService_unique_words_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_words_count_callback(
-    cFollyTry[cmap[string,int16_t]]&& result,
+    cFollyTry[cmap[string,cint16_t]]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -407,7 +419,7 @@ cdef void SimpleService_words_count_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(_module_types.Map__string_i16.create(make_shared[cmap[string,int16_t]](result.value())))
+            pyfuture.set_result(_module_types.Map__string_i16.create(make_shared[cmap[string,cint16_t]](result.value())))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
@@ -425,7 +437,7 @@ cdef void SimpleService_set_enum_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_list_of_lists_callback(
-    cFollyTry[vector[vector[int32_t]]]&& result,
+    cFollyTry[vector[vector[cint32_t]]]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -433,12 +445,12 @@ cdef void SimpleService_list_of_lists_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(_module_types.List__List__i32.create(make_shared[vector[vector[int32_t]]](result.value())))
+            pyfuture.set_result(_module_types.List__List__i32.create(make_shared[vector[vector[cint32_t]]](result.value())))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_word_character_frequency_callback(
-    cFollyTry[cmap[string,cmap[string,int32_t]]]&& result,
+    cFollyTry[cmap[string,cmap[string,cint32_t]]]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -446,7 +458,7 @@ cdef void SimpleService_word_character_frequency_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(_module_types.Map__string_Map__string_i32.create(make_shared[cmap[string,cmap[string,int32_t]]](result.value())))
+            pyfuture.set_result(_module_types.Map__string_Map__string_i32.create(make_shared[cmap[string,cmap[string,cint32_t]]](result.value())))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
@@ -464,7 +476,7 @@ cdef void SimpleService_list_of_sets_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_nested_map_argument_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -485,12 +497,12 @@ cdef void SimpleService_make_sentence_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(result.value().decode('UTF-8'))
+            pyfuture.set_result(result.value().data().decode('UTF-8'))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void SimpleService_get_union_callback(
-    cFollyTry[cset[int32_t]]&& result,
+    cFollyTry[cset[cint32_t]]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -498,7 +510,7 @@ cdef void SimpleService_get_union_callback(
         pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
     else:
         try:
-            pyfuture.set_result(_module_types.Set__i32.create(make_shared[cset[int32_t]](result.value())))
+            pyfuture.set_result(_module_types.Set__i32.create(make_shared[cset[cint32_t]](result.value())))
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
@@ -567,8 +579,21 @@ cdef void SimpleService_contain_enum_callback(
         except Exception as ex:
             pyfuture.set_exception(ex.with_traceback(None))
 
+cdef void SimpleService_get_binary_union_struct_callback(
+    cFollyTry[_module_types.cBinaryUnionStruct]&& result,
+    PyObject* userdata
+):
+    client, pyfuture, options = <object> userdata  
+    if result.hasException():
+        pyfuture.set_exception(create_py_exception(result.exception(), <__RpcOptions>options))
+    else:
+        try:
+            pyfuture.set_result(_module_types.BinaryUnionStruct.create(make_shared[_module_types.cBinaryUnionStruct](result.value())))
+        except Exception as ex:
+            pyfuture.set_exception(ex.with_traceback(None))
+
 cdef void DerivedService_get_six_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -581,7 +606,7 @@ cdef void DerivedService_get_six_callback(
             pyfuture.set_exception(ex.with_traceback(None))
 
 cdef void RederivedService_get_seven_callback(
-    cFollyTry[int32_t]&& result,
+    cFollyTry[cint32_t]&& result,
     PyObject* userdata
 ):
     client, pyfuture, options = <object> userdata  
@@ -598,78 +623,17 @@ cdef object _SimpleService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class SimpleService(thrift.py3.client.Client):
     annotations = _SimpleService_annotations
-
-    def __cinit__(SimpleService self):
-        loop = asyncio_get_event_loop()
-        self._connect_future = loop.create_future()
-        self._deferred_headers = {}
 
     cdef const type_info* _typeid(SimpleService self):
         return &typeid(cSimpleServiceAsyncClient)
 
-    @staticmethod
-    cdef _module_SimpleService_set_client(SimpleService inst, shared_ptr[cSimpleServiceClientWrapper] c_obj):
-        """So the class hierarchy talks to the correct pointer type"""
-        inst._module_SimpleService_client = c_obj
-
-    cdef _module_SimpleService_reset_client(SimpleService self):
-        """So the class hierarchy resets the shared pointer up the chain"""
-        self._module_SimpleService_client.reset()
-
-    def __dealloc__(SimpleService self):
-        if self._connect_future.done() and not self._connect_future.exception():
-            print(f'thrift-py3 client: {self!r} was not cleaned up, use the async context manager', file=sys.stderr)
-            if self._module_SimpleService_client:
-                deref(self._module_SimpleService_client).disconnect().get()
-        self._module_SimpleService_reset_client()
-
     cdef bind_client(SimpleService self, cRequestChannel_ptr&& channel):
-        SimpleService._module_SimpleService_set_client(
-            self,
-            makeClientWrapper[cSimpleServiceAsyncClient, cSimpleServiceClientWrapper](
-                thrift.py3.client.move(channel)
-            ),
+        self._client = makeClientWrapper[cSimpleServiceAsyncClient, cSimpleServiceClientWrapper](
+            thrift.py3.client.move(channel)
         )
-
-    async def __aenter__(SimpleService self):
-        await asyncio_shield(self._connect_future)
-        if self._context_entered:
-            raise asyncio_InvalidStateError('Client context has been used already')
-        self._context_entered = True
-        for key, value in self._deferred_headers.items():
-            self.set_persistent_header(key, value)
-        self._deferred_headers = None
-        return self
-
-    def __aexit__(SimpleService self, *exc):
-        self._check_connect_future()
-        loop = asyncio_get_event_loop()
-        future = loop.create_future()
-        userdata = (self, future)
-        bridgeFutureWith[cFollyUnit](
-            self._executor,
-            deref(self._module_SimpleService_client).disconnect(),
-            closed_SimpleService_py3_client_callback,
-            <PyObject *>userdata  # So we keep client alive until disconnect
-        )
-        # To break any future usage of this client
-        # Also to prevent dealloc from trying to disconnect in a blocking way.
-        badfuture = loop.create_future()
-        badfuture.set_exception(asyncio_InvalidStateError('Client Out of Context'))
-        badfuture.exception()
-        self._connect_future = badfuture
-        return asyncio_shield(future)
-
-    def set_persistent_header(SimpleService self, str key, str value):
-        if not self._module_SimpleService_client:
-            self._deferred_headers[key] = value
-            return
-
-        cdef string ckey = <bytes> key.encode('utf-8')
-        cdef string cvalue = <bytes> value.encode('utf-8')
-        deref(self._module_SimpleService_client).setPersistentHeader(ckey, cvalue)
 
     @cython.always_allow_keywords(True)
     def get_five(
@@ -682,9 +646,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).get_five(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_five(rpc_options._cpp_obj, 
             ),
             SimpleService_get_five_callback,
             <PyObject *> __userdata
@@ -702,14 +666,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(num, int):
             raise TypeError(f'num is not a {int !r}.')
         else:
-            num = <int32_t> num
+            num = <cint32_t> num
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).add_five(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).add_five(rpc_options._cpp_obj, 
                 num,
             ),
             SimpleService_add_five_callback,
@@ -730,7 +694,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cFollyUnit](
             self._executor,
-            deref(self._module_SimpleService_client).do_nothing(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).do_nothing(rpc_options._cpp_obj, 
             ),
             SimpleService_do_nothing_callback,
             <PyObject *> __userdata
@@ -752,7 +716,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).concat(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).concat(rpc_options._cpp_obj, 
                 first.encode('UTF-8'),
                 second.encode('UTF-8'),
             ),
@@ -773,9 +737,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).get_value(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_value(rpc_options._cpp_obj, 
                 deref((<_module_types.SimpleStruct>simple_struct)._cpp_obj),
             ),
             SimpleService_get_value_callback,
@@ -797,7 +761,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cbool](
             self._executor,
-            deref(self._module_SimpleService_client).negate(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).negate(rpc_options._cpp_obj, 
                 input,
             ),
             SimpleService_negate_callback,
@@ -816,14 +780,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(input, int):
             raise TypeError(f'input is not a {int !r}.')
         else:
-            input = <int8_t> input
+            input = <cint8_t> input
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int8_t](
+        bridgeFutureWith[cint8_t](
             self._executor,
-            deref(self._module_SimpleService_client).tiny(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).tiny(rpc_options._cpp_obj, 
                 input,
             ),
             SimpleService_tiny_callback,
@@ -842,14 +806,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(input, int):
             raise TypeError(f'input is not a {int !r}.')
         else:
-            input = <int16_t> input
+            input = <cint16_t> input
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int16_t](
+        bridgeFutureWith[cint16_t](
             self._executor,
-            deref(self._module_SimpleService_client).small(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).small(rpc_options._cpp_obj, 
                 input,
             ),
             SimpleService_small_callback,
@@ -868,14 +832,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(input, int):
             raise TypeError(f'input is not a {int !r}.')
         else:
-            input = <int64_t> input
+            input = <cint64_t> input
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int64_t](
+        bridgeFutureWith[cint64_t](
             self._executor,
-            deref(self._module_SimpleService_client).big(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).big(rpc_options._cpp_obj, 
                 input,
             ),
             SimpleService_big_callback,
@@ -897,7 +861,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[double](
             self._executor,
-            deref(self._module_SimpleService_client).two(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).two(rpc_options._cpp_obj, 
                 input,
             ),
             SimpleService_two_callback,
@@ -918,7 +882,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cFollyUnit](
             self._executor,
-            deref(self._module_SimpleService_client).expected_exception(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).expected_exception(rpc_options._cpp_obj, 
             ),
             SimpleService_expected_exception_callback,
             <PyObject *> __userdata
@@ -936,9 +900,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).unexpected_exception(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).unexpected_exception(rpc_options._cpp_obj, 
             ),
             SimpleService_unexpected_exception_callback,
             <PyObject *> __userdata
@@ -959,9 +923,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).sum_i16_list(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).sum_i16_list(rpc_options._cpp_obj, 
                 deref((<_module_types.List__i16>numbers)._cpp_obj),
             ),
             SimpleService_sum_i16_list_callback,
@@ -983,9 +947,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).sum_i32_list(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).sum_i32_list(rpc_options._cpp_obj, 
                 deref((<_module_types.List__i32>numbers)._cpp_obj),
             ),
             SimpleService_sum_i32_list_callback,
@@ -1007,9 +971,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).sum_i64_list(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).sum_i64_list(rpc_options._cpp_obj, 
                 deref((<_module_types.List__i64>numbers)._cpp_obj),
             ),
             SimpleService_sum_i64_list_callback,
@@ -1033,7 +997,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).concat_many(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).concat_many(rpc_options._cpp_obj, 
                 deref((<_module_types.List__string>words)._cpp_obj),
             ),
             SimpleService_concat_many_callback,
@@ -1055,9 +1019,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).count_structs(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).count_structs(rpc_options._cpp_obj, 
                 deref((<_module_types.List__SimpleStruct>items)._cpp_obj),
             ),
             SimpleService_count_structs_callback,
@@ -1079,9 +1043,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).sum_set(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).sum_set(rpc_options._cpp_obj, 
                 deref((<_module_types.Set__i32>numbers)._cpp_obj),
             ),
             SimpleService_sum_set_callback,
@@ -1106,7 +1070,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cbool](
             self._executor,
-            deref(self._module_SimpleService_client).contains_word(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).contains_word(rpc_options._cpp_obj, 
                 deref((<_module_types.Set__string>words)._cpp_obj),
                 word.encode('UTF-8'),
             ),
@@ -1132,7 +1096,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).get_map_value(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_map_value(rpc_options._cpp_obj, 
                 deref((<_module_types.Map__string_string>words)._cpp_obj),
                 key.encode('UTF-8'),
             ),
@@ -1155,9 +1119,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int16_t](
+        bridgeFutureWith[cint16_t](
             self._executor,
-            deref(self._module_SimpleService_client).map_length(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).map_length(rpc_options._cpp_obj, 
                 deref((<_module_types.Map__string_SimpleStruct>items)._cpp_obj),
             ),
             SimpleService_map_length_callback,
@@ -1179,9 +1143,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int16_t](
+        bridgeFutureWith[cint16_t](
             self._executor,
-            deref(self._module_SimpleService_client).sum_map_values(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).sum_map_values(rpc_options._cpp_obj, 
                 deref((<_module_types.Map__string_i16>items)._cpp_obj),
             ),
             SimpleService_sum_map_values_callback,
@@ -1201,9 +1165,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).complex_sum_i32(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).complex_sum_i32(rpc_options._cpp_obj, 
                 deref((<_module_types.ComplexStruct>counter)._cpp_obj),
             ),
             SimpleService_complex_sum_i32_callback,
@@ -1225,7 +1189,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).repeat_name(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).repeat_name(rpc_options._cpp_obj, 
                 deref((<_module_types.ComplexStruct>counter)._cpp_obj),
             ),
             SimpleService_repeat_name_callback,
@@ -1246,7 +1210,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[_module_types.cSimpleStruct](
             self._executor,
-            deref(self._module_SimpleService_client).get_struct(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_struct(rpc_options._cpp_obj, 
             ),
             SimpleService_get_struct_callback,
             <PyObject *> __userdata
@@ -1264,14 +1228,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(n, int):
             raise TypeError(f'n is not a {int !r}.')
         else:
-            n = <int16_t> n
+            n = <cint16_t> n
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[vector[int32_t]](
+        bridgeFutureWith[vector[cint32_t]](
             self._executor,
-            deref(self._module_SimpleService_client).fib(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).fib(rpc_options._cpp_obj, 
                 n,
             ),
             SimpleService_fib_callback,
@@ -1295,7 +1259,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cset[string]](
             self._executor,
-            deref(self._module_SimpleService_client).unique_words(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).unique_words(rpc_options._cpp_obj, 
                 deref((<_module_types.List__string>words)._cpp_obj),
             ),
             SimpleService_unique_words_callback,
@@ -1317,9 +1281,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[cmap[string,int16_t]](
+        bridgeFutureWith[cmap[string,cint16_t]](
             self._executor,
-            deref(self._module_SimpleService_client).words_count(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).words_count(rpc_options._cpp_obj, 
                 deref((<_module_types.List__string>words)._cpp_obj),
             ),
             SimpleService_words_count_callback,
@@ -1341,8 +1305,8 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[_module_types.cAnEnum](
             self._executor,
-            deref(self._module_SimpleService_client).set_enum(rpc_options._cpp_obj, 
-                _module_types.AnEnum_to_cpp(in_enum),
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).set_enum(rpc_options._cpp_obj, 
+                <_module_types.cAnEnum><int>in_enum,
             ),
             SimpleService_set_enum_callback,
             <PyObject *> __userdata
@@ -1361,18 +1325,18 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(num_lists, int):
             raise TypeError(f'num_lists is not a {int !r}.')
         else:
-            num_lists = <int16_t> num_lists
+            num_lists = <cint16_t> num_lists
         if not isinstance(num_items, int):
             raise TypeError(f'num_items is not a {int !r}.')
         else:
-            num_items = <int16_t> num_items
+            num_items = <cint16_t> num_items
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[vector[vector[int32_t]]](
+        bridgeFutureWith[vector[vector[cint32_t]]](
             self._executor,
-            deref(self._module_SimpleService_client).list_of_lists(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).list_of_lists(rpc_options._cpp_obj, 
                 num_lists,
                 num_items,
             ),
@@ -1393,9 +1357,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[cmap[string,cmap[string,int32_t]]](
+        bridgeFutureWith[cmap[string,cmap[string,cint32_t]]](
             self._executor,
-            deref(self._module_SimpleService_client).word_character_frequency(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).word_character_frequency(rpc_options._cpp_obj, 
                 sentence.encode('UTF-8'),
             ),
             SimpleService_word_character_frequency_callback,
@@ -1417,7 +1381,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[vector[cset[string]]](
             self._executor,
-            deref(self._module_SimpleService_client).list_of_sets(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).list_of_sets(rpc_options._cpp_obj, 
                 some_words.encode('UTF-8'),
             ),
             SimpleService_list_of_sets_callback,
@@ -1439,9 +1403,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_SimpleService_client).nested_map_argument(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).nested_map_argument(rpc_options._cpp_obj, 
                 deref((<_module_types.Map__string_List__SimpleStruct>struct_map)._cpp_obj),
             ),
             SimpleService_nested_map_argument_callback,
@@ -1465,7 +1429,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).make_sentence(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).make_sentence(rpc_options._cpp_obj, 
                 deref((<_module_types.List__List__string>word_chars)._cpp_obj),
             ),
             SimpleService_make_sentence_callback,
@@ -1487,9 +1451,9 @@ cdef class SimpleService(thrift.py3.client.Client):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[cset[int32_t]](
+        bridgeFutureWith[cset[cint32_t]](
             self._executor,
-            deref(self._module_SimpleService_client).get_union(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_union(rpc_options._cpp_obj, 
                 deref((<_module_types.List__Set__i32>sets)._cpp_obj),
             ),
             SimpleService_get_union_callback,
@@ -1513,7 +1477,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cset[string]](
             self._executor,
-            deref(self._module_SimpleService_client).get_keys(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_keys(rpc_options._cpp_obj, 
                 deref((<_module_types.List__Map__string_string>string_map)._cpp_obj),
             ),
             SimpleService_get_keys_callback,
@@ -1532,14 +1496,14 @@ cdef class SimpleService(thrift.py3.client.Client):
         if not isinstance(key, int):
             raise TypeError(f'key is not a {int !r}.')
         else:
-            key = <int32_t> key
+            key = <cint32_t> key
         self._check_connect_future()
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[double](
             self._executor,
-            deref(self._module_SimpleService_client).lookup_double(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).lookup_double(rpc_options._cpp_obj, 
                 key,
             ),
             SimpleService_lookup_double_callback,
@@ -1561,7 +1525,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[string](
             self._executor,
-            deref(self._module_SimpleService_client).retrieve_binary(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).retrieve_binary(rpc_options._cpp_obj, 
                 something,
             ),
             SimpleService_retrieve_binary_callback,
@@ -1585,7 +1549,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[cset[string]](
             self._executor,
-            deref(self._module_SimpleService_client).contain_binary(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).contain_binary(rpc_options._cpp_obj, 
                 deref((<_module_types.List__binary>binaries)._cpp_obj),
             ),
             SimpleService_contain_binary_callback,
@@ -1609,7 +1573,7 @@ cdef class SimpleService(thrift.py3.client.Client):
         __userdata = (self, __future, rpc_options)
         bridgeFutureWith[vector[_module_types.cAnEnum]](
             self._executor,
-            deref(self._module_SimpleService_client).contain_enum(rpc_options._cpp_obj, 
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).contain_enum(rpc_options._cpp_obj, 
                 deref((<_module_types.List__AnEnum>the_enum)._cpp_obj),
             ),
             SimpleService_contain_enum_callback,
@@ -1617,92 +1581,49 @@ cdef class SimpleService(thrift.py3.client.Client):
         )
         return asyncio_shield(__future)
 
+    @cython.always_allow_keywords(True)
+    def get_binary_union_struct(
+            SimpleService self,
+            _module_types.BinaryUnion u not None,
+            __RpcOptions rpc_options=None
+    ):
+        if rpc_options is None:
+            rpc_options = <__RpcOptions>__RpcOptions.__new__(__RpcOptions)
+        self._check_connect_future()
+        __loop = asyncio_get_event_loop()
+        __future = __loop.create_future()
+        __userdata = (self, __future, rpc_options)
+        bridgeFutureWith[_module_types.cBinaryUnionStruct](
+            self._executor,
+            down_cast_ptr[cSimpleServiceClientWrapper, cClientWrapper](self._client.get()).get_binary_union_struct(rpc_options._cpp_obj, 
+                deref((<_module_types.BinaryUnion>u)._cpp_obj),
+            ),
+            SimpleService_get_binary_union_struct_callback,
+            <PyObject *> __userdata
+        )
+        return asyncio_shield(__future)
 
 
-cdef void closed_SimpleService_py3_client_callback(
-    cFollyTry[cFollyUnit]&& result,
-    PyObject* userdata,
-):
-    client, pyfuture = <object> userdata 
-    pyfuture.set_result(None)
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__SimpleService(for_clients=True)
+
 cdef object _DerivedService_annotations = _py_types.MappingProxyType({
+    """bar""": """1""",    """foo""": """\"\"\"""",
 })
 
 
+@cython.auto_pickle(False)
 cdef class DerivedService(SimpleService):
     annotations = _DerivedService_annotations
-
-    def __cinit__(DerivedService self):
-        loop = asyncio_get_event_loop()
-        self._connect_future = loop.create_future()
-        self._deferred_headers = {}
 
     cdef const type_info* _typeid(DerivedService self):
         return &typeid(cDerivedServiceAsyncClient)
 
-    @staticmethod
-    cdef _module_DerivedService_set_client(DerivedService inst, shared_ptr[cDerivedServiceClientWrapper] c_obj):
-        """So the class hierarchy talks to the correct pointer type"""
-        inst._module_DerivedService_client = c_obj
-        SimpleService._module_SimpleService_set_client(inst, <shared_ptr[cSimpleServiceClientWrapper]>c_obj)
-
-    cdef _module_DerivedService_reset_client(DerivedService self):
-        """So the class hierarchy resets the shared pointer up the chain"""
-        self._module_DerivedService_client.reset()
-        SimpleService._module_SimpleService_reset_client(self)
-
-    def __dealloc__(DerivedService self):
-        if self._connect_future.done() and not self._connect_future.exception():
-            print(f'thrift-py3 client: {self!r} was not cleaned up, use the async context manager', file=sys.stderr)
-            if self._module_DerivedService_client:
-                deref(self._module_DerivedService_client).disconnect().get()
-        self._module_DerivedService_reset_client()
-
     cdef bind_client(DerivedService self, cRequestChannel_ptr&& channel):
-        DerivedService._module_DerivedService_set_client(
-            self,
-            makeClientWrapper[cDerivedServiceAsyncClient, cDerivedServiceClientWrapper](
-                thrift.py3.client.move(channel)
-            ),
+        self._client = makeClientWrapper[cDerivedServiceAsyncClient, cDerivedServiceClientWrapper](
+            thrift.py3.client.move(channel)
         )
-
-    async def __aenter__(DerivedService self):
-        await asyncio_shield(self._connect_future)
-        if self._context_entered:
-            raise asyncio_InvalidStateError('Client context has been used already')
-        self._context_entered = True
-        for key, value in self._deferred_headers.items():
-            self.set_persistent_header(key, value)
-        self._deferred_headers = None
-        return self
-
-    def __aexit__(DerivedService self, *exc):
-        self._check_connect_future()
-        loop = asyncio_get_event_loop()
-        future = loop.create_future()
-        userdata = (self, future)
-        bridgeFutureWith[cFollyUnit](
-            self._executor,
-            deref(self._module_DerivedService_client).disconnect(),
-            closed_DerivedService_py3_client_callback,
-            <PyObject *>userdata  # So we keep client alive until disconnect
-        )
-        # To break any future usage of this client
-        # Also to prevent dealloc from trying to disconnect in a blocking way.
-        badfuture = loop.create_future()
-        badfuture.set_exception(asyncio_InvalidStateError('Client Out of Context'))
-        badfuture.exception()
-        self._connect_future = badfuture
-        return asyncio_shield(future)
-
-    def set_persistent_header(DerivedService self, str key, str value):
-        if not self._module_DerivedService_client:
-            self._deferred_headers[key] = value
-            return
-
-        cdef string ckey = <bytes> key.encode('utf-8')
-        cdef string cvalue = <bytes> value.encode('utf-8')
-        deref(self._module_DerivedService_client).setPersistentHeader(ckey, cvalue)
 
     @cython.always_allow_keywords(True)
     def get_six(
@@ -1715,9 +1636,9 @@ cdef class DerivedService(SimpleService):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_DerivedService_client).get_six(rpc_options._cpp_obj, 
+            down_cast_ptr[cDerivedServiceClientWrapper, cClientWrapper](self._client.get()).get_six(rpc_options._cpp_obj, 
             ),
             DerivedService_get_six_callback,
             <PyObject *> __userdata
@@ -1725,91 +1646,25 @@ cdef class DerivedService(SimpleService):
         return asyncio_shield(__future)
 
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__DerivedService(for_clients=True)
 
-cdef void closed_DerivedService_py3_client_callback(
-    cFollyTry[cFollyUnit]&& result,
-    PyObject* userdata,
-):
-    client, pyfuture = <object> userdata 
-    pyfuture.set_result(None)
 cdef object _RederivedService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class RederivedService(DerivedService):
     annotations = _RederivedService_annotations
-
-    def __cinit__(RederivedService self):
-        loop = asyncio_get_event_loop()
-        self._connect_future = loop.create_future()
-        self._deferred_headers = {}
 
     cdef const type_info* _typeid(RederivedService self):
         return &typeid(cRederivedServiceAsyncClient)
 
-    @staticmethod
-    cdef _module_RederivedService_set_client(RederivedService inst, shared_ptr[cRederivedServiceClientWrapper] c_obj):
-        """So the class hierarchy talks to the correct pointer type"""
-        inst._module_RederivedService_client = c_obj
-        DerivedService._module_DerivedService_set_client(inst, <shared_ptr[cDerivedServiceClientWrapper]>c_obj)
-
-    cdef _module_RederivedService_reset_client(RederivedService self):
-        """So the class hierarchy resets the shared pointer up the chain"""
-        self._module_RederivedService_client.reset()
-        DerivedService._module_DerivedService_reset_client(self)
-
-    def __dealloc__(RederivedService self):
-        if self._connect_future.done() and not self._connect_future.exception():
-            print(f'thrift-py3 client: {self!r} was not cleaned up, use the async context manager', file=sys.stderr)
-            if self._module_RederivedService_client:
-                deref(self._module_RederivedService_client).disconnect().get()
-        self._module_RederivedService_reset_client()
-
     cdef bind_client(RederivedService self, cRequestChannel_ptr&& channel):
-        RederivedService._module_RederivedService_set_client(
-            self,
-            makeClientWrapper[cRederivedServiceAsyncClient, cRederivedServiceClientWrapper](
-                thrift.py3.client.move(channel)
-            ),
+        self._client = makeClientWrapper[cRederivedServiceAsyncClient, cRederivedServiceClientWrapper](
+            thrift.py3.client.move(channel)
         )
-
-    async def __aenter__(RederivedService self):
-        await asyncio_shield(self._connect_future)
-        if self._context_entered:
-            raise asyncio_InvalidStateError('Client context has been used already')
-        self._context_entered = True
-        for key, value in self._deferred_headers.items():
-            self.set_persistent_header(key, value)
-        self._deferred_headers = None
-        return self
-
-    def __aexit__(RederivedService self, *exc):
-        self._check_connect_future()
-        loop = asyncio_get_event_loop()
-        future = loop.create_future()
-        userdata = (self, future)
-        bridgeFutureWith[cFollyUnit](
-            self._executor,
-            deref(self._module_RederivedService_client).disconnect(),
-            closed_RederivedService_py3_client_callback,
-            <PyObject *>userdata  # So we keep client alive until disconnect
-        )
-        # To break any future usage of this client
-        # Also to prevent dealloc from trying to disconnect in a blocking way.
-        badfuture = loop.create_future()
-        badfuture.set_exception(asyncio_InvalidStateError('Client Out of Context'))
-        badfuture.exception()
-        self._connect_future = badfuture
-        return asyncio_shield(future)
-
-    def set_persistent_header(RederivedService self, str key, str value):
-        if not self._module_RederivedService_client:
-            self._deferred_headers[key] = value
-            return
-
-        cdef string ckey = <bytes> key.encode('utf-8')
-        cdef string cvalue = <bytes> value.encode('utf-8')
-        deref(self._module_RederivedService_client).setPersistentHeader(ckey, cvalue)
 
     @cython.always_allow_keywords(True)
     def get_seven(
@@ -1822,9 +1677,9 @@ cdef class RederivedService(DerivedService):
         __loop = asyncio_get_event_loop()
         __future = __loop.create_future()
         __userdata = (self, __future, rpc_options)
-        bridgeFutureWith[int32_t](
+        bridgeFutureWith[cint32_t](
             self._executor,
-            deref(self._module_RederivedService_client).get_seven(rpc_options._cpp_obj, 
+            down_cast_ptr[cRederivedServiceClientWrapper, cClientWrapper](self._client.get()).get_seven(rpc_options._cpp_obj, 
             ),
             RederivedService_get_seven_callback,
             <PyObject *> __userdata
@@ -1832,10 +1687,7 @@ cdef class RederivedService(DerivedService):
         return asyncio_shield(__future)
 
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__RederivedService(for_clients=True)
 
-cdef void closed_RederivedService_py3_client_callback(
-    cFollyTry[cFollyUnit]&& result,
-    PyObject* userdata,
-):
-    client, pyfuture = <object> userdata 
-    pyfuture.set_result(None)

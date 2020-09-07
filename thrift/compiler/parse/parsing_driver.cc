@@ -1,23 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 #include <thrift/compiler/parse/parsing_driver.h>
 
 #include <cstdarg>
@@ -32,6 +28,7 @@
 
 namespace apache {
 namespace thrift {
+namespace compiler {
 
 namespace {
 
@@ -73,13 +70,12 @@ std::unique_ptr<t_program_bundle> parsing_driver::parse(
     return result;
   }
 
-  parser_ = std::make_unique<apache::thrift::yy::parser>(
-      *this, scanner->get_scanner());
+  parser_ = std::make_unique<yy::parser>(*this, scanner->get_scanner());
 
   try {
     parse_file();
     result = std::move(program_bundle);
-  } catch (const parsing_terminator& e) {
+  } catch (const parsing_terminator&) {
     // No need to do anything here. The purpose of the exception is simply to
     // end the parsing process by unwinding to here.
   }
@@ -110,7 +106,7 @@ void parsing_driver::parse_file() {
 
   // Create new scope and scan for includes
   verbose("Scanning %s for includes\n", path.c_str());
-  mode = apache::thrift::parsing_mode::INCLUDES;
+  mode = parsing_mode::INCLUDES;
   try {
     if (parser_->parse() != 0) {
       failure("Parser error during include pass.");
@@ -144,6 +140,7 @@ void parsing_driver::parse_file() {
     parse_file();
 
     size_t num_removed = circular_deps_.erase(path);
+    (void)num_removed;
     assert(num_removed == 1);
   }
   params = old_params;
@@ -157,7 +154,7 @@ void parsing_driver::parse_file() {
     failure(ex.what());
   }
 
-  mode = apache::thrift::parsing_mode::PROGRAM;
+  mode = parsing_mode::PROGRAM;
   verbose("Parsing %s for types\n", path.c_str());
   try {
     if (parser_->parse() != 0) {
@@ -174,13 +171,15 @@ void parsing_driver::parse_file() {
   }
 }
 
-[[noreturn]] void parsing_driver::end_parsing() { throw parsing_terminator{}; }
+[[noreturn]] void parsing_driver::end_parsing() {
+  throw parsing_terminator{};
+}
 
 // TODO: This doesn't really need to be a member function. Move it somewhere
 // else (e.g. `util.{h|cc}`) once everything gets consolidated into `parse/`.
-/* static */ std::string
-    parsing_driver::directory_name(const std::string& filename) {
-  std::string::size_type slash = filename.rfind("/");
+/* static */ std::string parsing_driver::directory_name(
+    const std::string& filename) {
+  std::string::size_type slash = filename.rfind('/');
   // No slash, just use the current directory
   if (slash == std::string::npos) {
     return ".";
@@ -190,10 +189,10 @@ void parsing_driver::parse_file() {
 
 std::string parsing_driver::include_file(const std::string& filename) {
   // Absolute path? Just try that
-  if (filename[0] == '/') {
-    boost::filesystem::path abspath{filename};
+  boost::filesystem::path path{filename};
+  if (path.has_root_directory()) {
     try {
-      abspath = boost::filesystem::canonical(abspath);
+      auto abspath = boost::filesystem::canonical(path);
       return abspath.string();
     } catch (const boost::filesystem::filesystem_error& e) {
       failure("Could not find file: %s. Error: %s", filename.c_str(), e.what());
@@ -233,6 +232,7 @@ void parsing_driver::validate_const_rec(
     t_base_type::t_base tbase = ((t_base_type*)type)->get_base();
     switch (tbase) {
       case t_base_type::TYPE_STRING:
+      case t_base_type::TYPE_BINARY:
         if (value->get_type() != t_const_value::CV_STRING) {
           throw std::string(
               "type error: const \"" + name + "\" was declared as string");
@@ -393,6 +393,19 @@ void parsing_driver::validate_field_value(t_field* field, t_const_value* cv) {
   validate_const_rec(field->get_name(), field->get_type(), cv);
 }
 
+void parsing_driver::validate_not_ambiguous_enum(const std::string& name) {
+  if (scope_cache->is_ambiguous_enum_value(name)) {
+    std::string possible_enums =
+        scope_cache->get_fully_qualified_enum_value_names(name).c_str();
+    std::string msg = "The ambiguous enum " + name +
+        " is defined in more than one place. " +
+        "Please refer to this enum using ENUM_NAME.ENUM_VALUE.";
+    if (!possible_enums.empty()) {
+      msg += (" Possible options: " + possible_enums);
+    }
+    warning(1, msg.c_str());
+  }
+}
 void parsing_driver::clear_doctext() {
   if (doctext) {
     warning(2, "Uncaptured doctext at on line %d.", doctext_lineno);
@@ -526,5 +539,6 @@ boost::optional<std::string> parsing_driver::clean_up_doctext(
   return docstring;
 }
 
+} // namespace compiler
 } // namespace thrift
 } // namespace apache

@@ -1,30 +1,25 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <thrift/compiler/lib/cpp2/util.h>
 
 #include <memory>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <folly/portability/GMock.h>
+#include <folly/portability/GTest.h>
 
 #include <thrift/compiler/ast/t_base_type.h>
 #include <thrift/compiler/ast/t_field.h>
@@ -61,23 +56,23 @@ TEST_F(UtilTest, get_gen_namespace__cpp2) {
   t_program p("path/to/program.thrift");
   p.set_namespace("cpp2", "foo.bar");
   p.set_namespace("cpp", "baz.foo");
-  EXPECT_EQ("foo::bar", cpp2::get_gen_namespace(p));
+  EXPECT_EQ("::foo::bar", cpp2::get_gen_namespace(p));
 }
 
 TEST_F(UtilTest, get_gen_namespace_cpp) {
   t_program p("path/to/program.thrift");
   p.set_namespace("cpp", "baz.foo");
-  EXPECT_EQ("baz::foo::cpp2", cpp2::get_gen_namespace(p));
+  EXPECT_EQ("::baz::foo::cpp2", cpp2::get_gen_namespace(p));
 }
 
 TEST_F(UtilTest, get_gen_namespace_none) {
   t_program p("path/to/program.thrift");
-  EXPECT_EQ("cpp2", cpp2::get_gen_namespace(p));
+  EXPECT_EQ("::cpp2", cpp2::get_gen_namespace(p));
 }
 
 TEST_F(UtilTest, is_orderable_set_template) {
   t_base_type e("element", t_base_type::TYPE_DOUBLE);
-  t_set t(&e, false);
+  t_set t(&e);
   t.annotations_["cpp2.template"] = "blah";
   t_program p("path/to/program.thrift");
   t_struct s(&p, "struct_name");

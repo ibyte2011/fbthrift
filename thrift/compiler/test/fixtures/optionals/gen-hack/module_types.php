@@ -10,12 +10,11 @@
  * Original thrift enum:-
  * Animal
  */
-enum Animal : int {
+enum Animal: int {
   DOG = 1;
   CAT = 2;
   TARANTULA = 3;
 }
-type AnimalType = Animal;
 
 /**
  * Original thrift struct:-
@@ -24,30 +23,38 @@ type AnimalType = Animal;
 class Color implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'red',
       'type' => \TType::DOUBLE,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'green',
       'type' => \TType::DOUBLE,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'blue',
       'type' => \TType::DOUBLE,
-      ],
-    4 => dict[
+    ),
+    4 => shape(
       'var' => 'alpha',
       'type' => \TType::DOUBLE,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'red' => 1,
     'green' => 2,
     'blue' => 3,
     'alpha' => 4,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'red' => float,
+    ?'green' => float,
+    ?'blue' => float,
+    ?'alpha' => float,
+  );
+
   const int STRUCTURAL_ID = 5495510740722957663;
   /**
    * Original thrift field:-
@@ -70,31 +77,55 @@ class Color implements \IThriftStruct {
    */
   public float $alpha;
 
+  <<__Rx>>
   public function __construct(?float $red = null, ?float $green = null, ?float $blue = null, ?float $alpha = null  ) {
-    if ($red === null) {
-      $this->red = 0.0;
-    } else {
-      $this->red = $red;
-    }
-    if ($green === null) {
-      $this->green = 0.0;
-    } else {
-      $this->green = $green;
-    }
-    if ($blue === null) {
-      $this->blue = 0.0;
-    } else {
-      $this->blue = $blue;
-    }
-    if ($alpha === null) {
-      $this->alpha = 0.0;
-    } else {
-      $this->alpha = $alpha;
-    }
+    $this->red = $red ?? 0.0;
+    $this->green = $green ?? 0.0;
+    $this->blue = $blue ?? 0.0;
+    $this->alpha = $alpha ?? 0.0;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'red'),
+      Shapes::idx($shape, 'green'),
+      Shapes::idx($shape, 'blue'),
+      Shapes::idx($shape, 'alpha'),
+    );
   }
 
   public function getName(): string {
     return 'Color';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'red' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'green' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'blue' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'alpha' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -106,36 +137,45 @@ class Color implements \IThriftStruct {
 class Vehicle implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'color',
       'type' => \TType::STRUCT,
-      'class' => 'Color',
-      ],
-    2 => dict[
+      'class' => Color::class,
+    ),
+    2 => shape(
       'var' => 'licensePlate',
       'type' => \TType::STRING,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'description',
       'type' => \TType::STRING,
-      ],
-    4 => dict[
+    ),
+    4 => shape(
       'var' => 'name',
       'type' => \TType::STRING,
-      ],
-    5 => dict[
+    ),
+    5 => shape(
       'var' => 'hasAC',
       'type' => \TType::BOOL,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'color' => 1,
     'licensePlate' => 2,
     'description' => 3,
     'name' => 4,
     'hasAC' => 5,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'color' => ?Color,
+    ?'licensePlate' => ?string,
+    ?'description' => ?string,
+    ?'name' => ?string,
+    ?'hasAC' => bool,
+  );
+
   const int STRUCTURAL_ID = 2222890000100114781;
   /**
    * Original thrift field:-
@@ -163,20 +203,61 @@ class Vehicle implements \IThriftStruct {
    */
   public bool $hasAC;
 
+  <<__Rx>>
   public function __construct(?Color $color = null, ?string $licensePlate = null, ?string $description = null, ?string $name = null, ?bool $hasAC = null  ) {
     $this->color = $color;
     $this->licensePlate = $licensePlate;
     $this->description = $description;
     $this->name = $name;
-    if ($hasAC === null) {
-      $this->hasAC = false;
-    } else {
-      $this->hasAC = $hasAC;
-    }
+    $this->hasAC = $hasAC ?? false;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'color'),
+      Shapes::idx($shape, 'licensePlate'),
+      Shapes::idx($shape, 'description'),
+      Shapes::idx($shape, 'name'),
+      Shapes::idx($shape, 'hasAC'),
+    );
   }
 
   public function getName(): string {
     return 'Vehicle';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'color' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'licensePlate' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'description' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'name' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'hasAC' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -188,72 +269,72 @@ class Vehicle implements \IThriftStruct {
 class Person implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'id',
       'type' => \TType::I64,
-      ],
-    2 => dict[
+    ),
+    2 => shape(
       'var' => 'name',
       'type' => \TType::STRING,
-      ],
-    3 => dict[
+    ),
+    3 => shape(
       'var' => 'age',
       'type' => \TType::I16,
-      ],
-    4 => dict[
+    ),
+    4 => shape(
       'var' => 'address',
       'type' => \TType::STRING,
-      ],
-    5 => dict[
+    ),
+    5 => shape(
       'var' => 'favoriteColor',
       'type' => \TType::STRUCT,
-      'class' => 'Color',
-      ],
-    6 => dict[
+      'class' => Color::class,
+    ),
+    6 => shape(
       'var' => 'friends',
       'type' => \TType::SET,
       'etype' => \TType::I64,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I64,
-        ],
-        'format' => 'collection',
-      ],
-    7 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    7 => shape(
       'var' => 'bestFriend',
       'type' => \TType::I64,
-      ],
-    8 => dict[
+    ),
+    8 => shape(
       'var' => 'petNames',
       'type' => \TType::MAP,
       'ktype' => \TType::I32,
       'vtype' => \TType::STRING,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::I32,
-        'enum' => 'Animal',
-      ],
-      'val' => dict[
+        'enum' => Animal::class,
+      ),
+      'val' => shape(
         'type' => \TType::STRING,
-        ],
-        'format' => 'collection',
-      ],
-    9 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    9 => shape(
       'var' => 'afraidOfAnimal',
       'type' => \TType::I32,
-      'enum' => 'Animal',
-      ],
-    10 => dict[
+      'enum' => Animal::class,
+    ),
+    10 => shape(
       'var' => 'vehicles',
       'type' => \TType::LST,
       'etype' => \TType::STRUCT,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::STRUCT,
-        'class' => 'Vehicle',
-        ],
-        'format' => 'collection',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+        'class' => Vehicle::class,
+      ),
+      'format' => 'collection',
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'id' => 1,
     'name' => 2,
     'age' => 3,
@@ -264,7 +345,21 @@ class Person implements \IThriftStruct {
     'petNames' => 8,
     'afraidOfAnimal' => 9,
     'vehicles' => 10,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'id' => int,
+    ?'name' => string,
+    ?'age' => ?int,
+    ?'address' => ?string,
+    ?'favoriteColor' => ?Color,
+    ?'friends' => ?Set<int>,
+    ?'bestFriend' => ?int,
+    ?'petNames' => ?Map<Animal, string>,
+    ?'afraidOfAnimal' => ?Animal,
+    ?'vehicles' => ?Vector<Vehicle>,
+  );
+
   const int STRUCTURAL_ID = 5615342512964403351;
   /**
    * Original thrift field:-
@@ -317,17 +412,10 @@ class Person implements \IThriftStruct {
    */
   public ?Vector<Vehicle> $vehicles;
 
+  <<__Rx>>
   public function __construct(?int $id = null, ?string $name = null, ?int $age = null, ?string $address = null, ?Color $favoriteColor = null, ?Set<int> $friends = null, ?int $bestFriend = null, ?Map<Animal, string> $petNames = null, ?Animal $afraidOfAnimal = null, ?Vector<Vehicle> $vehicles = null  ) {
-    if ($id === null) {
-      $this->id = 0;
-    } else {
-      $this->id = $id;
-    }
-    if ($name === null) {
-      $this->name = '';
-    } else {
-      $this->name = $name;
-    }
+    $this->id = $id ?? 0;
+    $this->name = $name ?? '';
     $this->age = $age;
     $this->address = $address;
     $this->favoriteColor = $favoriteColor;
@@ -338,8 +426,77 @@ class Person implements \IThriftStruct {
     $this->vehicles = $vehicles;
   }
 
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'id'),
+      Shapes::idx($shape, 'name'),
+      Shapes::idx($shape, 'age'),
+      Shapes::idx($shape, 'address'),
+      Shapes::idx($shape, 'favoriteColor'),
+      Shapes::idx($shape, 'friends'),
+      Shapes::idx($shape, 'bestFriend'),
+      Shapes::idx($shape, 'petNames'),
+      Shapes::idx($shape, 'afraidOfAnimal'),
+      Shapes::idx($shape, 'vehicles'),
+    );
+  }
+
   public function getName(): string {
     return 'Person';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'id' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'name' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'age' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'address' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'favoriteColor' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'friends' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'bestFriend' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'petNames' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'afraidOfAnimal' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'vehicles' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }

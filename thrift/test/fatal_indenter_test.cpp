@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,19 +19,19 @@
 #include <sstream>
 #include <string>
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 TEST(fatal_indenter, arbitrary_push_depth) {
   std::ostringstream out;
   auto indenter = apache::thrift::make_indenter(out, "  ");
 
   std::string expected =
-    "  1.2\n"
-    "    2.2\n"
-    "    3.2\n"
-    "        4.4\n"
-    "      5.3\n"
-    "6.0";
+      "  1.2\n"
+      "    2.2\n"
+      "    3.2\n"
+      "        4.4\n"
+      "      5.3\n"
+      "6.0";
 
   indenter.push();
   indenter << "1.2";
@@ -59,12 +59,12 @@ TEST(fatal_indenter, set_margin) {
   auto indenter = apache::thrift::make_indenter(out, "  ");
 
   std::string expected =
-    "a  1.2\n"
-    "a    2.2\n"
-    "b    3.2\n"
-    "         4.4\n"
-    "      5.3\n"
-    "c6.0";
+      "a  1.2\n"
+      "a    2.2\n"
+      "b    3.2\n"
+      "         4.4\n"
+      "      5.3\n"
+      "c6.0";
 
   indenter.push();
   indenter.set_margin("a");

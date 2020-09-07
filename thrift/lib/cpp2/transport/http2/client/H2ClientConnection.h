@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 
+#include <folly/io/async/AsyncTransport.h>
 #include <proxygen/lib/http/codec/HTTPCodec.h>
 #include <proxygen/lib/http/codec/HTTPSettings.h>
 #include <proxygen/lib/http/session/HTTPUpstreamSession.h>
@@ -52,8 +53,27 @@ namespace thrift {
 class H2ClientConnection : public ClientConnectionIf,
                            public proxygen::HTTPSession::InfoCallback {
  public:
+  struct FlowControlSettings {
+   private:
+    // Stream and initial receive control window are 10MB
+    static constexpr size_t kStreamWindow = 10 * (1 << 20);
+    // Session (i.e connection) window is larger at 15MB
+    static constexpr size_t kSessionWindow = 1.5 * 10 * (1 << 20);
+
+   public:
+    FlowControlSettings()
+        : initialReceiveWindow(kStreamWindow),
+          receiveStreamWindowSize(kStreamWindow),
+          receiveSessionWindowSize(kSessionWindow) {}
+
+    size_t initialReceiveWindow;
+    size_t receiveStreamWindowSize;
+    size_t receiveSessionWindowSize;
+  };
+
   static std::unique_ptr<ClientConnectionIf> newHTTP2Connection(
-      async::TAsyncTransport::UniquePtr transport);
+      folly::AsyncTransport::UniquePtr transport,
+      FlowControlSettings flowControlSettings = FlowControlSettings());
 
   virtual ~H2ClientConnection() override;
 
@@ -72,13 +92,12 @@ class H2ClientConnection : public ClientConnectionIf,
   bool isStable();
   void setIsStable();
 
-  apache::thrift::async::TAsyncTransport* getTransport() override;
+  folly::AsyncTransport* getTransport() override;
   bool good() override;
   ClientChannel::SaturationStatus getSaturationStatus() override;
   void attachEventBase(folly::EventBase* evb) override;
   void detachEventBase() override;
   bool isDetachable() override;
-  bool isSecurityActive() override;
   uint32_t getTimeout() override;
   void setTimeout(uint32_t ms) override;
   void closeNow() override;
@@ -89,8 +108,9 @@ class H2ClientConnection : public ClientConnectionIf,
 
  private:
   H2ClientConnection(
-      async::TAsyncTransport::UniquePtr transport,
-      std::unique_ptr<proxygen::HTTPCodec> codec);
+      folly::AsyncTransport::UniquePtr transport,
+      std::unique_ptr<proxygen::HTTPCodec> codec,
+      FlowControlSettings flowControlSettings);
 
   proxygen::HTTPUpstreamSession* httpSession_;
   folly::EventBase* evb_{nullptr};

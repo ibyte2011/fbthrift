@@ -10,42 +10,16 @@
 namespace cpp2 {
 
 
-NestedContainersClientWrapper::NestedContainersClientWrapper(
-    std::shared_ptr<cpp2::NestedContainersAsyncClient> async_client,
-    std::shared_ptr<apache::thrift::RequestChannel> channel) : 
-    async_client(async_client),
-      channel_(channel) {}
-
-NestedContainersClientWrapper::~NestedContainersClientWrapper() {}
-
-folly::Future<folly::Unit> NestedContainersClientWrapper::disconnect() {
-  return folly::via(
-    this->async_client->getChannel()->getEventBase(),
-    [this] { disconnectInLoop(); });
-}
-
-void NestedContainersClientWrapper::disconnectInLoop() {
-    channel_.reset();
-    async_client.reset();
-}
-
-void NestedContainersClientWrapper::setPersistentHeader(const std::string& key, const std::string& value) {
-    auto headerChannel = async_client->getHeaderChannel();
-    if (headerChannel != nullptr) {
-        headerChannel->setPersistentHeader(key, value);
-    }
-}
-
-
 folly::Future<folly::Unit>
 NestedContainersClientWrapper::mapList(
     apache::thrift::RpcOptions& rpcOptions,
     std::map<int32_t,std::vector<int32_t>> arg_foo) {
   folly::Promise<folly::Unit> _promise;
   auto _future = _promise.getFuture();
+  auto* client = static_cast<::cpp2::NestedContainersAsyncClient*>(async_client_.get());
   auto callback = std::make_unique<::thrift::py3::FutureCallback<folly::Unit>>(
-    std::move(_promise), rpcOptions, async_client->recv_wrapped_mapList, channel_);
-  async_client->mapList(
+    std::move(_promise), rpcOptions, client->recv_wrapped_mapList, channel_);
+  client->mapList(
     rpcOptions,
     std::move(callback),
     arg_foo
@@ -59,9 +33,10 @@ NestedContainersClientWrapper::mapSet(
     std::map<int32_t,std::set<int32_t>> arg_foo) {
   folly::Promise<folly::Unit> _promise;
   auto _future = _promise.getFuture();
+  auto* client = static_cast<::cpp2::NestedContainersAsyncClient*>(async_client_.get());
   auto callback = std::make_unique<::thrift::py3::FutureCallback<folly::Unit>>(
-    std::move(_promise), rpcOptions, async_client->recv_wrapped_mapSet, channel_);
-  async_client->mapSet(
+    std::move(_promise), rpcOptions, client->recv_wrapped_mapSet, channel_);
+  client->mapSet(
     rpcOptions,
     std::move(callback),
     arg_foo
@@ -75,9 +50,10 @@ NestedContainersClientWrapper::listMap(
     std::vector<std::map<int32_t,int32_t>> arg_foo) {
   folly::Promise<folly::Unit> _promise;
   auto _future = _promise.getFuture();
+  auto* client = static_cast<::cpp2::NestedContainersAsyncClient*>(async_client_.get());
   auto callback = std::make_unique<::thrift::py3::FutureCallback<folly::Unit>>(
-    std::move(_promise), rpcOptions, async_client->recv_wrapped_listMap, channel_);
-  async_client->listMap(
+    std::move(_promise), rpcOptions, client->recv_wrapped_listMap, channel_);
+  client->listMap(
     rpcOptions,
     std::move(callback),
     arg_foo
@@ -91,9 +67,10 @@ NestedContainersClientWrapper::listSet(
     std::vector<std::set<int32_t>> arg_foo) {
   folly::Promise<folly::Unit> _promise;
   auto _future = _promise.getFuture();
+  auto* client = static_cast<::cpp2::NestedContainersAsyncClient*>(async_client_.get());
   auto callback = std::make_unique<::thrift::py3::FutureCallback<folly::Unit>>(
-    std::move(_promise), rpcOptions, async_client->recv_wrapped_listSet, channel_);
-  async_client->listSet(
+    std::move(_promise), rpcOptions, client->recv_wrapped_listSet, channel_);
+  client->listSet(
     rpcOptions,
     std::move(callback),
     arg_foo
@@ -107,15 +84,15 @@ NestedContainersClientWrapper::turtles(
     std::vector<std::vector<std::map<int32_t,std::map<int32_t,std::set<int32_t>>>>> arg_foo) {
   folly::Promise<folly::Unit> _promise;
   auto _future = _promise.getFuture();
+  auto* client = static_cast<::cpp2::NestedContainersAsyncClient*>(async_client_.get());
   auto callback = std::make_unique<::thrift::py3::FutureCallback<folly::Unit>>(
-    std::move(_promise), rpcOptions, async_client->recv_wrapped_turtles, channel_);
-  async_client->turtles(
+    std::move(_promise), rpcOptions, client->recv_wrapped_turtles, channel_);
+  client->turtles(
     rpcOptions,
     std::move(callback),
     arg_foo
   );
   return _future;
 }
-
 
 } // namespace cpp2

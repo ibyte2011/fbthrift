@@ -1,22 +1,19 @@
 #! /usr/bin/env python2 -tt
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements. See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership. The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License. You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import print_function
 from __future__ import absolute_import
 
 import optparse
@@ -73,27 +70,27 @@ def main():
                                            CLIENT_TYPE.UNFRAMED_DEPRECATED,
                                            CLIENT_TYPE.HTTP_SERVER])
         if options.servertype == 'TCppServer':
-            print 'C++ ThriftServer, Header transport, backwards compatible ' \
-                  'with all other types'
+            print('C++ ThriftServer, Header transport, backwards compatible ' \
+                  'with all other types')
         elif options.servertype == 'TNonblockingServer':
-            print 'Header transport, backwards compatible with framed'
+            print('Header transport, backwards compatible with framed')
         else:
-            print 'Header transport, backwards compatible with ' + \
-                'unframed, framed, http'
+            print('Header transport, backwards compatible with ' + \
+                'unframed, framed, http')
     else:
         if options.servertype == 'TCppServer':
             if not options.header:
                 op.error('TCppServer cannot be used without header')
         if options.servertype == 'TNonblockingServer':
-            print 'Framed transport'
+            print('Framed transport')
         else:
-            print 'Unframed transport'
+            print('Unframed transport')
         pfactory = TBinaryProtocolAcceleratedFactory()
 
     if options.servertype == 'TCppServer':
         server = TCppServer.TCppServer(processor)
         server.setPort(options.port)
-        print 'Worker threads: ' + str(options.workers)
+        print('Worker threads: ' + str(options.workers))
         server.setNumIOWorkerThreads(options.workers)
     else:
         transport = TSocket.TServerSocket(options.port)
@@ -102,7 +99,7 @@ def main():
             server = TNonblockingServer.TNonblockingServer(processor, transport,
                                 pfactory, maxQueueSize=options.max_queue_size)
         elif options.servertype == "TGeventServer":
-            print 'Worker processes: ' + str(options.workers)
+            print('Worker processes: ' + str(options.workers))
             # Gevent makes its own server transport.
             server = TGeventServer.TGeventServer(options.port,
                                                  processor, None,
@@ -113,8 +110,8 @@ def main():
             ServerClass = getattr(TServer, options.servertype)
             server = ServerClass(processor, transport, tfactory, pfactory)
 
-    print 'Serving ' + options.servertype + \
-        ' requests on port %d...' % (options.port,)
+    print('Serving ' + options.servertype + \
+        ' requests on port %d...' % (options.port,))
     server.serve()
 
 if __name__ == '__main__':

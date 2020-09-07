@@ -14,15 +14,15 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.*;
 import java.util.*;
 
+@SwiftGenerated
 @ThriftService("Raiser")
-public interface Raiser
-{
+public interface Raiser extends java.io.Closeable {
     @ThriftService("Raiser")
-    public interface Async
-    {
+    public interface Async extends java.io.Closeable {
+        @Override void close();
+
         @ThriftMethod(value = "doBland")
-        ListenableFuture<Void> doBland(
-        );
+        ListenableFuture<Void> doBland();
 
         @ThriftMethod(value = "doRaise",
                       exception = { 
@@ -30,12 +30,10 @@ public interface Raiser
                           @ThriftException(type=test.fixtures.exceptions.Fiery.class, id=2),
                           @ThriftException(type=test.fixtures.exceptions.Serious.class, id=3)
                       })
-        ListenableFuture<Void> doRaise(
-        ) throws test.fixtures.exceptions.Banal, test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Serious;
+        ListenableFuture<Void> doRaise();
 
         @ThriftMethod(value = "get200")
-        ListenableFuture<String> get200(
-        );
+        ListenableFuture<String> get200();
 
         @ThriftMethod(value = "get500",
                       exception = { 
@@ -43,13 +41,12 @@ public interface Raiser
                           @ThriftException(type=test.fixtures.exceptions.Banal.class, id=2),
                           @ThriftException(type=test.fixtures.exceptions.Serious.class, id=3)
                       })
-        ListenableFuture<String> get500(
-        ) throws test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Banal, test.fixtures.exceptions.Serious;
+        ListenableFuture<String> get500();
     }
-    @ThriftMethod(value = "doBland")
-    void doBland(
-    );
+    @Override void close();
 
+    @ThriftMethod(value = "doBland")
+    void doBland() throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "doRaise",
                   exception = { 
@@ -57,14 +54,10 @@ public interface Raiser
                       @ThriftException(type=test.fixtures.exceptions.Fiery.class, id=2),
                       @ThriftException(type=test.fixtures.exceptions.Serious.class, id=3)
                   })
-    void doRaise(
-    ) throws test.fixtures.exceptions.Banal, test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Serious;
-
+    void doRaise() throws test.fixtures.exceptions.Banal, test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Serious, org.apache.thrift.TException;
 
     @ThriftMethod(value = "get200")
-    String get200(
-    );
-
+    String get200() throws org.apache.thrift.TException;
 
     @ThriftMethod(value = "get500",
                   exception = { 
@@ -72,7 +65,5 @@ public interface Raiser
                       @ThriftException(type=test.fixtures.exceptions.Banal.class, id=2),
                       @ThriftException(type=test.fixtures.exceptions.Serious.class, id=3)
                   })
-    String get500(
-    ) throws test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Banal, test.fixtures.exceptions.Serious;
-
+    String get500() throws test.fixtures.exceptions.Fiery, test.fixtures.exceptions.Banal, test.fixtures.exceptions.Serious, org.apache.thrift.TException;
 }

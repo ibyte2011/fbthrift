@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,10 @@
 #include <thrift/compiler/generate/t_generator.h>
 
 #include <thrift/compiler/ast/t_program.h>
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 /**
  * String concatenation based generators.
@@ -361,4 +365,7 @@ class t_concat_generator : public t_generator {
   int tmp_;
 };
 
+} // namespace compiler
+} // namespace thrift
+} // namespace apache
 #endif // T_CONCAT_GENERATOR_H

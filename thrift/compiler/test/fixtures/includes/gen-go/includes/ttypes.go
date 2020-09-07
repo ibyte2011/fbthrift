@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	transitive0 "transitive"
 
 )
@@ -28,9 +28,11 @@ type IncludedInt64 = int64
 
 func IncludedInt64Ptr(v IncludedInt64) *IncludedInt64 { return &v }
 
-type TransitiveFoo = *transitive0.Foo
+type TransitiveFoo = transitive0.Foo
 
 func TransitiveFooPtr(v TransitiveFoo) *TransitiveFoo { return &v }
+
+func NewTransitiveFoo() *TransitiveFoo { return transitive0.NewFoo() }
 
 // Attributes:
 //  - MyIntField
@@ -153,6 +155,14 @@ func (p *Included) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Included(%+v)", *p)
+
+  myIntFieldVal := fmt.Sprintf("%v", p.MyIntField)
+  var myTransitiveFieldVal string
+  if p.MyTransitiveField == nil {
+    myTransitiveFieldVal = "<nil>"
+  } else {
+    myTransitiveFieldVal = fmt.Sprintf("%v", p.MyTransitiveField)
+  }
+  return fmt.Sprintf("Included({MyIntField:%s MyTransitiveField:%s})", myIntFieldVal, myTransitiveFieldVal)
 }
 

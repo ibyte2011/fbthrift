@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,10 +52,10 @@ int main(int argc, char** argv) {
   folly::init(&argc, &argv);
 
   simple_struct value;
-  value.i32_data = 12345678;
-  value.i16_data = 4321;
-  value.double_data = 3.1415926;
-  value.string_data = "hello, world";
+  *value.i32_data_ref() = 12345678;
+  *value.i16_data_ref() = 4321;
+  *value.double_data_ref() = 3.1415926;
+  *value.string_data_ref() = "hello, world";
 
   print_struct_info(value);
 

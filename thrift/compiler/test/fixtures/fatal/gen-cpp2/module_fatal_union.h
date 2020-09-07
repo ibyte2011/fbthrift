@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include  "reflection_dep_B_fatal_types.h"
-#include  "reflection_dep_C_fatal_types.h"
+#include  "thrift/compiler/test/fixtures/fatal/gen-cpp2/reflection_dep_B_fatal_types.h"
+#include  "thrift/compiler/test/fixtures/fatal/gen-cpp2/reflection_dep_C_fatal_types.h"
 
 #include "thrift/compiler/test/fixtures/fatal/gen-cpp2/module_types.h"
 #include "thrift/compiler/test/fixtures/fatal/gen-cpp2/module_fatal.h"
@@ -244,18 +244,18 @@ class union1_variant_traits {
       union1__struct_unique_setters_list::ud,
       ::apache::thrift::reflected_variant_member_metadata<
         thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::ud,
-        2,
+        3,
         ::apache::thrift::type_class::floating_point
       >
     >,
     ::fatal::variant_member_descriptor<
-      std::string,
+      ::std::string,
       union1__struct_unique_identifiers_list::us,
       union1__struct_unique_getters_list::us,
       union1__struct_unique_setters_list::us,
       ::apache::thrift::reflected_variant_member_metadata<
         thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::us,
-        3,
+        5,
         ::apache::thrift::type_class::string
       >
     >,
@@ -266,7 +266,7 @@ class union1_variant_traits {
       union1__struct_unique_setters_list::ue,
       ::apache::thrift::reflected_variant_member_metadata<
         thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::ue,
-        4,
+        7,
         ::apache::thrift::type_class::enumeration
       >
     >
@@ -524,7 +524,7 @@ class union2_variant_traits {
       >
     >,
     ::fatal::variant_member_descriptor<
-      std::string,
+      ::std::string,
       union2__struct_unique_identifiers_list::us_2,
       union2__struct_unique_getters_list::us_2,
       union2__struct_unique_setters_list::us_2,
@@ -799,7 +799,7 @@ class union3_variant_traits {
       >
     >,
     ::fatal::variant_member_descriptor<
-      std::string,
+      ::std::string,
       union3__struct_unique_identifiers_list::us_3,
       union3__struct_unique_getters_list::us_3,
       union3__struct_unique_setters_list::us_3,
@@ -1111,7 +1111,7 @@ class unionA_variant_traits {
       >
     >,
     ::fatal::variant_member_descriptor<
-      std::string,
+      ::std::string,
       unionA__struct_unique_identifiers_list::s,
       unionA__struct_unique_getters_list::s,
       unionA__struct_unique_setters_list::s,
@@ -1170,6 +1170,7 @@ class unionA_variant_traits {
       >
     >;
   };
+
 
   static id get_id(type const &variant) {
     return variant.getType();
@@ -2612,7 +2613,6 @@ class union_with_special_names_variant_traits {
 };
 
 } // thrift_fatal_impl_detail
-
 FATAL_REGISTER_VARIANT_TRAITS(
   ::test_cpp2::cpp_reflection::thrift_fatal_impl_detail::union1_variant_traits,
   ::apache::thrift::detail::type_common_metadata_impl<
@@ -2653,5 +2653,4 @@ FATAL_REGISTER_VARIANT_TRAITS(
     static_cast<::apache::thrift::legacy_type_id_t>(7581402120603624460ull)
   >
 );
-
 }} // test_cpp2::cpp_reflection

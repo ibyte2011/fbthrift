@@ -10,10 +10,9 @@
  * Original thrift enum:-
  * Enum
  */
-enum Enum : int {
+enum Enum: int {
   ENUM = 1;
 }
-type EnumType = Enum;
 
 /**
  * Original thrift struct:-
@@ -22,15 +21,20 @@ type EnumType = Enum;
 class A implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => string,
+  );
+
   const type TShape = shape(
     'a' => string,
     ...
@@ -42,16 +46,37 @@ class A implements \IThriftStruct, \IThriftShapishStruct {
    */
   public string $a;
 
+  <<__Rx>>
   public function __construct(?string $a = null  ) {
-    if ($a === null) {
-      $this->a = '';
-    } else {
-      $this->a = $a;
-    }
+    $this->a = $a ?? '';
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+    );
   }
 
   public function getName(): string {
     return 'A';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
   public static function __stringifyMapKeys<T>(Map<arraykey, T> $m): Map<string, T> {
@@ -63,11 +88,12 @@ class A implements \IThriftStruct, \IThriftShapishStruct {
   }
 
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
+    $me = new static();
     $me->a = $shape['a'];
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'a' => $this->a,
@@ -82,373 +108,373 @@ class A implements \IThriftStruct, \IThriftShapishStruct {
 class B implements \IThriftStruct, \IThriftShapishStruct {
   use \ThriftSerializationTrait;
 
-  public static dict<int, dict<string, mixed>> $_TSPEC = dict[
-    1 => dict[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'just_an_A',
       'type' => \TType::STRUCT,
-      'class' => 'A',
-      ],
-    2 => dict[
+      'class' => A::class,
+    ),
+    2 => shape(
       'var' => 'set_of_i32',
       'type' => \TType::SET,
       'etype' => \TType::I32,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    3 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    3 => shape(
       'var' => 'list_of_i32',
       'type' => \TType::LST,
       'etype' => \TType::I32,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    4 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    4 => shape(
       'var' => 'list_of_string',
       'type' => \TType::LST,
       'etype' => \TType::STRING,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::STRING,
-        ],
-        'format' => 'collection',
-      ],
-    5 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    5 => shape(
       'var' => 'map_of_string_to_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::I32,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    6 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    6 => shape(
       'var' => 'map_of_string_to_A',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::STRUCT,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::STRUCT,
-        'class' => 'A',
-        ],
-        'format' => 'collection',
-      ],
-    7 => dict[
+        'class' => A::class,
+      ),
+      'format' => 'collection',
+    ),
+    7 => shape(
       'var' => 'map_of_string_to_list_of_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::LST,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::LST,
         'etype' => \TType::I32,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    8 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    8 => shape(
       'var' => 'map_of_string_to_list_of_A',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::LST,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::LST,
         'etype' => \TType::STRUCT,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::STRUCT,
-          'class' => 'A',
-          ],
-          'format' => 'collection',
-        ],
+          'class' => A::class,
+        ),
         'format' => 'collection',
-      ],
-    9 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    9 => shape(
       'var' => 'map_of_string_to_set_of_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::SET,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::SET,
         'etype' => \TType::I32,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    10 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    10 => shape(
       'var' => 'map_of_string_to_map_of_string_to_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::MAP,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::MAP,
         'ktype' => \TType::STRING,
         'vtype' => \TType::I32,
-        'key' => dict[
+        'key' => shape(
           'type' => \TType::STRING,
-        ],
-        'val' => dict[
+        ),
+        'val' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    11 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    11 => shape(
       'var' => 'map_of_string_to_map_of_string_to_A',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::MAP,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::MAP,
         'ktype' => \TType::STRING,
         'vtype' => \TType::STRUCT,
-        'key' => dict[
+        'key' => shape(
           'type' => \TType::STRING,
-        ],
-        'val' => dict[
+        ),
+        'val' => shape(
           'type' => \TType::STRUCT,
-          'class' => 'A',
-          ],
-          'format' => 'collection',
-        ],
+          'class' => A::class,
+        ),
         'format' => 'collection',
-      ],
-    12 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    12 => shape(
       'var' => 'list_of_set_of_i32',
       'type' => \TType::LST,
       'etype' => \TType::SET,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::SET,
         'etype' => \TType::I32,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    13 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    13 => shape(
       'var' => 'list_of_map_of_string_to_list_of_A',
       'type' => \TType::LST,
       'etype' => \TType::MAP,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::MAP,
         'ktype' => \TType::STRING,
         'vtype' => \TType::LST,
-        'key' => dict[
+        'key' => shape(
           'type' => \TType::STRING,
-        ],
-        'val' => dict[
+        ),
+        'val' => shape(
           'type' => \TType::LST,
           'etype' => \TType::STRUCT,
-          'elem' => dict[
+          'elem' => shape(
             'type' => \TType::STRUCT,
-            'class' => 'A',
-            ],
-            'format' => 'collection',
-          ],
+            'class' => A::class,
+          ),
           'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    14 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    14 => shape(
       'var' => 'list_of_map_of_string_to_A',
       'type' => \TType::LST,
       'etype' => \TType::MAP,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::MAP,
         'ktype' => \TType::STRING,
         'vtype' => \TType::STRUCT,
-        'key' => dict[
+        'key' => shape(
           'type' => \TType::STRING,
-        ],
-        'val' => dict[
+        ),
+        'val' => shape(
           'type' => \TType::STRUCT,
-          'class' => 'A',
-          ],
-          'format' => 'collection',
-        ],
+          'class' => A::class,
+        ),
         'format' => 'collection',
-      ],
-    15 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    15 => shape(
       'var' => 'list_of_self',
       'type' => \TType::LST,
       'etype' => \TType::STRUCT,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::STRUCT,
-        'class' => 'B',
-        ],
-        'format' => 'collection',
-      ],
-    16 => dict[
+        'class' => B::class,
+      ),
+      'format' => 'collection',
+    ),
+    16 => shape(
       'var' => 'map_of_string_to_self',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::STRUCT,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::STRUCT,
-        'class' => 'B',
-        ],
-        'format' => 'collection',
-      ],
-    17 => dict[
+        'class' => B::class,
+      ),
+      'format' => 'collection',
+    ),
+    17 => shape(
       'var' => 'just_an_enum',
       'type' => \TType::I32,
-      'enum' => 'Enum',
-      ],
-    51 => dict[
+      'enum' => Enum::class,
+    ),
+    51 => shape(
       'var' => 'optional_just_an_A',
       'type' => \TType::STRUCT,
-      'class' => 'A',
-      ],
-    52 => dict[
+      'class' => A::class,
+    ),
+    52 => shape(
       'var' => 'optional_set_of_i32',
       'type' => \TType::SET,
       'etype' => \TType::I32,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    53 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    53 => shape(
       'var' => 'optional_list_of_i32',
       'type' => \TType::LST,
       'etype' => \TType::I32,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    54 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    54 => shape(
       'var' => 'optional_list_of_string',
       'type' => \TType::LST,
       'etype' => \TType::STRING,
-      'elem' => dict[
+      'elem' => shape(
         'type' => \TType::STRING,
-        ],
-        'format' => 'collection',
-      ],
-    55 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    55 => shape(
       'var' => 'optional_map_of_string_to_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::I32,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'collection',
-      ],
-    56 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    56 => shape(
       'var' => 'optional_map_of_string_to_A',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::STRUCT,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::STRUCT,
-        'class' => 'A',
-        ],
-        'format' => 'collection',
-      ],
-    57 => dict[
+        'class' => A::class,
+      ),
+      'format' => 'collection',
+    ),
+    57 => shape(
       'var' => 'optional_map_of_string_to_list_of_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::LST,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::LST,
         'etype' => \TType::I32,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    58 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    58 => shape(
       'var' => 'optional_map_of_string_to_list_of_A',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::LST,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::LST,
         'etype' => \TType::STRUCT,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::STRUCT,
-          'class' => 'A',
-          ],
-          'format' => 'collection',
-        ],
+          'class' => A::class,
+        ),
         'format' => 'collection',
-      ],
-    59 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    59 => shape(
       'var' => 'optional_map_of_string_to_set_of_i32',
       'type' => \TType::MAP,
       'ktype' => \TType::STRING,
       'vtype' => \TType::SET,
-      'key' => dict[
+      'key' => shape(
         'type' => \TType::STRING,
-      ],
-      'val' => dict[
+      ),
+      'val' => shape(
         'type' => \TType::SET,
         'etype' => \TType::I32,
-        'elem' => dict[
+        'elem' => shape(
           'type' => \TType::I32,
-          ],
-          'format' => 'collection',
-        ],
+        ),
         'format' => 'collection',
-      ],
-    60 => dict[
+      ),
+      'format' => 'collection',
+    ),
+    60 => shape(
       'var' => 'optional_enum',
       'type' => \TType::I32,
-      'enum' => 'Enum',
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+      'enum' => Enum::class,
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'just_an_A' => 1,
     'set_of_i32' => 2,
     'list_of_i32' => 3,
@@ -476,7 +502,38 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
     'optional_map_of_string_to_list_of_A' => 58,
     'optional_map_of_string_to_set_of_i32' => 59,
     'optional_enum' => 60,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'just_an_A' => ?A,
+    ?'set_of_i32' => Set<int>,
+    ?'list_of_i32' => Vector<int>,
+    ?'list_of_string' => Vector<string>,
+    ?'map_of_string_to_i32' => Map<string, int>,
+    ?'map_of_string_to_A' => Map<string, A>,
+    ?'map_of_string_to_list_of_i32' => Map<string, Vector<int>>,
+    ?'map_of_string_to_list_of_A' => Map<string, Vector<A>>,
+    ?'map_of_string_to_set_of_i32' => Map<string, Set<int>>,
+    ?'map_of_string_to_map_of_string_to_i32' => Map<string, Map<string, int>>,
+    ?'map_of_string_to_map_of_string_to_A' => Map<string, Map<string, A>>,
+    ?'list_of_set_of_i32' => Vector<Set<int>>,
+    ?'list_of_map_of_string_to_list_of_A' => Vector<Map<string, Vector<A>>>,
+    ?'list_of_map_of_string_to_A' => Vector<Map<string, A>>,
+    ?'list_of_self' => Vector<B>,
+    ?'map_of_string_to_self' => Map<string, B>,
+    ?'just_an_enum' => ?Enum,
+    ?'optional_just_an_A' => ?A,
+    ?'optional_set_of_i32' => ?Set<int>,
+    ?'optional_list_of_i32' => ?Vector<int>,
+    ?'optional_list_of_string' => ?Vector<string>,
+    ?'optional_map_of_string_to_i32' => ?Map<string, int>,
+    ?'optional_map_of_string_to_A' => ?Map<string, A>,
+    ?'optional_map_of_string_to_list_of_i32' => ?Map<string, Vector<int>>,
+    ?'optional_map_of_string_to_list_of_A' => ?Map<string, Vector<A>>,
+    ?'optional_map_of_string_to_set_of_i32' => ?Map<string, Set<int>>,
+    ?'optional_enum' => ?Enum,
+  );
+
   const type TShape = shape(
     ?'just_an_A' => ?A::TShape,
     'set_of_i32' => dict<int, bool>,
@@ -644,83 +701,24 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
    */
   public ?Enum $optional_enum;
 
+  <<__Rx>>
   public function __construct(?A $just_an_A = null, ?Set<int> $set_of_i32 = null, ?Vector<int> $list_of_i32 = null, ?Vector<string> $list_of_string = null, ?Map<string, int> $map_of_string_to_i32 = null, ?Map<string, A> $map_of_string_to_A = null, ?Map<string, Vector<int>> $map_of_string_to_list_of_i32 = null, ?Map<string, Vector<A>> $map_of_string_to_list_of_A = null, ?Map<string, Set<int>> $map_of_string_to_set_of_i32 = null, ?Map<string, Map<string, int>> $map_of_string_to_map_of_string_to_i32 = null, ?Map<string, Map<string, A>> $map_of_string_to_map_of_string_to_A = null, ?Vector<Set<int>> $list_of_set_of_i32 = null, ?Vector<Map<string, Vector<A>>> $list_of_map_of_string_to_list_of_A = null, ?Vector<Map<string, A>> $list_of_map_of_string_to_A = null, ?Vector<B> $list_of_self = null, ?Map<string, B> $map_of_string_to_self = null, ?Enum $just_an_enum = null, ?A $optional_just_an_A = null, ?Set<int> $optional_set_of_i32 = null, ?Vector<int> $optional_list_of_i32 = null, ?Vector<string> $optional_list_of_string = null, ?Map<string, int> $optional_map_of_string_to_i32 = null, ?Map<string, A> $optional_map_of_string_to_A = null, ?Map<string, Vector<int>> $optional_map_of_string_to_list_of_i32 = null, ?Map<string, Vector<A>> $optional_map_of_string_to_list_of_A = null, ?Map<string, Set<int>> $optional_map_of_string_to_set_of_i32 = null, ?Enum $optional_enum = null  ) {
     $this->just_an_A = $just_an_A;
-    if ($set_of_i32 === null) {
-      $this->set_of_i32 = Set {};
-    } else {
-      $this->set_of_i32 = $set_of_i32;
-    }
-    if ($list_of_i32 === null) {
-      $this->list_of_i32 = Vector {};
-    } else {
-      $this->list_of_i32 = $list_of_i32;
-    }
-    if ($list_of_string === null) {
-      $this->list_of_string = Vector {};
-    } else {
-      $this->list_of_string = $list_of_string;
-    }
-    if ($map_of_string_to_i32 === null) {
-      $this->map_of_string_to_i32 = Map {};
-    } else {
-      $this->map_of_string_to_i32 = $map_of_string_to_i32;
-    }
-    if ($map_of_string_to_A === null) {
-      $this->map_of_string_to_A = Map {};
-    } else {
-      $this->map_of_string_to_A = $map_of_string_to_A;
-    }
-    if ($map_of_string_to_list_of_i32 === null) {
-      $this->map_of_string_to_list_of_i32 = Map {};
-    } else {
-      $this->map_of_string_to_list_of_i32 = $map_of_string_to_list_of_i32;
-    }
-    if ($map_of_string_to_list_of_A === null) {
-      $this->map_of_string_to_list_of_A = Map {};
-    } else {
-      $this->map_of_string_to_list_of_A = $map_of_string_to_list_of_A;
-    }
-    if ($map_of_string_to_set_of_i32 === null) {
-      $this->map_of_string_to_set_of_i32 = Map {};
-    } else {
-      $this->map_of_string_to_set_of_i32 = $map_of_string_to_set_of_i32;
-    }
-    if ($map_of_string_to_map_of_string_to_i32 === null) {
-      $this->map_of_string_to_map_of_string_to_i32 = Map {};
-    } else {
-      $this->map_of_string_to_map_of_string_to_i32 = $map_of_string_to_map_of_string_to_i32;
-    }
-    if ($map_of_string_to_map_of_string_to_A === null) {
-      $this->map_of_string_to_map_of_string_to_A = Map {};
-    } else {
-      $this->map_of_string_to_map_of_string_to_A = $map_of_string_to_map_of_string_to_A;
-    }
-    if ($list_of_set_of_i32 === null) {
-      $this->list_of_set_of_i32 = Vector {};
-    } else {
-      $this->list_of_set_of_i32 = $list_of_set_of_i32;
-    }
-    if ($list_of_map_of_string_to_list_of_A === null) {
-      $this->list_of_map_of_string_to_list_of_A = Vector {};
-    } else {
-      $this->list_of_map_of_string_to_list_of_A = $list_of_map_of_string_to_list_of_A;
-    }
-    if ($list_of_map_of_string_to_A === null) {
-      $this->list_of_map_of_string_to_A = Vector {};
-    } else {
-      $this->list_of_map_of_string_to_A = $list_of_map_of_string_to_A;
-    }
-    if ($list_of_self === null) {
-      $this->list_of_self = Vector {};
-    } else {
-      $this->list_of_self = $list_of_self;
-    }
-    if ($map_of_string_to_self === null) {
-      $this->map_of_string_to_self = Map {};
-    } else {
-      $this->map_of_string_to_self = $map_of_string_to_self;
-    }
+    $this->set_of_i32 = $set_of_i32 ?? Set {};
+    $this->list_of_i32 = $list_of_i32 ?? Vector {};
+    $this->list_of_string = $list_of_string ?? Vector {};
+    $this->map_of_string_to_i32 = $map_of_string_to_i32 ?? Map {};
+    $this->map_of_string_to_A = $map_of_string_to_A ?? Map {};
+    $this->map_of_string_to_list_of_i32 = $map_of_string_to_list_of_i32 ?? Map {};
+    $this->map_of_string_to_list_of_A = $map_of_string_to_list_of_A ?? Map {};
+    $this->map_of_string_to_set_of_i32 = $map_of_string_to_set_of_i32 ?? Map {};
+    $this->map_of_string_to_map_of_string_to_i32 = $map_of_string_to_map_of_string_to_i32 ?? Map {};
+    $this->map_of_string_to_map_of_string_to_A = $map_of_string_to_map_of_string_to_A ?? Map {};
+    $this->list_of_set_of_i32 = $list_of_set_of_i32 ?? Vector {};
+    $this->list_of_map_of_string_to_list_of_A = $list_of_map_of_string_to_list_of_A ?? Vector {};
+    $this->list_of_map_of_string_to_A = $list_of_map_of_string_to_A ?? Vector {};
+    $this->list_of_self = $list_of_self ?? Vector {};
+    $this->map_of_string_to_self = $map_of_string_to_self ?? Map {};
     $this->just_an_enum = $just_an_enum;
     $this->optional_just_an_A = $optional_just_an_A;
     $this->optional_set_of_i32 = $optional_set_of_i32;
@@ -734,8 +732,162 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
     $this->optional_enum = $optional_enum;
   }
 
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'just_an_A'),
+      Shapes::idx($shape, 'set_of_i32'),
+      Shapes::idx($shape, 'list_of_i32'),
+      Shapes::idx($shape, 'list_of_string'),
+      Shapes::idx($shape, 'map_of_string_to_i32'),
+      Shapes::idx($shape, 'map_of_string_to_A'),
+      Shapes::idx($shape, 'map_of_string_to_list_of_i32'),
+      Shapes::idx($shape, 'map_of_string_to_list_of_A'),
+      Shapes::idx($shape, 'map_of_string_to_set_of_i32'),
+      Shapes::idx($shape, 'map_of_string_to_map_of_string_to_i32'),
+      Shapes::idx($shape, 'map_of_string_to_map_of_string_to_A'),
+      Shapes::idx($shape, 'list_of_set_of_i32'),
+      Shapes::idx($shape, 'list_of_map_of_string_to_list_of_A'),
+      Shapes::idx($shape, 'list_of_map_of_string_to_A'),
+      Shapes::idx($shape, 'list_of_self'),
+      Shapes::idx($shape, 'map_of_string_to_self'),
+      Shapes::idx($shape, 'just_an_enum'),
+      Shapes::idx($shape, 'optional_just_an_A'),
+      Shapes::idx($shape, 'optional_set_of_i32'),
+      Shapes::idx($shape, 'optional_list_of_i32'),
+      Shapes::idx($shape, 'optional_list_of_string'),
+      Shapes::idx($shape, 'optional_map_of_string_to_i32'),
+      Shapes::idx($shape, 'optional_map_of_string_to_A'),
+      Shapes::idx($shape, 'optional_map_of_string_to_list_of_i32'),
+      Shapes::idx($shape, 'optional_map_of_string_to_list_of_A'),
+      Shapes::idx($shape, 'optional_map_of_string_to_set_of_i32'),
+      Shapes::idx($shape, 'optional_enum'),
+    );
+  }
+
   public function getName(): string {
     return 'B';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'just_an_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'set_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_string' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_list_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_list_of_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_set_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_map_of_string_to_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_map_of_string_to_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_set_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_map_of_string_to_list_of_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_map_of_string_to_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'list_of_self' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'map_of_string_to_self' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'just_an_enum' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_just_an_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_set_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_list_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_list_of_string' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_map_of_string_to_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_map_of_string_to_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_map_of_string_to_list_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_map_of_string_to_list_of_A' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_map_of_string_to_set_of_i32' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'optional_enum' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
   public static function __stringifyMapKeys<T>(Map<arraykey, T> $m): Map<string, T> {
@@ -747,8 +899,10 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
   }
 
   public static function __fromShape(self::TShape $shape): this {
-    $me = /* HH_IGNORE_ERROR[4060] */ new static();
-    $me->just_an_A = Shapes::idx($shape, 'just_an_A') === null ? null : A::__fromShape(\nullthrows(Shapes::idx($shape, 'just_an_A')));
+    $me = new static();
+    if (Shapes::idx($shape, 'just_an_A') !== null) {
+      $me->just_an_A = A::__fromShape($shape['just_an_A']);
+    }
     $me->set_of_i32 = new Set(Keyset\keys($shape['set_of_i32']));
     $me->list_of_i32 = (new Vector($shape['list_of_i32']));
     $me->list_of_string = (new Vector($shape['list_of_string']));
@@ -796,37 +950,53 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
     $me->map_of_string_to_self = self::__stringifyMapKeys(new Map($shape['map_of_string_to_self']))->map(
       $val15 ==> B::__fromShape($val15),
     );
-    $me->just_an_enum = Shapes::idx($shape, 'just_an_enum');
-    $me->optional_just_an_A = Shapes::idx($shape, 'optional_just_an_A') === null ? null : A::__fromShape(\nullthrows(Shapes::idx($shape, 'optional_just_an_A')));
-    $me->optional_set_of_i32 = Shapes::idx($shape, 'optional_set_of_i32') === null ? null : new Set(Keyset\keys(\nullthrows(Shapes::idx($shape, 'optional_set_of_i32'))));
-    $me->optional_list_of_i32 = Shapes::idx($shape, 'optional_list_of_i32') === null ? null : 
-      (new Vector(Shapes::idx($shape, 'optional_list_of_i32')));
-    $me->optional_list_of_string = Shapes::idx($shape, 'optional_list_of_string') === null ? null : 
-      (new Vector(Shapes::idx($shape, 'optional_list_of_string')));
-    $me->optional_map_of_string_to_i32 = Shapes::idx($shape, 'optional_map_of_string_to_i32') === null ? null : 
-      self::__stringifyMapKeys(new Map(Shapes::idx($shape, 'optional_map_of_string_to_i32')));
-    $me->optional_map_of_string_to_A = Shapes::idx($shape, 'optional_map_of_string_to_A') === null ? null : 
-      self::__stringifyMapKeys(new Map(Shapes::idx($shape, 'optional_map_of_string_to_A')))->map(
+    if (Shapes::idx($shape, 'just_an_enum') !== null) {
+      $me->just_an_enum = $shape['just_an_enum'];
+    }
+    if (Shapes::idx($shape, 'optional_just_an_A') !== null) {
+      $me->optional_just_an_A = A::__fromShape($shape['optional_just_an_A']);
+    }
+    if (Shapes::idx($shape, 'optional_set_of_i32') !== null) {
+      $me->optional_set_of_i32 = new Set(Keyset\keys($shape['optional_set_of_i32']));
+    }
+    if (Shapes::idx($shape, 'optional_list_of_i32') !== null) {
+      $me->optional_list_of_i32 = (new Vector($shape['optional_list_of_i32']));
+    }
+    if (Shapes::idx($shape, 'optional_list_of_string') !== null) {
+      $me->optional_list_of_string = (new Vector($shape['optional_list_of_string']));
+    }
+    if (Shapes::idx($shape, 'optional_map_of_string_to_i32') !== null) {
+      $me->optional_map_of_string_to_i32 = self::__stringifyMapKeys(new Map($shape['optional_map_of_string_to_i32']));
+    }
+    if (Shapes::idx($shape, 'optional_map_of_string_to_A') !== null) {
+      $me->optional_map_of_string_to_A = self::__stringifyMapKeys(new Map($shape['optional_map_of_string_to_A']))->map(
         $val16 ==> A::__fromShape($val16),
       );
-    $me->optional_map_of_string_to_list_of_i32 = Shapes::idx($shape, 'optional_map_of_string_to_list_of_i32') === null ? null : 
-      self::__stringifyMapKeys(new Map(Shapes::idx($shape, 'optional_map_of_string_to_list_of_i32')))->map(
+    }
+    if (Shapes::idx($shape, 'optional_map_of_string_to_list_of_i32') !== null) {
+      $me->optional_map_of_string_to_list_of_i32 = self::__stringifyMapKeys(new Map($shape['optional_map_of_string_to_list_of_i32']))->map(
         $val17 ==> (new Vector($val17)),
       );
-    $me->optional_map_of_string_to_list_of_A = Shapes::idx($shape, 'optional_map_of_string_to_list_of_A') === null ? null : 
-      self::__stringifyMapKeys(new Map(Shapes::idx($shape, 'optional_map_of_string_to_list_of_A')))->map(
+    }
+    if (Shapes::idx($shape, 'optional_map_of_string_to_list_of_A') !== null) {
+      $me->optional_map_of_string_to_list_of_A = self::__stringifyMapKeys(new Map($shape['optional_map_of_string_to_list_of_A']))->map(
         $val18 ==> (new Vector($val18))->map(
           $val19 ==> A::__fromShape($val19),
         ),
       );
-    $me->optional_map_of_string_to_set_of_i32 = Shapes::idx($shape, 'optional_map_of_string_to_set_of_i32') === null ? null : 
-      self::__stringifyMapKeys(new Map(Shapes::idx($shape, 'optional_map_of_string_to_set_of_i32')))->map(
+    }
+    if (Shapes::idx($shape, 'optional_map_of_string_to_set_of_i32') !== null) {
+      $me->optional_map_of_string_to_set_of_i32 = self::__stringifyMapKeys(new Map($shape['optional_map_of_string_to_set_of_i32']))->map(
         $val20 ==> new Set(Keyset\keys($val20)),
       );
-    $me->optional_enum = Shapes::idx($shape, 'optional_enum');
+    }
+    if (Shapes::idx($shape, 'optional_enum') !== null) {
+      $me->optional_enum = $shape['optional_enum'];
+    }
     return $me;
   }
 
+  <<__Rx>>
   public function __toShape(): self::TShape {
     return shape(
       'just_an_A' => $this->just_an_A?->__toShape(),
@@ -835,43 +1005,43 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
       'list_of_string' => vec($this->list_of_string),
       'map_of_string_to_i32' => dict($this->map_of_string_to_i32),
       'map_of_string_to_A' => $this->map_of_string_to_A->map(
-        $_val0 ==> $_val0->__toShape(),
+        ($_val0) ==> $_val0->__toShape(),
       )
         |> dict($$),
       'map_of_string_to_list_of_i32' => $this->map_of_string_to_list_of_i32->map(
-        $_val0 ==> vec($_val0),
+        ($_val0) ==> vec($_val0),
       )
         |> dict($$),
       'map_of_string_to_list_of_A' => $this->map_of_string_to_list_of_A->map(
-        $_val0 ==> $_val0->map(
-          $_val1 ==> $_val1->__toShape(),
+        ($_val0) ==> $_val0->map(
+          ($_val1) ==> $_val1->__toShape(),
         )
           |> vec($$),
       )
         |> dict($$),
       'map_of_string_to_set_of_i32' => $this->map_of_string_to_set_of_i32->map(
-        $_val0 ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
+        ($_val0) ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
       )
         |> dict($$),
       'map_of_string_to_map_of_string_to_i32' => $this->map_of_string_to_map_of_string_to_i32->map(
-        $_val0 ==> dict($_val0),
+        ($_val0) ==> dict($_val0),
       )
         |> dict($$),
       'map_of_string_to_map_of_string_to_A' => $this->map_of_string_to_map_of_string_to_A->map(
-        $_val0 ==> $_val0->map(
-          $_val1 ==> $_val1->__toShape(),
+        ($_val0) ==> $_val0->map(
+          ($_val1) ==> $_val1->__toShape(),
         )
           |> dict($$),
       )
         |> dict($$),
       'list_of_set_of_i32' => $this->list_of_set_of_i32->map(
-        $_val0 ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
+        ($_val0) ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
       )
         |> vec($$),
       'list_of_map_of_string_to_list_of_A' => $this->list_of_map_of_string_to_list_of_A->map(
-        $_val0 ==> $_val0->map(
-          $_val1 ==> $_val1->map(
-            $_val2 ==> $_val2->__toShape(),
+        ($_val0) ==> $_val0->map(
+          ($_val1) ==> $_val1->map(
+            ($_val2) ==> $_val2->__toShape(),
           )
             |> vec($$),
         )
@@ -879,18 +1049,18 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
       )
         |> vec($$),
       'list_of_map_of_string_to_A' => $this->list_of_map_of_string_to_A->map(
-        $_val0 ==> $_val0->map(
-          $_val1 ==> $_val1->__toShape(),
+        ($_val0) ==> $_val0->map(
+          ($_val1) ==> $_val1->__toShape(),
         )
           |> dict($$),
       )
         |> vec($$),
       'list_of_self' => $this->list_of_self->map(
-        $_val0 ==> $_val0->__toShape(),
+        ($_val0) ==> $_val0->__toShape(),
       )
         |> vec($$),
       'map_of_string_to_self' => $this->map_of_string_to_self->map(
-        $_val0 ==> $_val0->__toShape(),
+        ($_val0) ==> $_val0->__toShape(),
       )
         |> dict($$),
       'just_an_enum' => $this->just_an_enum,
@@ -904,22 +1074,22 @@ class B implements \IThriftStruct, \IThriftShapishStruct {
       'optional_map_of_string_to_i32' => $this->optional_map_of_string_to_i32
         |> $$ === null ? null : dict($$),
       'optional_map_of_string_to_A' => $this->optional_map_of_string_to_A?->map(
-        $_val0 ==> $_val0->__toShape(),
+        ($_val0) ==> $_val0->__toShape(),
       )
         |> $$ === null ? null : dict($$),
       'optional_map_of_string_to_list_of_i32' => $this->optional_map_of_string_to_list_of_i32?->map(
-        $_val0 ==> vec($_val0),
+        ($_val0) ==> vec($_val0),
       )
         |> $$ === null ? null : dict($$),
       'optional_map_of_string_to_list_of_A' => $this->optional_map_of_string_to_list_of_A?->map(
-        $_val0 ==> $_val0->map(
-          $_val1 ==> $_val1->__toShape(),
+        ($_val0) ==> $_val0->map(
+          ($_val1) ==> $_val1->__toShape(),
         )
           |> vec($$),
       )
         |> $$ === null ? null : dict($$),
       'optional_map_of_string_to_set_of_i32' => $this->optional_map_of_string_to_set_of_i32?->map(
-        $_val0 ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
+        ($_val0) ==> ThriftUtil::toDArray(Dict\fill_keys($_val0, true)),
       )
         |> $$ === null ? null : dict($$),
       'optional_enum' => $this->optional_enum,

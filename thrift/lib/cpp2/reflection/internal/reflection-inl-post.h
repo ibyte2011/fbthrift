@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_FATAL_REFLECTION_INL_POST_H_
 #define THRIFT_FATAL_REFLECTION_INL_POST_H_ 1
 
@@ -31,11 +32,6 @@ namespace detail {
 namespace reflection_impl {
 
 template <typename T>
-struct is_optional : std::false_type {};
-template <typename T>
-struct is_optional<folly::Optional<T>> : std::true_type {};
-
-template <typename T>
 using isset_of = decltype(std::declval<T>().__isset);
 template <typename, typename T, typename Getter>
 struct has_isset_field_ : std::false_type {};
@@ -51,16 +47,9 @@ struct isset {
   struct kind {};
 
   template <typename T>
-  using kind_of = std::conditional_t<
-      is_optional<folly::remove_cvref_t<decltype(
-          Getter::ref(std::declval<T const&>()))>>::value,
-      kind<0>,
-      std::conditional_t<has_isset_field<T, Getter>::value, kind<1>, kind<2>>>;
+  using kind_of =
+      std::conditional_t<has_isset_field<T, Getter>::value, kind<1>, kind<2>>;
 
-  template <typename T>
-  static constexpr bool check(kind<0>, T const& owner) {
-    return Getter::ref(owner).has_value();
-  }
   template <typename T>
   static constexpr bool check(kind<1>, T const& owner) {
     return Getter::copy(owner.__isset);
@@ -74,16 +63,6 @@ struct isset {
     return check(kind_of<T>{}, owner);
   }
 
-  template <typename T>
-  static constexpr bool mark(kind<0>, T& owner, bool set) {
-    auto& field = Getter::ref(owner);
-    if (set && !field.has_value()) {
-      field.emplace();
-    } else if (!set && field.has_value()) {
-      field.clear();
-    }
-    return set;
-  }
   template <typename T>
   static constexpr bool mark(kind<1>, T& owner, bool set) {
     return Getter::ref(owner.__isset) = set;
@@ -99,35 +78,6 @@ struct isset {
 };
 
 } // namespace reflection_impl
-
-template <typename...>
-struct chained_data_member_getter;
-
-template <typename OuterGetter, typename... Getters>
-struct chained_data_member_getter<OuterGetter, Getters...>
-    : fatal::chained_data_member_getter<OuterGetter, Getters...> {
-  using head = OuterGetter;
-  using tail = chained_data_member_getter<Getters...>;
-};
-template <>
-struct chained_data_member_getter<> : fatal::chained_data_member_getter<> {
-  using head = void;
-  using tail = void;
-};
-
-template <typename Impl>
-struct reflection_indirection_getter {
-  template <typename T>
-  using type = decltype(Impl::val(std::declval<T&&>()));
-
-  template <typename T>
-  using reference = decltype(Impl::ref(std::declval<T&&>()));
-
-  template <typename T>
-  static inline auto&& ref(T&& arg) {
-    return Impl::ref(std::forward<T>(arg));
-  }
-};
 
 template <typename Module, typename Annotations, legacy_type_id_t LegacyTypeId>
 struct type_common_metadata_impl {

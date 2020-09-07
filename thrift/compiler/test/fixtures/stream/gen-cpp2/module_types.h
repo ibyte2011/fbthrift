@@ -6,11 +6,18 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+} // namespace tag
+namespace detail {
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 
@@ -29,23 +36,56 @@ class FooEx;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class FooEx final : private apache::thrift::detail::st::ComparisonOperators<FooEx>, public apache::thrift::TException {
+class FooEx final : public apache::thrift::TException {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = FooEx;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   FooEx() {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   FooEx(apache::thrift::FragileConstructor);
 
   FooEx(FooEx&&) = default;
 
   FooEx(const FooEx&) = default;
 
+
   FooEx& operator=(FooEx&&) = default;
 
   FooEx& operator=(const FooEx&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
   bool operator==(const FooEx& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const FooEx& __x, const FooEx& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const FooEx& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const FooEx& __x, const FooEx& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const FooEx& __x, const FooEx& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const FooEx& __x, const FooEx& __y) {
+    return !(__x < __y);
+  }
+#endif
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -57,7 +97,7 @@ class FooEx final : private apache::thrift::detail::st::ComparisonOperators<FooE
   uint32_t write(Protocol_* prot_) const;
 
   const char* what() const noexcept override {
-    return " ::cpp2::FooEx";
+    return "::cpp2::FooEx";
   }
 
  private:
@@ -65,50 +105,14 @@ class FooEx final : private apache::thrift::detail::st::ComparisonOperators<FooE
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< FooEx >;
+  friend void swap(FooEx& a, FooEx& b);
 };
-
-void swap(FooEx& a, FooEx& b);
-extern template void FooEx::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t FooEx::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t FooEx::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t FooEx::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void FooEx::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t FooEx::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t FooEx::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t FooEx::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t FooEx::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::FooEx>::clear( ::cpp2::FooEx* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::FooEx>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::FooEx>::write(Protocol* proto,  ::cpp2::FooEx const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::FooEx>::read(Protocol* proto,  ::cpp2::FooEx* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::FooEx>::serializedSize(Protocol const* proto,  ::cpp2::FooEx const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::FooEx>::serializedSizeZC(Protocol const* proto,  ::cpp2::FooEx const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift

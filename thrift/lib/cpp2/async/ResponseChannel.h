@@ -1,22 +1,17 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef THRIFT_ASYNC_RESPONSECHANNEL_H_
@@ -26,16 +21,28 @@
 #include <limits>
 #include <memory>
 
+#include <folly/Portability.h>
+
 #include <thrift/lib/cpp/Thrift.h>
 #include <thrift/lib/cpp/server/TServerObserver.h>
 #include <thrift/lib/cpp2/async/MessageChannel.h>
-#include <thrift/lib/cpp2/async/SemiStream.h>
+#include <thrift/lib/cpp2/async/ServerStream.h>
+#include <thrift/lib/cpp2/server/RequestsRegistry.h>
+#if FOLLY_HAS_COROUTINES
+#include <thrift/lib/cpp2/async/Sink.h>
+#endif
+#include <thrift/lib/cpp2/async/StreamCallbacks.h>
+#include <thrift/lib/cpp2/server/AdmissionController.h>
 
 namespace folly {
 class IOBuf;
 }
 
+extern const std::string kUnknownErrorCode;
 extern const std::string kOverloadedErrorCode;
+extern const std::string kAppOverloadedErrorCode;
+extern const std::string kAppClientErrorCode;
+extern const std::string kAppServerErrorCode;
 extern const std::string kTaskExpiredErrorCode;
 extern const std::string kProxyTransportExceptionErrorCode;
 extern const std::string kProxyClientProtocolExceptionErrorCode;
@@ -56,12 +63,16 @@ extern const std::string kProxyAclCheckExceptionErrorCode;
 extern const std::string kProxyOverloadedErrorCode;
 extern const std::string kProxyLoopbackErrorCode;
 extern const std::string kRequestTypeDoesntMatchServiceFunctionType;
+extern const std::string kMethodUnknownErrorCode;
 
 namespace apache {
 namespace thrift {
 
 class ResponseChannelRequest {
  public:
+  using UniquePtr =
+      std::unique_ptr<ResponseChannelRequest, RequestsRegistry::Deleter>;
+
   folly::IOBuf* getBuf() {
     return buf_.get();
   }
@@ -69,49 +80,106 @@ class ResponseChannelRequest {
     return std::move(buf_);
   }
 
-  SemiStream<std::unique_ptr<folly::IOBuf>> extractStream() {
-    return std::move(stream_);
-  }
-
-  virtual bool isActive() = 0;
+  virtual bool isActive() const = 0;
 
   virtual void cancel() = 0;
 
-  virtual bool isOneway() = 0;
+  virtual bool isOneway() const = 0;
 
-  virtual bool isStream() {
+  virtual bool isStream() const {
+    return false;
+  }
+
+  virtual bool isSink() const {
+    return false;
+  }
+
+  apache::thrift::RpcKind rpcKind() const {
+    if (isStream()) {
+      return apache::thrift::RpcKind::SINGLE_REQUEST_STREAMING_RESPONSE;
+    }
+    if (isSink()) {
+      return apache::thrift::RpcKind::SINK;
+    }
+    if (isOneway()) {
+      return apache::thrift::RpcKind::SINGLE_REQUEST_NO_RESPONSE;
+    }
+    return apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE;
+  }
+
+  virtual bool isReplyChecksumNeeded() const {
     return false;
   }
 
   virtual void sendReply(
       std::unique_ptr<folly::IOBuf>&&,
-      MessageChannel::SendCallback* cb = nullptr) = 0;
+      MessageChannel::SendCallback* cb = nullptr,
+      folly::Optional<uint32_t> crc32 = folly::none) = 0;
 
   virtual void sendStreamReply(
-      ResponseAndSemiStream<
-          std::unique_ptr<folly::IOBuf>,
-          std::unique_ptr<folly::IOBuf>>&&,
-      MessageChannel::SendCallback* = nullptr) {
+      std::unique_ptr<folly::IOBuf>&&,
+      detail::ServerStreamFactory&&,
+      folly::Optional<uint32_t> = folly::none) {
     throw std::logic_error("unimplemented");
   }
 
-  virtual void sendErrorWrapped(
-      folly::exception_wrapper ex,
-      std::string exCode,
-      MessageChannel::SendCallback* cb = nullptr) = 0;
-
-  virtual ~ResponseChannelRequest() {}
-
-  virtual apache::thrift::server::TServerObserver::CallTimestamps&
-  getTimestamps() {
-    return timestamps_;
+  FOLLY_NODISCARD virtual bool sendStreamReply(
+      std::unique_ptr<folly::IOBuf>,
+      StreamServerCallbackPtr,
+      folly::Optional<uint32_t> = folly::none) {
+    throw std::logic_error("unimplemented");
   }
 
-  apache::thrift::server::TServerObserver::CallTimestamps timestamps_;
+#if FOLLY_HAS_COROUTINES
+  virtual void sendSinkReply(
+      std::unique_ptr<folly::IOBuf>&&,
+      apache::thrift::detail::SinkConsumerImpl&&,
+      folly::Optional<uint32_t> = folly::none) {
+    throw std::logic_error("unimplemented");
+  }
+#endif
+
+  virtual void sendErrorWrapped(
+      folly::exception_wrapper ex,
+      std::string exCode) = 0;
+
+  virtual ~ResponseChannelRequest() {
+    if (admissionController_ != nullptr) {
+      if (!startedProcessing_) {
+        admissionController_->dequeue();
+      } else {
+        auto latency = std::chrono::steady_clock::now() - creationTimestamps_;
+        admissionController_->returnedResponse(latency);
+      }
+    }
+  }
+
+  virtual void setStartedProcessing() {
+    startedProcessing_ = true;
+    if (admissionController_ != nullptr) {
+      admissionController_->dequeue();
+      creationTimestamps_ = std::chrono::steady_clock::now();
+    }
+  }
+
+  virtual bool getStartedProcessing() {
+    return startedProcessing_;
+  }
+
+  void setAdmissionController(
+      std::shared_ptr<AdmissionController> admissionController) {
+    admissionController_ = std::move(admissionController);
+  }
+
+  std::shared_ptr<AdmissionController> getAdmissionController() const {
+    return admissionController_;
+  }
 
  protected:
   std::unique_ptr<folly::IOBuf> buf_;
-  SemiStream<std::unique_ptr<folly::IOBuf>> stream_;
+  std::shared_ptr<apache::thrift::AdmissionController> admissionController_;
+  bool startedProcessing_{false};
+  std::chrono::steady_clock::time_point creationTimestamps_;
 };
 
 /**
@@ -124,8 +192,6 @@ class ResponseChannel : virtual public folly::DelayedDestruction {
 
   class Callback {
    public:
-    virtual void requestReceived(std::unique_ptr<ResponseChannelRequest>&&) = 0;
-
     /**
      * reason is empty if closed due to EOF, or a pointer to an exception
      * if closed due to some sort of error.

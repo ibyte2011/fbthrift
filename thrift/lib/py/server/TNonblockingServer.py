@@ -1,21 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements. See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership. The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License. You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Implementation of non-blocking server.
 
 The main idea of the server is receiving and sending requests
@@ -51,6 +47,7 @@ from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory
 from thrift.protocol.THeaderProtocol import THeaderProtocolFactory
 
+logger = logging.getLogger(__name__)
 LOG_ERRORS_EVERY = 60 * 10    # once per 10 minutes
 
 __all__ = ['TNonblockingServer']
@@ -72,7 +69,7 @@ class Worker(threading.Thread):
                 processor.process(iprot, oprot, callback.getContext())
                 callback.success(reply=otrans.getvalue())
             except Exception:
-                logging.exception("Exception while processing request")
+                logger.exception("Exception while processing request")
                 callback.failure()
 
 WAIT_LEN = 0
@@ -162,18 +159,18 @@ class Connection:
             # if we read 0 bytes and self.message is empty, it means client
             # closed the connection
             if len(self.message) != 0:
-                logging.error("can't read frame size from socket")
+                logger.error("can't read frame size from socket")
             self.close()
             return
         self.message += read
         if len(self.message) == 4:
             self.len, = struct.unpack(b'!i', self.message)
             if self.len < 0:
-                logging.error("negative frame size, it seems client"\
+                logger.error("negative frame size, it seems client"\
                     " doesn't use FramedTransport")
                 self.close()
             elif self.len == 0:
-                logging.error("empty frame, it's really strange")
+                logger.error("empty frame, it's really strange")
                 self.close()
             else:
                 self.len += 4   # Include message length
@@ -192,8 +189,8 @@ class Connection:
         elif self.status == WAIT_MESSAGE:
             read = self.socket.recv(self.len - len(self.message))
             if len(read) == 0:
-                logging.error("can't read frame from socket" +
-                              " (got %d of %d bytes)" %
+                logger.error("can't read frame from socket" +
+                             " (got %d of %d bytes)" %
                     (len(self.message), self.len))
                 self.close()
                 return
@@ -227,7 +224,7 @@ class Connection:
         The one wakes up main thread.
         """
         if self.status != WAIT_PROCESS:
-            logging.error("Connection status switched to {} when"
+            logger.error("Connection status switched to {} when"
                     "processing requests. Server bug?".format(self.status))
             all_ok = False
 
@@ -354,7 +351,7 @@ class TNonblockingServer(TServer.TServer):
         now = time.time()
         if now - self.last_logged_error >= LOG_ERRORS_EVERY:
             self.last_logged_error = now
-            logging.exception(msg)
+            logger.exception(msg)
 
     def _select(self):
         """Does epoll or select on open connections."""
@@ -405,7 +402,7 @@ class TNonblockingServer(TServer.TServer):
                         self.tasks.put([self.processor, iprot, oprot,
                                         omembuf, connection])
                     else:
-                        logging.error(
+                        logger.error(
                             "Queue max size of %d exceeded. Request rejected.",
                             self.max_queue_size)
         for writeable in wset:

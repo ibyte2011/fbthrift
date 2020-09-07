@@ -5,14 +5,11 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_constants.h"
+#include "thrift/compiler/test/fixtures/basic/gen-cpp2/module_constants.h"
 
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_constants_cpp.h>
 
-#pragma push_macro("major")
-#undef major
 
 namespace cpp2 {
 
 } // cpp2
-#pragma pop_macro("major")

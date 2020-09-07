@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <thrift/compiler/ast/t_program.h>
 
 #include <map>
@@ -65,7 +66,7 @@ std::string t_program::compute_name_from_file_path(std::string path) {
   if (slash != std::string::npos) {
     path = path.substr(slash + 1);
   }
-  std::string::size_type dot = path.rfind(".");
+  std::string::size_type dot = path.rfind('.');
   if (dot != std::string::npos) {
     path = path.substr(0, dot);
   }

@@ -6,12 +6,113 @@
  */
 #pragma once
 
-#include <folly/Optional.h>
-#include <thrift/lib/cpp2/GeneratedHeaderHelper.h>
-#include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/gen/module_types_h.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
 
+
+
+namespace apache {
+namespace thrift {
+namespace tag {
+struct red;
+struct green;
+struct blue;
+struct alpha;
+struct color;
+struct licensePlate;
+struct description;
+struct name;
+struct hasAC;
+struct id;
+struct name;
+struct age;
+struct address;
+struct favoriteColor;
+struct friends;
+struct bestFriend;
+struct petNames;
+struct afraidOfAnimal;
+struct vehicles;
+} // namespace tag
+namespace detail {
+#ifndef APACHE_THRIFT_ACCESSOR_red
+#define APACHE_THRIFT_ACCESSOR_red
+APACHE_THRIFT_DEFINE_ACCESSOR(red);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_green
+#define APACHE_THRIFT_ACCESSOR_green
+APACHE_THRIFT_DEFINE_ACCESSOR(green);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_blue
+#define APACHE_THRIFT_ACCESSOR_blue
+APACHE_THRIFT_DEFINE_ACCESSOR(blue);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_alpha
+#define APACHE_THRIFT_ACCESSOR_alpha
+APACHE_THRIFT_DEFINE_ACCESSOR(alpha);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_color
+#define APACHE_THRIFT_ACCESSOR_color
+APACHE_THRIFT_DEFINE_ACCESSOR(color);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_licensePlate
+#define APACHE_THRIFT_ACCESSOR_licensePlate
+APACHE_THRIFT_DEFINE_ACCESSOR(licensePlate);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_description
+#define APACHE_THRIFT_ACCESSOR_description
+APACHE_THRIFT_DEFINE_ACCESSOR(description);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_name
+#define APACHE_THRIFT_ACCESSOR_name
+APACHE_THRIFT_DEFINE_ACCESSOR(name);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_hasAC
+#define APACHE_THRIFT_ACCESSOR_hasAC
+APACHE_THRIFT_DEFINE_ACCESSOR(hasAC);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_id
+#define APACHE_THRIFT_ACCESSOR_id
+APACHE_THRIFT_DEFINE_ACCESSOR(id);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_name
+#define APACHE_THRIFT_ACCESSOR_name
+APACHE_THRIFT_DEFINE_ACCESSOR(name);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_age
+#define APACHE_THRIFT_ACCESSOR_age
+APACHE_THRIFT_DEFINE_ACCESSOR(age);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_address
+#define APACHE_THRIFT_ACCESSOR_address
+APACHE_THRIFT_DEFINE_ACCESSOR(address);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_favoriteColor
+#define APACHE_THRIFT_ACCESSOR_favoriteColor
+APACHE_THRIFT_DEFINE_ACCESSOR(favoriteColor);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_friends
+#define APACHE_THRIFT_ACCESSOR_friends
+APACHE_THRIFT_DEFINE_ACCESSOR(friends);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_bestFriend
+#define APACHE_THRIFT_ACCESSOR_bestFriend
+APACHE_THRIFT_DEFINE_ACCESSOR(bestFriend);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_petNames
+#define APACHE_THRIFT_ACCESSOR_petNames
+APACHE_THRIFT_DEFINE_ACCESSOR(petNames);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_afraidOfAnimal
+#define APACHE_THRIFT_ACCESSOR_afraidOfAnimal
+APACHE_THRIFT_DEFINE_ACCESSOR(afraidOfAnimal);
+#endif
+#ifndef APACHE_THRIFT_ACCESSOR_vehicles
+#define APACHE_THRIFT_ACCESSOR_vehicles
+APACHE_THRIFT_DEFINE_ACCESSOR(vehicles);
+#endif
+} // namespace detail
+} // namespace thrift
+} // namespace apache
 
 // BEGIN declare_enums
 namespace cpp2 {
@@ -19,12 +120,9 @@ namespace cpp2 {
 enum class Animal {
   DOG = 1,
   CAT = 2,
-  TARANTULA = 3
+  TARANTULA = 3,
 };
 
-using _Animal_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<Animal, Animal>;
-extern const _Animal_EnumMapFactory::ValuesToNamesMapType _Animal_VALUES_TO_NAMES;
-extern const _Animal_EnumMapFactory::NamesToValuesMapType _Animal_NAMES_TO_VALUES;
 
 
 
@@ -32,8 +130,8 @@ extern const _Animal_EnumMapFactory::NamesToValuesMapType _Animal_NAMES_TO_VALUE
 namespace std {
 
 
-template<> struct hash<typename  ::cpp2::Animal> : public apache::thrift::detail::enum_hash<typename  ::cpp2::Animal> {};
-template<> struct equal_to<typename  ::cpp2::Animal> : public apache::thrift::detail::enum_equal_to<typename  ::cpp2::Animal> {};
+template<> struct hash<typename ::cpp2::Animal> : public apache::thrift::detail::enum_hash<typename ::cpp2::Animal> {};
+template<> struct equal_to<typename ::cpp2::Animal> : public apache::thrift::detail::enum_equal_to<typename ::cpp2::Animal> {};
 
 
 } // std
@@ -41,26 +139,34 @@ template<> struct equal_to<typename  ::cpp2::Animal> : public apache::thrift::de
 namespace apache { namespace thrift {
 
 
-template <> struct TEnumDataStorage< ::cpp2::Animal>;
-#ifndef _MSC_VER
-template <> const std::size_t TEnumTraits< ::cpp2::Animal>::size;
-template <> const folly::Range<const  ::cpp2::Animal*> TEnumTraits< ::cpp2::Animal>::values;
-template <> const folly::Range<const folly::StringPiece*> TEnumTraits< ::cpp2::Animal>::names;
-#endif
-template <> const char* TEnumTraits< ::cpp2::Animal>::findName( ::cpp2::Animal value);
-template <> bool TEnumTraits< ::cpp2::Animal>::findValue(const char* name,  ::cpp2::Animal* outValue);
+template <> struct TEnumDataStorage<::cpp2::Animal>;
 
-template <> inline constexpr  ::cpp2::Animal TEnumTraits< ::cpp2::Animal>::min() {
-  return  ::cpp2::Animal::DOG;
-}
+template <> struct TEnumTraits<::cpp2::Animal> {
+  using type = ::cpp2::Animal;
 
-template <> inline constexpr  ::cpp2::Animal TEnumTraits< ::cpp2::Animal>::max() {
-  return  ::cpp2::Animal::TARANTULA;
-}
+  static constexpr std::size_t const size = 3;
+  static folly::Range<type const*> const values;
+  static folly::Range<folly::StringPiece const*> const names;
+
+  static char const* findName(type value);
+  static bool findValue(char const* name, type* out);
+
+  static constexpr type min() { return type::DOG; }
+  static constexpr type max() { return type::TARANTULA; }
+};
 
 
 }} // apache::thrift
 
+namespace cpp2 {
+
+using _Animal_EnumMapFactory = apache::thrift::detail::TEnumMapFactory<Animal>;
+[[deprecated("use apache::thrift::util::enumNameSafe, apache::thrift::util::enumName, or apache::thrift::TEnumTraits")]]
+extern const _Animal_EnumMapFactory::ValuesToNamesMapType _Animal_VALUES_TO_NAMES;
+[[deprecated("use apache::thrift::TEnumTraits")]]
+extern const _Animal_EnumMapFactory::NamesToValuesMapType _Animal_NAMES_TO_VALUES;
+
+} // cpp2
 
 // END declare_enums
 // BEGIN struct_indirection
@@ -82,47 +188,213 @@ typedef int64_t PersonID;
 // BEGIN hash_and_equal_to
 // END hash_and_equal_to
 namespace cpp2 {
-class Color final : private apache::thrift::detail::st::ComparisonOperators<Color> {
+class Color final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Color;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   Color() :
       red(0),
       green(0),
       blue(0),
       alpha(0) {}
   // FragileConstructor for use in initialization lists only.
+  [[deprecated("This constructor is deprecated")]]
   Color(apache::thrift::FragileConstructor, double red__arg, double green__arg, double blue__arg, double alpha__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    red = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    green = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    blue = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    alpha = arg.extract();
-  }
 
   Color(Color&&) = default;
 
   Color(const Color&) = default;
 
+
   Color& operator=(Color&&) = default;
 
   Color& operator=(const Color&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
+ public:
   double red;
+ public:
   double green;
+ public:
   double blue;
+ public:
   double alpha;
+
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
+  struct __isset {
+    bool red;
+    bool green;
+    bool blue;
+    bool alpha;
+  } __isset = {};
   bool operator==(const Color& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Color& __x, const Color& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Color& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Color& __x, const Color& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Color& __x, const Color& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Color& __x, const Color& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> red_ref() const& {
+    return {this->red, __isset.red};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> red_ref() const&& {
+    return {std::move(this->red), __isset.red};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> red_ref() & {
+    return {this->red, __isset.red};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> red_ref() && {
+    return {std::move(this->red), __isset.red};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> green_ref() const& {
+    return {this->green, __isset.green};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> green_ref() const&& {
+    return {std::move(this->green), __isset.green};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> green_ref() & {
+    return {this->green, __isset.green};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> green_ref() && {
+    return {std::move(this->green), __isset.green};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> blue_ref() const& {
+    return {this->blue, __isset.blue};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> blue_ref() const&& {
+    return {std::move(this->blue), __isset.blue};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> blue_ref() & {
+    return {this->blue, __isset.blue};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> blue_ref() && {
+    return {std::move(this->blue), __isset.blue};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> alpha_ref() const& {
+    return {this->alpha, __isset.alpha};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> alpha_ref() const&& {
+    return {std::move(this->alpha), __isset.alpha};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> alpha_ref() & {
+    return {this->alpha, __isset.alpha};
+  }
+
+  template <typename..., typename T = double>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> alpha_ref() && {
+    return {std::move(this->alpha), __isset.alpha};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+  double get_red() const {
+    return red;
+  }
+
+  double& set_red(double red_) {
+    red = red_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.red = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return red;
+  }
+
+  double get_green() const {
+    return green;
+  }
+
+  double& set_green(double green_) {
+    green = green_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.green = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return green;
+  }
+
+  double get_blue() const {
+    return blue;
+  }
+
+  double& set_blue(double blue_) {
+    blue = blue_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.blue = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return blue;
+  }
+
+  double get_alpha() const {
+    return alpha;
+  }
+
+  double& set_alpha(double alpha_) {
+    alpha = alpha_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.alpha = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return alpha;
+  }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -138,100 +410,284 @@ class Color final : private apache::thrift::detail::st::ComparisonOperators<Colo
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Color >;
+  friend void swap(Color& a, Color& b);
 };
-
-void swap(Color& a, Color& b);
-extern template void Color::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Color::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Color::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Color::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Color::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Color::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Color::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Color::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Color::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Color>::clear( ::cpp2::Color* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Color>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Color>::write(Protocol* proto,  ::cpp2::Color const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Color>::read(Protocol* proto,  ::cpp2::Color* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Color>::serializedSize(Protocol const* proto,  ::cpp2::Color const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Color>::serializedSizeZC(Protocol const* proto,  ::cpp2::Color const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class Vehicle final : private apache::thrift::detail::st::ComparisonOperators<Vehicle> {
+class Vehicle final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Vehicle;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
   Vehicle();
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 
   // FragileConstructor for use in initialization lists only.
-  Vehicle(apache::thrift::FragileConstructor,  ::cpp2::Color color__arg, std::string licensePlate__arg, std::string description__arg, std::string name__arg, bool hasAC__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    color = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    licensePlate = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    description = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    name = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<5, _T> arg) {
-    hasAC = arg.extract();
-  }
+  [[deprecated("This constructor is deprecated")]]
+  Vehicle(apache::thrift::FragileConstructor,  ::cpp2::Color color__arg, ::std::string licensePlate__arg, ::std::string description__arg, ::std::string name__arg, bool hasAC__arg);
 
   Vehicle(Vehicle&&) = default;
 
   Vehicle(const Vehicle&) = default;
 
+
   Vehicle& operator=(Vehicle&&) = default;
 
   Vehicle& operator=(const Vehicle&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
 
   ~Vehicle();
 
+ public:
    ::cpp2::Color color;
-  folly::Optional<std::string> licensePlate;
-  folly::Optional<std::string> description;
-  folly::Optional<std::string> name;
-  folly::Optional<bool> hasAC;
+ private:
+  ::std::string licensePlate;
+ private:
+  ::std::string description;
+ private:
+  ::std::string name;
+ private:
+  bool hasAC;
+
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
+  struct __isset {
+    bool color;
+    bool licensePlate;
+    bool description;
+    bool name;
+    bool hasAC;
+  } __isset = {};
   bool operator==(const Vehicle& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Vehicle& __x, const Vehicle& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Vehicle& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Vehicle& __x, const Vehicle& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Vehicle& __x, const Vehicle& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Vehicle& __x, const Vehicle& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> color_ref() const& {
+    return {this->color, __isset.color};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> color_ref() const&& {
+    return {std::move(this->color), __isset.color};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> color_ref() & {
+    return {this->color, __isset.color};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> color_ref() && {
+    return {std::move(this->color), __isset.color};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> licensePlate_ref() const& {
+    return {this->licensePlate, __isset.licensePlate};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> licensePlate_ref() const&& {
+    return {std::move(this->licensePlate), __isset.licensePlate};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> licensePlate_ref() & {
+    return {this->licensePlate, __isset.licensePlate};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> licensePlate_ref() && {
+    return {std::move(this->licensePlate), __isset.licensePlate};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> description_ref() const& {
+    return {this->description, __isset.description};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> description_ref() const&& {
+    return {std::move(this->description), __isset.description};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> description_ref() & {
+    return {this->description, __isset.description};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> description_ref() && {
+    return {std::move(this->description), __isset.description};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> name_ref() const& {
+    return {this->name, __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> name_ref() const&& {
+    return {std::move(this->name), __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> name_ref() & {
+    return {this->name, __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> name_ref() && {
+    return {std::move(this->name), __isset.name};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = bool>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> hasAC_ref() const& {
+    return {this->hasAC, __isset.hasAC};
+  }
+
+  template <typename..., typename T = bool>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> hasAC_ref() const&& {
+    return {std::move(this->hasAC), __isset.hasAC};
+  }
+
+  template <typename..., typename T = bool>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> hasAC_ref() & {
+    return {this->hasAC, __isset.hasAC};
+  }
+
+  template <typename..., typename T = bool>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> hasAC_ref() && {
+    return {std::move(this->hasAC), __isset.hasAC};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+  const  ::cpp2::Color& get_color() const&;
+   ::cpp2::Color get_color() &&;
+
+  template <typename T_Vehicle_color_struct_setter =  ::cpp2::Color>
+   ::cpp2::Color& set_color(T_Vehicle_color_struct_setter&& color_) {
+    color = std::forward<T_Vehicle_color_struct_setter>(color_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.color = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return color;
+  }
+
+  const ::std::string* get_licensePlate() const& {
+    return licensePlate_ref() ? std::addressof(licensePlate) : nullptr;
+  }
+
+  ::std::string* get_licensePlate() & {
+    return licensePlate_ref() ? std::addressof(licensePlate) : nullptr;
+  }
+  ::std::string* get_licensePlate() && = delete;
+
+  template <typename T_Vehicle_licensePlate_struct_setter = ::std::string>
+  ::std::string& set_licensePlate(T_Vehicle_licensePlate_struct_setter&& licensePlate_) {
+    licensePlate = std::forward<T_Vehicle_licensePlate_struct_setter>(licensePlate_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.licensePlate = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return licensePlate;
+  }
+
+  const ::std::string* get_description() const& {
+    return description_ref() ? std::addressof(description) : nullptr;
+  }
+
+  ::std::string* get_description() & {
+    return description_ref() ? std::addressof(description) : nullptr;
+  }
+  ::std::string* get_description() && = delete;
+
+  template <typename T_Vehicle_description_struct_setter = ::std::string>
+  ::std::string& set_description(T_Vehicle_description_struct_setter&& description_) {
+    description = std::forward<T_Vehicle_description_struct_setter>(description_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.description = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return description;
+  }
+
+  const ::std::string* get_name() const& {
+    return name_ref() ? std::addressof(name) : nullptr;
+  }
+
+  ::std::string* get_name() & {
+    return name_ref() ? std::addressof(name) : nullptr;
+  }
+  ::std::string* get_name() && = delete;
+
+  template <typename T_Vehicle_name_struct_setter = ::std::string>
+  ::std::string& set_name(T_Vehicle_name_struct_setter&& name_) {
+    name = std::forward<T_Vehicle_name_struct_setter>(name_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.name = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return name;
+  }
+
+  const bool* get_hasAC() const& {
+    return hasAC_ref() ? std::addressof(hasAC) : nullptr;
+  }
+
+  bool* get_hasAC() & {
+    return hasAC_ref() ? std::addressof(hasAC) : nullptr;
+  }
+  bool* get_hasAC() && = delete;
+
+  bool& set_hasAC(bool hasAC_) {
+    hasAC = hasAC_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.hasAC = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return hasAC;
+  }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -247,125 +703,473 @@ class Vehicle final : private apache::thrift::detail::st::ComparisonOperators<Ve
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Vehicle >;
+  friend void swap(Vehicle& a, Vehicle& b);
 };
-
-void swap(Vehicle& a, Vehicle& b);
-extern template void Vehicle::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Vehicle::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Vehicle::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Vehicle::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Vehicle::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Vehicle::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Vehicle::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Vehicle::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Vehicle::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Vehicle>::clear( ::cpp2::Vehicle* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Vehicle>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Vehicle>::write(Protocol* proto,  ::cpp2::Vehicle const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Vehicle>::read(Protocol* proto,  ::cpp2::Vehicle* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Vehicle>::serializedSize(Protocol const* proto,  ::cpp2::Vehicle const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Vehicle>::serializedSizeZC(Protocol const* proto,  ::cpp2::Vehicle const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift
 namespace cpp2 {
-class Person final : private apache::thrift::detail::st::ComparisonOperators<Person> {
+class Person final  {
+ private:
+  friend struct ::apache::thrift::detail::st::struct_private_access;
+
+  //  used by a static_assert in the corresponding source
+  static constexpr bool __fbthrift_cpp2_gen_json = false;
+  static constexpr bool __fbthrift_cpp2_gen_nimble = false;
+
+ public:
+  using __fbthrift_cpp2_type = Person;
+  static constexpr bool __fbthrift_cpp2_is_union =
+    false;
+
+
  public:
 
   Person();
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 
   // FragileConstructor for use in initialization lists only.
-  Person(apache::thrift::FragileConstructor,  ::cpp2::PersonID id__arg, std::string name__arg, int16_t age__arg, std::string address__arg,  ::cpp2::Color favoriteColor__arg, std::set< ::cpp2::PersonID> friends__arg,  ::cpp2::PersonID bestFriend__arg, std::map< ::cpp2::Animal, std::string> petNames__arg,  ::cpp2::Animal afraidOfAnimal__arg, std::vector< ::cpp2::Vehicle> vehicles__arg);
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<1, _T> arg) {
-    id = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<2, _T> arg) {
-    name = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<3, _T> arg) {
-    age = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<4, _T> arg) {
-    address = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<5, _T> arg) {
-    favoriteColor = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<6, _T> arg) {
-    friends = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<7, _T> arg) {
-    bestFriend = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<8, _T> arg) {
-    petNames = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<9, _T> arg) {
-    afraidOfAnimal = arg.extract();
-  }
-  template <typename _T>
-  void __set_field(::apache::thrift::detail::argument_wrapper<10, _T> arg) {
-    vehicles = arg.extract();
-  }
+  [[deprecated("This constructor is deprecated")]]
+  Person(apache::thrift::FragileConstructor,  ::cpp2::PersonID id__arg, ::std::string name__arg, int16_t age__arg, ::std::string address__arg,  ::cpp2::Color favoriteColor__arg, ::std::set< ::cpp2::PersonID> friends__arg,  ::cpp2::PersonID bestFriend__arg, ::std::map< ::cpp2::Animal, ::std::string> petNames__arg,  ::cpp2::Animal afraidOfAnimal__arg, ::std::vector< ::cpp2::Vehicle> vehicles__arg);
 
   Person(Person&&) = default;
 
   Person(const Person&) = default;
 
+
   Person& operator=(Person&&) = default;
 
   Person& operator=(const Person&) = default;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
   void __clear();
 
   ~Person();
 
+ public:
    ::cpp2::PersonID id;
-  std::string name;
-  folly::Optional<int16_t> age;
-  folly::Optional<std::string> address;
-  folly::Optional< ::cpp2::Color> favoriteColor;
-  folly::Optional<std::set< ::cpp2::PersonID>> friends;
-  folly::Optional< ::cpp2::PersonID> bestFriend;
-  folly::Optional<std::map< ::cpp2::Animal, std::string>> petNames;
-  folly::Optional< ::cpp2::Animal> afraidOfAnimal;
-  folly::Optional<std::vector< ::cpp2::Vehicle>> vehicles;
+ public:
+  ::std::string name;
+ private:
+  int16_t age;
+ private:
+  ::std::string address;
+ private:
+   ::cpp2::Color favoriteColor;
+ private:
+  ::std::set< ::cpp2::PersonID> friends;
+ private:
+   ::cpp2::PersonID bestFriend;
+ private:
+  ::std::map< ::cpp2::Animal, ::std::string> petNames;
+ private:
+   ::cpp2::Animal afraidOfAnimal;
+ private:
+  ::std::vector< ::cpp2::Vehicle> vehicles;
+
+ public:
+  [[deprecated("__isset field is deprecated in Thrift struct. Use _ref() accessors instead.")]]
+  struct __isset {
+    bool id;
+    bool name;
+    bool age;
+    bool address;
+    bool favoriteColor;
+    bool friends;
+    bool bestFriend;
+    bool petNames;
+    bool afraidOfAnimal;
+    bool vehicles;
+  } __isset = {};
   bool operator==(const Person& rhs) const;
+#ifndef SWIG
+  friend bool operator!=(const Person& __x, const Person& __y) {
+    return !(__x == __y);
+  }
+#endif
   bool operator<(const Person& rhs) const;
+#ifndef SWIG
+  friend bool operator>(const Person& __x, const Person& __y) {
+    return __y < __x;
+  }
+  friend bool operator<=(const Person& __x, const Person& __y) {
+    return !(__y < __x);
+  }
+  friend bool operator>=(const Person& __x, const Person& __y) {
+    return !(__x < __y);
+  }
+#endif
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> id_ref() const& {
+    return {this->id, __isset.id};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> id_ref() const&& {
+    return {std::move(this->id), __isset.id};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> id_ref() & {
+    return {this->id, __isset.id};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> id_ref() && {
+    return {std::move(this->id), __isset.id};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&> name_ref() const& {
+    return {this->name, __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<const T&&> name_ref() const&& {
+    return {std::move(this->name), __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&> name_ref() & {
+    return {this->name, __isset.name};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::field_ref<T&&> name_ref() && {
+    return {std::move(this->name), __isset.name};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = int16_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> age_ref() const& {
+    return {this->age, __isset.age};
+  }
+
+  template <typename..., typename T = int16_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> age_ref() const&& {
+    return {std::move(this->age), __isset.age};
+  }
+
+  template <typename..., typename T = int16_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> age_ref() & {
+    return {this->age, __isset.age};
+  }
+
+  template <typename..., typename T = int16_t>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> age_ref() && {
+    return {std::move(this->age), __isset.age};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> address_ref() const& {
+    return {this->address, __isset.address};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> address_ref() const&& {
+    return {std::move(this->address), __isset.address};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> address_ref() & {
+    return {this->address, __isset.address};
+  }
+
+  template <typename..., typename T = ::std::string>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> address_ref() && {
+    return {std::move(this->address), __isset.address};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> favoriteColor_ref() const& {
+    return {this->favoriteColor, __isset.favoriteColor};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> favoriteColor_ref() const&& {
+    return {std::move(this->favoriteColor), __isset.favoriteColor};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> favoriteColor_ref() & {
+    return {this->favoriteColor, __isset.favoriteColor};
+  }
+
+  template <typename..., typename T =  ::cpp2::Color>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> favoriteColor_ref() && {
+    return {std::move(this->favoriteColor), __isset.favoriteColor};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::set< ::cpp2::PersonID>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> friends_ref() const& {
+    return {this->friends, __isset.friends};
+  }
+
+  template <typename..., typename T = ::std::set< ::cpp2::PersonID>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> friends_ref() const&& {
+    return {std::move(this->friends), __isset.friends};
+  }
+
+  template <typename..., typename T = ::std::set< ::cpp2::PersonID>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> friends_ref() & {
+    return {this->friends, __isset.friends};
+  }
+
+  template <typename..., typename T = ::std::set< ::cpp2::PersonID>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> friends_ref() && {
+    return {std::move(this->friends), __isset.friends};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> bestFriend_ref() const& {
+    return {this->bestFriend, __isset.bestFriend};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> bestFriend_ref() const&& {
+    return {std::move(this->bestFriend), __isset.bestFriend};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> bestFriend_ref() & {
+    return {this->bestFriend, __isset.bestFriend};
+  }
+
+  template <typename..., typename T =  ::cpp2::PersonID>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> bestFriend_ref() && {
+    return {std::move(this->bestFriend), __isset.bestFriend};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::map< ::cpp2::Animal, ::std::string>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> petNames_ref() const& {
+    return {this->petNames, __isset.petNames};
+  }
+
+  template <typename..., typename T = ::std::map< ::cpp2::Animal, ::std::string>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> petNames_ref() const&& {
+    return {std::move(this->petNames), __isset.petNames};
+  }
+
+  template <typename..., typename T = ::std::map< ::cpp2::Animal, ::std::string>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> petNames_ref() & {
+    return {this->petNames, __isset.petNames};
+  }
+
+  template <typename..., typename T = ::std::map< ::cpp2::Animal, ::std::string>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> petNames_ref() && {
+    return {std::move(this->petNames), __isset.petNames};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T =  ::cpp2::Animal>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> afraidOfAnimal_ref() const& {
+    return {this->afraidOfAnimal, __isset.afraidOfAnimal};
+  }
+
+  template <typename..., typename T =  ::cpp2::Animal>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> afraidOfAnimal_ref() const&& {
+    return {std::move(this->afraidOfAnimal), __isset.afraidOfAnimal};
+  }
+
+  template <typename..., typename T =  ::cpp2::Animal>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> afraidOfAnimal_ref() & {
+    return {this->afraidOfAnimal, __isset.afraidOfAnimal};
+  }
+
+  template <typename..., typename T =  ::cpp2::Animal>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> afraidOfAnimal_ref() && {
+    return {std::move(this->afraidOfAnimal), __isset.afraidOfAnimal};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+  template <typename..., typename T = ::std::vector< ::cpp2::Vehicle>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&> vehicles_ref() const& {
+    return {this->vehicles, __isset.vehicles};
+  }
+
+  template <typename..., typename T = ::std::vector< ::cpp2::Vehicle>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<const T&&> vehicles_ref() const&& {
+    return {std::move(this->vehicles), __isset.vehicles};
+  }
+
+  template <typename..., typename T = ::std::vector< ::cpp2::Vehicle>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&> vehicles_ref() & {
+    return {this->vehicles, __isset.vehicles};
+  }
+
+  template <typename..., typename T = ::std::vector< ::cpp2::Vehicle>>
+  FOLLY_ERASE ::apache::thrift::optional_field_ref<T&&> vehicles_ref() && {
+    return {std::move(this->vehicles), __isset.vehicles};
+  }
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+
+   ::cpp2::PersonID get_id() const {
+    return id;
+  }
+
+   ::cpp2::PersonID& set_id( ::cpp2::PersonID id_) {
+    id = id_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.id = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return id;
+  }
+
+  const ::std::string& get_name() const& {
+    return name;
+  }
+
+  ::std::string get_name() && {
+    return std::move(name);
+  }
+
+  template <typename T_Person_name_struct_setter = ::std::string>
+  ::std::string& set_name(T_Person_name_struct_setter&& name_) {
+    name = std::forward<T_Person_name_struct_setter>(name_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.name = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return name;
+  }
+
+  const int16_t* get_age() const& {
+    return age_ref() ? std::addressof(age) : nullptr;
+  }
+
+  int16_t* get_age() & {
+    return age_ref() ? std::addressof(age) : nullptr;
+  }
+  int16_t* get_age() && = delete;
+
+  int16_t& set_age(int16_t age_) {
+    age = age_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.age = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return age;
+  }
+
+  const ::std::string* get_address() const& {
+    return address_ref() ? std::addressof(address) : nullptr;
+  }
+
+  ::std::string* get_address() & {
+    return address_ref() ? std::addressof(address) : nullptr;
+  }
+  ::std::string* get_address() && = delete;
+
+  template <typename T_Person_address_struct_setter = ::std::string>
+  ::std::string& set_address(T_Person_address_struct_setter&& address_) {
+    address = std::forward<T_Person_address_struct_setter>(address_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.address = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return address;
+  }
+  const  ::cpp2::Color* get_favoriteColor() const&;
+   ::cpp2::Color* get_favoriteColor() &;
+   ::cpp2::Color* get_favoriteColor() && = delete;
+
+  template <typename T_Person_favoriteColor_struct_setter =  ::cpp2::Color>
+   ::cpp2::Color& set_favoriteColor(T_Person_favoriteColor_struct_setter&& favoriteColor_) {
+    favoriteColor = std::forward<T_Person_favoriteColor_struct_setter>(favoriteColor_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.favoriteColor = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return favoriteColor;
+  }
+  const ::std::set< ::cpp2::PersonID>* get_friends() const&;
+  ::std::set< ::cpp2::PersonID>* get_friends() &;
+  ::std::set< ::cpp2::PersonID>* get_friends() && = delete;
+
+  template <typename T_Person_friends_struct_setter = ::std::set< ::cpp2::PersonID>>
+  ::std::set< ::cpp2::PersonID>& set_friends(T_Person_friends_struct_setter&& friends_) {
+    friends = std::forward<T_Person_friends_struct_setter>(friends_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.friends = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return friends;
+  }
+
+  const  ::cpp2::PersonID* get_bestFriend() const& {
+    return bestFriend_ref() ? std::addressof(bestFriend) : nullptr;
+  }
+
+   ::cpp2::PersonID* get_bestFriend() & {
+    return bestFriend_ref() ? std::addressof(bestFriend) : nullptr;
+  }
+   ::cpp2::PersonID* get_bestFriend() && = delete;
+
+   ::cpp2::PersonID& set_bestFriend( ::cpp2::PersonID bestFriend_) {
+    bestFriend = bestFriend_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.bestFriend = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return bestFriend;
+  }
+  const ::std::map< ::cpp2::Animal, ::std::string>* get_petNames() const&;
+  ::std::map< ::cpp2::Animal, ::std::string>* get_petNames() &;
+  ::std::map< ::cpp2::Animal, ::std::string>* get_petNames() && = delete;
+
+  template <typename T_Person_petNames_struct_setter = ::std::map< ::cpp2::Animal, ::std::string>>
+  ::std::map< ::cpp2::Animal, ::std::string>& set_petNames(T_Person_petNames_struct_setter&& petNames_) {
+    petNames = std::forward<T_Person_petNames_struct_setter>(petNames_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.petNames = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return petNames;
+  }
+
+  const  ::cpp2::Animal* get_afraidOfAnimal() const& {
+    return afraidOfAnimal_ref() ? std::addressof(afraidOfAnimal) : nullptr;
+  }
+
+   ::cpp2::Animal* get_afraidOfAnimal() & {
+    return afraidOfAnimal_ref() ? std::addressof(afraidOfAnimal) : nullptr;
+  }
+   ::cpp2::Animal* get_afraidOfAnimal() && = delete;
+
+   ::cpp2::Animal& set_afraidOfAnimal( ::cpp2::Animal afraidOfAnimal_) {
+    afraidOfAnimal = afraidOfAnimal_;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.afraidOfAnimal = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return afraidOfAnimal;
+  }
+  const ::std::vector< ::cpp2::Vehicle>* get_vehicles() const&;
+  ::std::vector< ::cpp2::Vehicle>* get_vehicles() &;
+  ::std::vector< ::cpp2::Vehicle>* get_vehicles() && = delete;
+
+  template <typename T_Person_vehicles_struct_setter = ::std::vector< ::cpp2::Vehicle>>
+  ::std::vector< ::cpp2::Vehicle>& set_vehicles(T_Person_vehicles_struct_setter&& vehicles_) {
+    vehicles = std::forward<T_Person_vehicles_struct_setter>(vehicles_);
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    __isset.vehicles = true;
+THRIFT_IGNORE_ISSET_USE_WARNING_END
+    return vehicles;
+  }
 
   template <class Protocol_>
   uint32_t read(Protocol_* iprot);
@@ -381,50 +1185,14 @@ class Person final : private apache::thrift::detail::st::ComparisonOperators<Per
   void readNoXfer(Protocol_* iprot);
 
   friend class ::apache::thrift::Cpp2Ops< Person >;
+  friend void swap(Person& a, Person& b);
 };
-
-void swap(Person& a, Person& b);
-extern template void Person::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
-extern template uint32_t Person::write<>(apache::thrift::BinaryProtocolWriter*) const;
-extern template uint32_t Person::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template uint32_t Person::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
-extern template void Person::readNoXfer<>(apache::thrift::CompactProtocolReader*);
-extern template uint32_t Person::write<>(apache::thrift::CompactProtocolWriter*) const;
-extern template uint32_t Person::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
-extern template uint32_t Person::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
 template <class Protocol_>
 uint32_t Person::read(Protocol_* iprot) {
-  auto _xferStart = iprot->getCurrentPosition().getCurrentPosition();
+  auto _xferStart = iprot->getCursorPosition();
   readNoXfer(iprot);
-  return iprot->getCurrentPosition().getCurrentPosition() - _xferStart;
+  return iprot->getCursorPosition() - _xferStart;
 }
 
 } // cpp2
-namespace apache { namespace thrift {
-
-template <> inline void Cpp2Ops< ::cpp2::Person>::clear( ::cpp2::Person* obj) {
-  return obj->__clear();
-}
-
-template <> inline constexpr apache::thrift::protocol::TType Cpp2Ops< ::cpp2::Person>::thriftType() {
-  return apache::thrift::protocol::T_STRUCT;
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Person>::write(Protocol* proto,  ::cpp2::Person const* obj) {
-  return obj->write(proto);
-}
-
-template <> template <class Protocol> void Cpp2Ops< ::cpp2::Person>::read(Protocol* proto,  ::cpp2::Person* obj) {
-  return obj->readNoXfer(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Person>::serializedSize(Protocol const* proto,  ::cpp2::Person const* obj) {
-  return obj->serializedSize(proto);
-}
-
-template <> template <class Protocol> uint32_t Cpp2Ops< ::cpp2::Person>::serializedSizeZC(Protocol const* proto,  ::cpp2::Person const* obj) {
-  return obj->serializedSizeZC(proto);
-}
-
-}} // apache::thrift

@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,15 +22,13 @@ namespace apache {
 namespace thrift {
 namespace rocket {
 
-size_t Serializer::writePayload(const Payload& p) {
+size_t Serializer::writePayload(Payload&& p) {
   size_t nwritten = 0;
   if (p.hasNonemptyMetadata()) {
-    const size_t metadataSize = p.metadata()->computeChainDataLength();
-    nwritten += writeFrameOrMetadataSize(metadataSize);
-    nwritten += write(*p.metadata());
+    nwritten += writeFrameOrMetadataSize(p.metadataSize());
   }
-  if (!p.data().empty()) {
-    nwritten += write(p.data());
+  if (!p.buffer()->empty()) {
+    nwritten += write(std::move(p).buffer());
   }
   return nwritten;
 }

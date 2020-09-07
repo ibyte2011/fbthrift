@@ -5,16 +5,18 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/doctext/gen-cpp2/module_data.h"
 
-namespace cpp2 {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _BEnumDataStorage::size;
-constexpr const std::array<B, 1> _BEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 1> _BEnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-} // cpp2
-namespace apache { namespace thrift {
 
-}} // apache::thrift
+constexpr const std::size_t TEnumDataStorage<::cpp2::B>::size;
+constexpr const std::array<::cpp2::B, 1> TEnumDataStorage<::cpp2::B>::values;
+constexpr const std::array<folly::StringPiece, 1> TEnumDataStorage<::cpp2::B>::names;
 
+
+} // namespace thrift
+} // namespace apache

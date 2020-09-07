@@ -6,35 +6,25 @@
  */
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <thrift/lib/cpp/Thrift.h>
+#include <thrift/lib/cpp2/gen/module_data_h.h>
 
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/optionals/gen-cpp2/module_types.h"
 
-namespace cpp2 {
+namespace apache { namespace thrift {
 
-struct _AnimalEnumDataStorage {
-  using type = Animal;
+template <> struct TEnumDataStorage<::cpp2::Animal> {
+  using type = ::cpp2::Animal;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<Animal, 3> values = {{
-    Animal::DOG,
-    Animal::CAT,
-    Animal::TARANTULA,
+  static constexpr const std::array<type, size> values = {{
+    type::DOG,
+    type::CAT,
+    type::TARANTULA,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "DOG",
     "CAT",
     "TARANTULA",
   }};
 };
 
-} // cpp2
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::cpp2::Animal> {
-  using storage_type =  ::cpp2::_AnimalEnumDataStorage;
-};
-
 }} // apache::thrift
-

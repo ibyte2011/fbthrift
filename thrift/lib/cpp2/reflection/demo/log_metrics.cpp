@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -105,14 +105,14 @@ int main(int argc, char** argv) {
   metrics_client sink;
 
   host_info metric;
-  metric.cpu = 1;
-  metric.memory = 12;
-  metric.disk = 1234;
-  metric.network_bytes_sent = 123;
-  metric.network_bytes_received = 321;
-  metric.network_retransmits = 2;
-  metric.network_connection_reset = 3;
-  metric.network_packets_dropped = 1;
+  *metric.cpu_ref() = 1;
+  *metric.memory_ref() = 12;
+  *metric.disk_ref() = 1234;
+  *metric.network_bytes_sent_ref() = 123;
+  *metric.network_bytes_received_ref() = 321;
+  *metric.network_retransmits_ref() = 2;
+  *metric.network_connection_reset_ref() = 3;
+  *metric.network_packets_dropped_ref() = 1;
 
   int iterations = argc > 2 ? atoi(argv[2]) : 1000000;
 

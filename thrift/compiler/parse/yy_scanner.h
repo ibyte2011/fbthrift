@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <cassert>
@@ -26,14 +27,14 @@ typedef void* yyscan_t;
 /**
  * These are provided by Flex.
  */
-int yylex_init(yyscan_t* ptr_yy_globals);
-int yylex_destroy(yyscan_t yyscanner);
+int fbthrift_compiler_parse_lex_init(yyscan_t* ptr_yy_globals);
+int fbthrift_compiler_parse_lex_destroy(yyscan_t yyscanner);
 
-void yyrestart(FILE* input_file, yyscan_t yyscanner);
+void fbthrift_compiler_parse_restart(FILE* input_file, yyscan_t yyscanner);
 
-int yyget_lineno(yyscan_t scanner);
-void yyset_lineno(int line_number, yyscan_t scanner);
-char* yyget_text(yyscan_t scanner);
+int fbthrift_compiler_parse_get_lineno(yyscan_t scanner);
+void fbthrift_compiler_parse_set_lineno(int line_number, yyscan_t scanner);
+char* fbthrift_compiler_parse_get_text(yyscan_t scanner);
 
 namespace apache {
 namespace thrift {
@@ -71,7 +72,7 @@ class readonly_file {
 class yy_scanner {
  public:
   yy_scanner() {
-    if (yylex_init(&scanner_) != 0) {
+    if (fbthrift_compiler_parse_lex_init(&scanner_) != 0) {
       throw std::system_error(errno, std::generic_category());
     }
   }
@@ -83,8 +84,8 @@ class yy_scanner {
 
   ~yy_scanner() {
     if (!!scanner_) {
-      // Why does yylex_destroy return an int??
-      yylex_destroy(scanner_);
+      // Why does fbthrift_compiler_parse_lex_destroy return an int??
+      fbthrift_compiler_parse_lex_destroy(scanner_);
     }
   }
 
@@ -95,22 +96,22 @@ class yy_scanner {
    */
   void start(std::string path) {
     file_ = std::make_unique<readonly_file>(path);
-    yyrestart(file_->get_file(), scanner_);
+    fbthrift_compiler_parse_restart(file_->get_file(), scanner_);
   }
 
   int get_lineno() const {
     assert(!!scanner_);
-    return yyget_lineno(scanner_);
+    return fbthrift_compiler_parse_get_lineno(scanner_);
   }
 
   void set_lineno(int lineno) {
     assert(!!scanner_);
-    yyset_lineno(lineno, scanner_);
+    fbthrift_compiler_parse_set_lineno(lineno, scanner_);
   }
 
   std::string get_text() const {
     assert(!!scanner_);
-    char const* text = yyget_text(scanner_);
+    char const* text = fbthrift_compiler_parse_get_text(scanner_);
     return (!!text) ? std::string{text} : "";
   }
 

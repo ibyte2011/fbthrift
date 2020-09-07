@@ -13,10 +13,8 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.util.BitSet;
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.facebook.thrift.*;
+import com.facebook.thrift.annotations.*;
 import com.facebook.thrift.async.*;
 import com.facebook.thrift.meta_data.*;
 import com.facebook.thrift.server.*;
@@ -30,11 +28,11 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
 
   public Empty def_field;
   public static final int DEF_FIELD = 1;
-  public static boolean DEFAULT_PRETTY_PRINT = true;
 
   // isset id assignments
 
   public static final Map<Integer, FieldMetaData> metaDataMap;
+
   static {
     Map<Integer, FieldMetaData> tmpMetaDataMap = new HashMap<Integer, FieldMetaData>();
     tmpMetaDataMap.put(DEF_FIELD, new FieldMetaData("def_field", TFieldRequirementType.DEFAULT, 
@@ -50,10 +48,31 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
   }
 
   public StructWithRefAndAnnotCppNoexceptMoveCtor(
-    Empty def_field)
-  {
+      Empty def_field) {
     this();
     this.def_field = def_field;
+  }
+
+  public static class Builder {
+    private Empty def_field;
+
+    public Builder() {
+    }
+
+    public Builder setDef_field(final Empty def_field) {
+      this.def_field = def_field;
+      return this;
+    }
+
+    public StructWithRefAndAnnotCppNoexceptMoveCtor build() {
+      StructWithRefAndAnnotCppNoexceptMoveCtor result = new StructWithRefAndAnnotCppNoexceptMoveCtor();
+      result.setDef_field(this.def_field);
+      return result;
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
@@ -69,12 +88,7 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
     return new StructWithRefAndAnnotCppNoexceptMoveCtor(this);
   }
 
-  @Deprecated
-  public StructWithRefAndAnnotCppNoexceptMoveCtor clone() {
-    return new StructWithRefAndAnnotCppNoexceptMoveCtor(this);
-  }
-
-  public Empty  getDef_field() {
+  public Empty getDef_field() {
     return this.def_field;
   }
 
@@ -92,19 +106,19 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
     return this.def_field != null;
   }
 
-  public void setDef_fieldIsSet(boolean value) {
-    if (!value) {
+  public void setDef_fieldIsSet(boolean __value) {
+    if (!__value) {
       this.def_field = null;
     }
   }
 
-  public void setFieldValue(int fieldID, Object value) {
+  public void setFieldValue(int fieldID, Object __value) {
     switch (fieldID) {
     case DEF_FIELD:
-      if (value == null) {
+      if (__value == null) {
         unsetDef_field();
       } else {
-        setDef_field((Empty)value);
+        setDef_field((Empty)__value);
       }
       break;
 
@@ -123,46 +137,24 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
     }
   }
 
-  // Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise
-  public boolean isSet(int fieldID) {
-    switch (fieldID) {
-    case DEF_FIELD:
-      return isSetDef_field();
-    default:
-      throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
-    }
-  }
-
   @Override
-  public boolean equals(Object that) {
-    if (that == null)
+  public boolean equals(Object _that) {
+    if (_that == null)
       return false;
-    if (that instanceof StructWithRefAndAnnotCppNoexceptMoveCtor)
-      return this.equals((StructWithRefAndAnnotCppNoexceptMoveCtor)that);
-    return false;
-  }
-
-  public boolean equals(StructWithRefAndAnnotCppNoexceptMoveCtor that) {
-    if (that == null)
-      return false;
-    if (this == that)
+    if (this == _that)
       return true;
+    if (!(_that instanceof StructWithRefAndAnnotCppNoexceptMoveCtor))
+      return false;
+    StructWithRefAndAnnotCppNoexceptMoveCtor that = (StructWithRefAndAnnotCppNoexceptMoveCtor)_that;
 
-    boolean this_present_def_field = true && this.isSetDef_field();
-    boolean that_present_def_field = true && that.isSetDef_field();
-    if (this_present_def_field || that_present_def_field) {
-      if (!(this_present_def_field && that_present_def_field))
-        return false;
-      if (!TBaseHelper.equalsNobinary(this.def_field, that.def_field))
-        return false;
-    }
+    if (!TBaseHelper.equalsNobinary(this.isSetDef_field(), that.isSetDef_field(), this.def_field, that.def_field)) { return false; }
 
     return true;
   }
 
   @Override
   public int hashCode() {
-    return 0;
+    return Arrays.deepHashCode(new Object[] {def_field});
   }
 
   @Override
@@ -182,33 +174,33 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
       return lastComparison;
     }
     lastComparison = TBaseHelper.compareTo(def_field, other.def_field);
-    if (lastComparison != 0) {
+    if (lastComparison != 0) { 
       return lastComparison;
     }
     return 0;
   }
 
   public void read(TProtocol iprot) throws TException {
-    TField field;
+    TField __field;
     iprot.readStructBegin(metaDataMap);
     while (true)
     {
-      field = iprot.readFieldBegin();
-      if (field.type == TType.STOP) { 
+      __field = iprot.readFieldBegin();
+      if (__field.type == TType.STOP) { 
         break;
       }
-      switch (field.id)
+      switch (__field.id)
       {
         case DEF_FIELD:
-          if (field.type == TType.STRUCT) {
+          if (__field.type == TType.STRUCT) {
             this.def_field = new Empty();
             this.def_field.read(iprot);
           } else { 
-            TProtocolUtil.skip(iprot, field.type);
+            TProtocolUtil.skip(iprot, __field.type);
           }
           break;
         default:
-          TProtocolUtil.skip(iprot, field.type);
+          TProtocolUtil.skip(iprot, __field.type);
           break;
       }
       iprot.readFieldEnd();
@@ -235,19 +227,14 @@ public class StructWithRefAndAnnotCppNoexceptMoveCtor implements TBase, java.io.
 
   @Override
   public String toString() {
-    return toString(DEFAULT_PRETTY_PRINT);
-  }
-
-  @Override
-  public String toString(boolean prettyPrint) {
-    return toString(1, prettyPrint);
+    return toString(1, true);
   }
 
   @Override
   public String toString(int indent, boolean prettyPrint) {
     String indentStr = prettyPrint ? TBaseHelper.getIndentedString(indent) : "";
     String newLine = prettyPrint ? "\n" : "";
-String space = prettyPrint ? " " : "";
+    String space = prettyPrint ? " " : "";
     StringBuilder sb = new StringBuilder("StructWithRefAndAnnotCppNoexceptMoveCtor");
     sb.append(space);
     sb.append("(");
@@ -258,10 +245,10 @@ String space = prettyPrint ? " " : "";
     sb.append("def_field");
     sb.append(space);
     sb.append(":").append(space);
-    if (this. getDef_field() == null) {
+    if (this.getDef_field() == null) {
       sb.append("null");
     } else {
-      sb.append(TBaseHelper.toString(this. getDef_field(), indent + 1, prettyPrint));
+      sb.append(TBaseHelper.toString(this.getDef_field(), indent + 1, prettyPrint));
     }
     first = false;
     sb.append(newLine + TBaseHelper.reduceIndent(indentStr));
@@ -271,7 +258,6 @@ String space = prettyPrint ? " " : "";
 
   public void validate() throws TException {
     // check for required fields
-    // check that fields of type enum have valid values
   }
 
 }

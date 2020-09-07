@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_FATAL_REFLECTION_H_
 #define THRIFT_FATAL_REFLECTION_H_ 1
 
@@ -34,7 +35,10 @@
 #include <fatal/type/traits.h>
 #include <fatal/type/transform.h>
 #include <fatal/type/variant_traits.h>
+#include <folly/CppAttributes.h>
 #include <folly/Traits.h>
+#include <folly/functional/Invoke.h>
+#include <thrift/lib/cpp2/OptionalField.h>
 #include <thrift/lib/cpp2/TypeClass.h>
 
 #include <thrift/lib/cpp2/reflection/internal/reflection-inl-pre.h>
@@ -551,7 +555,7 @@ using try_reflect_module_tag = typename detail::
  *
  * @author: Marcelo Juchem <marcelo@fb.com>
  */
-template <typename Key, typename Value, typename Structured = void>
+template <typename Key, typename Value>
 struct annotation {
   /**
    * Represents the annotation key as a compile-time string, in the form of a
@@ -568,58 +572,6 @@ struct annotation {
    * @author: Marcelo Juchem <marcelo@fb.com>
    */
   using value = Value;
-
-  /**
-   * The structured annotation value, if it represents a valid JSON subset,
-   * otherwise it's `void`, representing a non-structured annotation.
-   *
-   * A valid JSON subset includes only integrals, booleans, strings, lists and
-   * dictionaries. No floating point numbers are supported.
-   *
-   * Dictionary keys will be laid out in sorted order.
-   *
-   * Example:
-   *
-   *  using info = reflect_struct<Foo>::annotations;
-   *  using a = fatal::get<info::map, info::keys::a>;
-   *
-   *  // yields `void`
-   *  using result1 = a::structured;
-   *
-   *  using b = fatal::get<info::map, info::keys::b>;
-   *
-   *  // yields `fatal::list<
-   *  //  fatal::pair<
-   *  //    fatal::sequence<char, 'b', 'a', 'r'>,
-   *  //    std::true_type
-   *  //  >,
-   *  //  fatal::pair<
-   *  //    fatal::sequence<char, 'f', 'o', 'o'>,
-   *  //    std::integral_constant<std::uintmax_t, 10>
-   *  //  >,
-   *  //  fatal::pair<
-   *  //    fatal::sequence<char, 'v', 'a', 'l', 'i', 'd'>,
-   *  //    fatal::sequence<char, 'f', 'o', 'r', 'm', 'a', 't'>
-   *  //  >,
-   *  //  fatal::pair<
-   *  //    fatal::sequence<char, 'x'>,
-   *  //    fatal::list<
-   *  //      std::integral_constant<std::intmax_t, -5>,
-   *  //      std::integral_constant<std::uintmax_t, 0>,
-   *  //      std::integral_constant<std::uintmax_t, 5>
-   *  //    >
-   *  //  >
-   *  // >`
-   *  using result2 = b::structured;
-   *
-   *  using c = fatal::get<info::map, info::keys::c>;
-   *
-   *  // yields `fatal::sequence<char, 'h', 'e', 'l', 'l', 'o'>`
-   *  using result3 = c::structured;
-   *
-   * @author: Marcelo Juchem <marcelo@fb.com>
-   */
-  using structured = Structured;
 };
 
 /**
@@ -928,6 +880,7 @@ template <
     field_id_t Id,
     optionality Optionality,
     typename Getter,
+    typename FieldRefGetter,
     typename TypeClass,
     template <typename> class Pod,
     typename Annotations,
@@ -1104,6 +1057,11 @@ struct reflected_struct_data_member {
   using getter = Getter;
 
   /**
+   * Similar to getter, but return `(optional_)?field_ref` instead.
+   */
+  using field_ref_getter = FieldRefGetter;
+
+  /**
    * The type class for this member.
    *
    * Example:
@@ -1234,8 +1192,8 @@ struct reflected_struct_data_member {
   template <typename T>
   static constexpr inline bool is_set(T const& owner) {
     namespace impl = detail::reflection_impl;
-    using getter = impl::getter_direct_getter_t<getter>;
-    return impl::isset<Owner, getter>::check(owner);
+    using direct_getter = impl::getter_direct_getter_t<getter>;
+    return impl::isset<Owner, direct_getter>::check(owner);
   }
 
   /**
@@ -1267,8 +1225,8 @@ struct reflected_struct_data_member {
   template <typename T>
   static constexpr inline bool mark_set(T& owner, bool set) {
     namespace impl = detail::reflection_impl;
-    using getter = impl::getter_direct_getter_t<getter>;
-    return impl::isset<Owner, getter>::mark(owner, set);
+    using direct_getter = impl::getter_direct_getter_t<getter>;
+    return impl::isset<Owner, direct_getter>::mark(owner, set);
   }
 };
 

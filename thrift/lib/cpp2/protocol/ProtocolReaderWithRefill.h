@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef CPP2_PROTOCOL_PROTOCOLREADER_WITHREFILL_H_
 #define CPP2_PROTOCOL_PROTOCOLREADER_WITHREFILL_H_ 1
 
@@ -159,6 +160,10 @@ class CompactProtocolReaderWithRefill : public VirtualCompactReader {
   }
 
   inline void readBinary(folly::fbstring& str) override {
+    readStringImpl(str);
+  }
+
+  inline void readBinary(detail::SkipNoopString& str) override {
     readStringImpl(str);
   }
 
@@ -389,6 +394,10 @@ class BinaryProtocolReaderWithRefill : public VirtualBinaryReader {
     readStringImpl(str);
   }
 
+  inline void readBinary(detail::SkipNoopString& str) override {
+    readStringImpl(str);
+  }
+
   inline void readBinary(std::unique_ptr<folly::IOBuf>& str) override {
     readBinaryIOBufImpl(str);
   }
@@ -422,6 +431,22 @@ class BinaryProtocolReaderWithRefill : public VirtualBinaryReader {
     protocol_.in_.clone(str, size);
   }
 };
+
+template <>
+inline bool canReadNElements(
+    CompactProtocolReaderWithRefill& /* prot */,
+    uint32_t /* n */,
+    std::initializer_list<TType> /* types */) {
+  return true;
+}
+
+template <>
+inline bool canReadNElements(
+    BinaryProtocolReaderWithRefill& /* prot */,
+    uint32_t /* n */,
+    std::initializer_list<TType> /* types */) {
+  return true;
+}
 
 } // namespace thrift
 } // namespace apache

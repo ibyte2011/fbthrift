@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,10 +27,6 @@ class FakeThreadManager : public apache::thrift::concurrency::ThreadManager {
  public:
   ~FakeThreadManager() override {}
 
-  void setThrowOnAdd(bool val) {
-    throwOnAdd_ = val;
-  }
-
   void start() override {}
 
   void join() override {}
@@ -39,20 +35,14 @@ class FakeThreadManager : public apache::thrift::concurrency::ThreadManager {
       std::shared_ptr<apache::thrift::concurrency::Runnable> task,
       int64_t /*timeout*/,
       int64_t /*expiration*/,
-      bool /*cancellable*/,
-      bool /*numa*/) {
-    if (throwOnAdd_) {
-      // Simulates an overloaded server.
-      throw std::exception();
-    } else {
-      auto thread = factory_.newThread(task);
-      thread->start();
-    }
+      bool /*upstream*/) noexcept {
+    auto thread = factory_.newThread(task);
+    thread->start();
   }
 
   // Following methods are not required for this fake object.
 
-  void add(folly::Func /*f*/) override {
+  void add(folly::Func /*f*/) noexcept override {
     LOG(FATAL) << "Method not implemented in this fake object";
   }
 
@@ -109,12 +99,12 @@ class FakeThreadManager : public apache::thrift::concurrency::ThreadManager {
     return 1;
   }
 
-  size_t totalTaskCount() const override {
+  size_t pendingUpstreamTaskCount() const override {
     LOG(FATAL) << "Method not implemented in this fake object";
     return 1;
   }
 
-  size_t pendingTaskCountMax() const override {
+  size_t totalTaskCount() const override {
     LOG(FATAL) << "Method not implemented in this fake object";
     return 1;
   }
@@ -122,12 +112,6 @@ class FakeThreadManager : public apache::thrift::concurrency::ThreadManager {
   size_t expiredTaskCount() override {
     LOG(FATAL) << "Method not implemented in this fake object";
     return 1;
-  }
-
-  bool tryAdd(std::shared_ptr<apache::thrift::concurrency::Runnable> /*task*/)
-      override {
-    LOG(FATAL) << "Method not implemented in this fake object";
-    return true;
   }
 
   void remove(std::shared_ptr<apache::thrift::concurrency::Runnable> /*task*/)
@@ -168,7 +152,6 @@ class FakeThreadManager : public apache::thrift::concurrency::ThreadManager {
 
  private:
   apache::thrift::concurrency::PosixThreadFactory factory_;
-  bool throwOnAdd_{false};
 };
 
 } // namespace thrift

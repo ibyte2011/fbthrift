@@ -27,7 +27,6 @@ namespace java thrift.test
 namespace cpp thrift.test
 namespace json thrift.test.doc
 namespace py thrift.compiler.test.fixtures.json_experimental.src.ThriftdocTest
-namespace wiki Thrift.ThrifdocTest
 
 // C++ comment
 /* c style comment */
@@ -262,5 +261,50 @@ typedef i32 BigDog
 *
 */
 typedef i32 TotallyDegenerate
+
+/**
+    A bool constant, experimental will render it as string
+*/
+const bool BOOLCONSTANT = true
+
+
+/**
+    Simple list
+*/
+const list< BigDog > SIMPLE_LIST = [42, 73]
+
+/**
+    Complicated list
+*/
+const list< list<string> > COMPLICATED_LIST = [
+  ["Rick", "Morty" ], ["Brian", "Stewie"]]
+
+/**
+   Simple map
+*/
+const map<string, string> SIMPLE_MAP = {
+  "Rick": "Genius", "Morty": "Not realy" }
+
+/**
+   Complicated map
+*/
+const map<string, list<string>> COMPLICATED_MAP = {
+  "Witcher": ["Geralt", "Yennefer"],
+  "1984": ["2+2=5"]}
+
+/**
+  String const split on multiple lines by '\'
+*/
+const string MULTI_LINE_STR = "Line 1
+Line 2
+...\
+Last"
+
+/**
+  String with escapes an unicodes.
+  Basic testing of https://www.ietf.org/rfc/rfc4627.txt
+*/
+const string WEIRD_STR = "How much is 15\u00c2\u00b0C in \\ F"
+
 
 /* THE END */

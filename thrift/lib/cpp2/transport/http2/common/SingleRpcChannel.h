@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@
 #include <string>
 
 #include <folly/FixedString.h>
+#include <folly/Function.h>
+
 #include <proxygen/lib/http/session/HTTPTransaction.h>
 #include <thrift/lib/cpp/protocol/TProtocolTypes.h>
 #include <thrift/lib/cpp2/transport/http2/common/H2Channel.h>
@@ -29,19 +31,22 @@ namespace thrift {
 class SingleRpcChannel : public H2Channel {
  public:
   SingleRpcChannel(
-      proxygen::ResponseHandler* toHttp2,
+      proxygen::HTTPTransaction* toHttp2,
       ThriftProcessor* processor);
 
-  explicit SingleRpcChannel(H2ClientConnection* toHttp2);
+  SingleRpcChannel(
+      folly::EventBase& evb,
+      folly::Function<proxygen::HTTPTransaction*(SingleRpcChannel*)>
+          transactionFactory);
 
   virtual ~SingleRpcChannel() override;
 
   void sendThriftResponse(
-      std::unique_ptr<ResponseRpcMetadata> metadata,
+      ResponseRpcMetadata&& metadata,
       std::unique_ptr<folly::IOBuf> payload) noexcept override;
 
   virtual void sendThriftRequest(
-      std::unique_ptr<RequestRpcMetadata> metadata,
+      RequestRpcMetadata&& metadata,
       std::unique_ptr<folly::IOBuf> payload,
       std::unique_ptr<ThriftClientCallback> callback) noexcept override;
 
@@ -78,7 +83,10 @@ class SingleRpcChannel : public H2Channel {
   ThriftProcessor* processor_{nullptr};
 
   // Event base on which all methods in this object must be invoked.
-  folly::EventBase* evb_;
+  folly::EventBase* evb_{nullptr};
+
+  folly::Function<proxygen::HTTPTransaction*(SingleRpcChannel*)>
+      transactionFactory_;
 
   // Transaction object for use on client side to communicate with the
   // Proxygen layer.

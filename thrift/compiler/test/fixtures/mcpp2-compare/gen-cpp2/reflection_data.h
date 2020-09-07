@@ -6,10 +6,11 @@
  */
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <thrift/lib/cpp/Thrift.h>
+#include <thrift/lib/cpp2/gen/module_data_h.h>
 
-#include "src/gen-cpp2/reflection_types.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/reflection_types.h"
+
+namespace apache { namespace thrift {
 
 
+}} // apache::thrift

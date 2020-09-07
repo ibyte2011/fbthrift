@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
 
 #include <thrift/compiler/validator/validator.h>
 
-#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -24,48 +23,36 @@ namespace apache {
 namespace thrift {
 namespace compiler {
 
-class validator_list {
- public:
-  explicit validator_list(validator::errors_t& errors) : errors_(errors) {}
-
-  std::vector<visitor*> get_pointers() const {
-    auto pointers = std::vector<visitor*>{};
-    for (auto const& v : validators_) {
-      pointers.push_back(v.get());
-    }
-    return pointers;
-  }
-
-  template <typename T, typename... Args>
-  void add(Args&&... args) {
-    auto ptr = make_validator<T>(errors_, std::forward<Args>(args)...);
-    validators_.push_back(std::move(ptr));
-  }
-
- private:
-  validator::errors_t& errors_;
-  std::vector<std::unique_ptr<validator>> validators_;
-};
-
 static void fill_validators(validator_list& vs);
 
-validator::errors_t validator::validate(t_program* const program) {
-  auto errors = validator::errors_t{};
-
-  auto validators = validator_list(errors);
-  fill_validators(validators);
-
-  interleaved_visitor(validators.get_pointers()).traverse(program);
-
-  return errors;
+void validator_list::traverse(t_program* const program) {
+  auto pointers = std::vector<visitor*>{};
+  for (auto const& v : validators_) {
+    pointers.push_back(v.get());
+  }
+  interleaved_visitor(pointers).traverse(program);
 }
 
-void validator::add_error(int const lineno, std::string const& message) {
-  auto const file = program_->get_path();
-  auto const line = std::to_string(lineno);
-  std::ostringstream err;
-  err << "[FAILURE:" << file << ":" << line << "] " << message;
-  errors_->push_back(err.str());
+validator::diagnostics_t validator::validate(t_program* const program) {
+  auto diagnostics = validator::diagnostics_t{};
+
+  auto validators = validator_list(diagnostics);
+  fill_validators(validators);
+
+  validators.traverse(program);
+
+  return diagnostics;
+}
+
+void validator::add_error(
+    boost::optional<int> const lineno,
+    std::string const& message) {
+  diagnostics_->emplace_back(
+      diagnostic::type::failure, program_->get_path(), lineno, message);
+}
+
+void validator::set_program(t_program* const program) {
+  program_ = program;
 }
 
 bool validator::visit(t_program* const program) {
@@ -73,8 +60,8 @@ bool validator::visit(t_program* const program) {
   return true;
 }
 
-void validator::set_ref_errors(errors_t& errors) {
-  errors_ = &errors;
+void validator::set_ref_diagnostics(diagnostics_t& diagnostics) {
+  diagnostics_ = &diagnostics;
 }
 
 /**
@@ -146,6 +133,11 @@ static void fill_validators(validator_list& vs) {
   vs.add<enum_values_uniqueness_validator>();
   vs.add<enum_values_set_validator>();
   vs.add<exception_list_is_all_exceptions_validator>();
+  vs.add<union_no_qualified_fields_validator>();
+  vs.add<mixin_type_correctness_validator>();
+  vs.add<field_names_uniqueness_validator>();
+  vs.add<struct_names_uniqueness_validator>();
+  vs.add<structured_annotations_uniqueness_validator>();
 
   // add more validators here ...
 }
@@ -184,9 +176,7 @@ void enum_values_uniqueness_validator::add_validation_error(
   std::ostringstream err;
   err << "Duplicate value " << enum_value.get_name() << "="
       << enum_value.get_value() << " with value " << existing_value_name
-      << " in enum " << enum_name << ". "
-      << "Add thrift.duplicate_values annotation "
-      << "to enum to suppress this error";
+      << " in enum " << enum_name << ".";
   add_error(lineno, err.str());
 }
 
@@ -196,10 +186,6 @@ bool enum_values_uniqueness_validator::visit(t_enum* const tenum) {
 }
 
 void enum_values_uniqueness_validator::validate(t_enum const* const tenum) {
-  if (tenum->annotations_.count("thrift.duplicate_values")) {
-    // opt-out mechanism
-    return;
-  }
   std::unordered_map<int32_t, t_enum_value const*> enum_values;
   for (auto v : tenum->get_enum_values()) {
     auto it = enum_values.find(v->get_value());
@@ -276,6 +262,142 @@ bool exception_list_is_all_exceptions_validator::visit(t_service* service) {
   }
   return true;
 }
+
+bool union_no_qualified_fields_validator::visit(t_struct* s) {
+  if (!s->is_union()) {
+    return true;
+  }
+
+  for (const auto* field : s->get_members()) {
+    if (field->get_req() != t_field::T_OPT_IN_REQ_OUT) {
+      std::ostringstream ss;
+      ss << "Unions cannot contain qualified fields. Remove "
+         << (field->get_req() == t_field::T_REQUIRED ? "required" : "optional")
+         << " qualifier from field '" << field->get_name() << "'";
+      add_error(field->get_lineno(), ss.str());
+    }
+  }
+  return true;
+}
+
+bool mixin_type_correctness_validator::visit(t_struct* s) {
+  for (auto* member : s->get_members()) {
+    if (member->is_mixin()) {
+      if (s->is_union()) {
+        add_error(
+            s->get_lineno(),
+            "Union `" + s->get_name() + "` can not have mixin field `" +
+                member->get_name() + '`');
+      } else if (!member->get_type()->get_true_type()->is_struct()) {
+        add_error(
+            member->get_lineno(),
+            "Mixin field `" + member->get_name() + "` is not a struct but " +
+                member->get_type()->get_name());
+      } else if (member->get_type()->get_true_type()->is_union()) {
+        add_error(
+            member->get_lineno(),
+            "Mixin field `" + member->get_name() +
+                "` is not a struct but union");
+      } else if (member->get_req() == t_field::T_OPTIONAL) {
+        // Nothing technically stops us from marking optional field mixin.
+        // However, this will bring surprising behavior. e.g. `foo.bar_ref()`
+        // might throw `bad_field_access` if `bar` is inside optional mixin
+        // field.
+        add_error(
+            member->get_lineno(),
+            "Mixin field `" + member->get_name() + "` can not be optional");
+      }
+    }
+  }
+  return true;
+}
+
+bool field_names_uniqueness_validator::visit(t_struct* s) {
+  // If member is not struct, we couldn't extract field from mixin
+  for (auto* member : s->get_members()) {
+    if (member->is_mixin() &&
+        !member->get_type()->get_true_type()->is_struct()) {
+      return true;
+    }
+  }
+
+  std::map<std::string, std::string> memberToParent;
+  for (auto* member : s->get_members()) {
+    if (!memberToParent.emplace(member->get_name(), s->get_name()).second) {
+      add_error(
+          member->get_lineno(),
+          "Field `" + member->get_name() + "` is not unique in struct `" +
+              s->get_name() + '`');
+    }
+  }
+
+  for (auto i : s->get_mixins_and_members()) {
+    auto res =
+        memberToParent.emplace(i.member->get_name(), i.mixin->get_name());
+    if (!res.second) {
+      add_error(
+          i.mixin->get_lineno(),
+          "Field `" + res.first->second + "." + i.member->get_name() +
+              "` and `" + i.mixin->get_name() + "." + i.member->get_name() +
+              "` can not have same name in struct `" + s->get_name() + '`');
+    }
+  }
+  return true;
+}
+
+bool struct_names_uniqueness_validator::visit(t_program* p) {
+  set_program(p);
+  std::set<std::string> seen;
+  for (auto* object : p->get_objects()) {
+    if (!seen.emplace(object->get_name()).second) {
+      add_error(
+          object->get_lineno(),
+          "Redefinition of type `" + object->get_name() + "`");
+    }
+  }
+  return true;
+}
+
+bool structured_annotations_validator::visit(t_service* service) {
+  validate_annotations(service, service->get_full_name());
+  return true;
+}
+
+bool structured_annotations_validator::visit(t_enum* tenum) {
+  validate_annotations(tenum, tenum->get_full_name());
+  return true;
+}
+
+bool structured_annotations_validator::visit(t_struct* tstruct) {
+  validate_annotations(tstruct, tstruct->get_full_name());
+  return true;
+}
+
+bool structured_annotations_validator::visit(t_field* tfield) {
+  validate_annotations(tfield, "field " + tfield->get_name());
+  validate_annotations(
+      tfield->get_type(), "type of the field " + tfield->get_name());
+  return true;
+}
+
+void structured_annotations_uniqueness_validator::validate_annotations(
+    t_annotated* tannotated,
+    const std::string& tannotated_name) {
+  std::unordered_set<std::string> full_names;
+  std::string name;
+  for (const auto& it : tannotated->structured_annotations_) {
+    name = it->get_type()->get_full_name();
+    if (full_names.count(name) != 0) {
+      add_error(
+          it->get_lineno(),
+          "Duplicate structured annotation `" + name + "` in the `" +
+              tannotated_name + "`.");
+    } else {
+      full_names.insert(name);
+    }
+  }
+}
+
 } // namespace compiler
 } // namespace thrift
 } // namespace apache

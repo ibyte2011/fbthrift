@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import unittest
+from typing import Dict, List
 
 from testing.types import (
+    LocationMap,
+    StrI32ListMap,
     StrIntMap,
     StrStrIntListMapMap,
-    StrI32ListMap,
-    LocationMap,
     StrStrMap,
 )
-from typing import List, Dict
+from thrift.py3.types import Container
 
 
 class MapTests(unittest.TestCase):
@@ -29,9 +44,9 @@ class MapTests(unittest.TestCase):
         x = StrStrMap({"test": "value"})
         self.assertEqual(x["test"], "value")
         with self.assertRaises(KeyError):
-            x[5]   # type: ignore
+            x[5]  # type: ignore
         with self.assertRaises(KeyError):
-            x[x]   # type: ignore
+            x[x]  # type: ignore
 
     def test_get(self) -> None:
         x = StrStrMap({"test": "value"})
@@ -42,8 +57,8 @@ class MapTests(unittest.TestCase):
     def test_contains(self) -> None:
         x = StrStrMap({"test": "value"})
         self.assertIn("test", x)
-        self.assertNotIn(5, x)  # type: ignore
-        self.assertNotIn(x, x)  # type: ignore
+        self.assertNotIn(5, x)
+        self.assertNotIn(x, x)
 
     def test_items_values(self) -> None:
         x = {"test": "value"}
@@ -88,3 +103,10 @@ class MapTests(unittest.TestCase):
         self.assertEqual(x, y)
         self.assertEqual(x, x)
         self.assertEqual(y, y)
+
+    def test_is_container(self) -> None:
+        self.assertIsInstance(LocationMap, Container)
+        self.assertIsInstance(StrI32ListMap(), Container)
+        self.assertIsInstance(StrIntMap(), Container)
+        self.assertIsInstance(StrStrIntListMapMap(), Container)
+        self.assertIsInstance(StrStrMap(), Container)

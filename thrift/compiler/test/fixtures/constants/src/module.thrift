@@ -1,4 +1,21 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace java.swift test.fixtures.constants
+namespace java.swift.constants test.fixtures.constants.ModuleConstants
 
 const i32 myInt = 1337;
 const string name = "Mark Zuckerberg";
@@ -28,11 +45,24 @@ enum Company {
   INSTAGRAM = 3,
 }
 
+typedef Company MyCompany
+const MyCompany my_company = FACEBOOK
+
 struct Internship {
   1: required i32 weeks;
   2: string title;
   3: optional Company employer;
 }
+
+typedef string MyStringIdentifier
+typedef i32 MyIntIdentifier
+typedef map<string, string> MyMapIdentifier
+
+const MyStringIdentifier foo = "foo"
+const MyIntIdentifier bar = 42
+const MyMapIdentifier mymap = {
+  "keys": "values"
+};
 
 const Internship instagram = {
   "weeks": 12,
@@ -40,8 +70,9 @@ const Internship instagram = {
   "employer": Company.INSTAGRAM
 };
 
-struct UnEnumStruct {
-  1: City city = -1, # thrift-compiler should emit a warning
+const Internship partial_const = {
+  "weeks": 8,
+  "title": "Some Job",
 }
 
 struct Range {
@@ -76,9 +107,16 @@ struct struct1 {
 
 const struct1 pod_0 = {};
 
+const struct1 pod_s_0 = struct1 {};
+
 const struct1 pod_1 = {
   "a": 10,
   "b": "foo"
+}
+
+const struct1 pod_s_1 = struct1 {
+  a = 10,
+  b = foo
 }
 
 struct struct2 {
@@ -98,6 +136,26 @@ const struct2 pod_2 = {
   "d": [11, 22, 33]
 }
 
+const struct2 pod_trailing_commas = {
+  "a": 98,
+  "b": "gaz",
+  "c": {
+    "a": 12,
+    "b": "bar",
+  },
+  "d": [11, 22, 33,],
+}
+
+const struct2 pod_s_2 = struct2 {
+  a = 98,
+  b = "gaz",
+  c = struct1 {
+    a = 12,
+    b = "bar"
+  },
+  d = [11, 22, 33]
+}
+
 struct struct3 {
   1: string a
   2: i32 b
@@ -111,9 +169,33 @@ const struct3 pod_3 = {
     "a":888,
     "c":{
       "b":"gaz"
-    }
+    },
     "d": [1, 2, 3]
   }
+}
+
+const struct3 pod_s_3 = struct3 {
+  a = "abc",
+  b = 456,
+  c = struct2 {
+    a = 888,
+    c = struct1 {
+      b = 'gaz'
+    },
+    d = [1, 2, 3]
+  }
+}
+
+struct struct4 {
+  1: i32 a
+  2: optional double b
+  3: optional byte c
+}
+
+const struct4 pod_4 = {
+  "a": 1234,
+  "b": 0.333,
+  "c": 25
 }
 
 union union1 {

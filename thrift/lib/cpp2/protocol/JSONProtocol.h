@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,6 +37,10 @@ class JSONProtocolWriter : public JSONProtocolWriterCommon {
 
   static constexpr ProtocolType protocolType() {
     return ProtocolType::T_JSON_PROTOCOL;
+  }
+
+  static constexpr bool kSortKeys() {
+    return false;
   }
 
   inline uint32_t writeStructBegin(const char* name);
@@ -93,22 +97,24 @@ class JSONProtocolReader : public JSONProtocolReaderCommon {
     return false;
   }
 
-  inline uint32_t readStructBegin(std::string& name);
-  inline uint32_t readStructEnd();
-  inline uint32_t
+  inline void readStructBegin(std::string& name);
+  inline void readStructEnd();
+  inline void
   readFieldBegin(std::string& name, TType& fieldType, int16_t& fieldId);
-  inline uint32_t readFieldEnd();
-  inline uint32_t readMapBegin(TType& keyType, TType& valType, uint32_t& size);
-  inline uint32_t readMapEnd();
-  inline uint32_t readListBegin(TType& elemType, uint32_t& size);
-  inline uint32_t readListEnd();
-  inline uint32_t readSetBegin(TType& elemType, uint32_t& size);
-  inline uint32_t readSetEnd();
-  inline uint32_t readBool(bool& value);
-  inline uint32_t readBool(std::vector<bool>::reference value);
+  inline void readFieldEnd();
+  inline void readMapBegin(TType& keyType, TType& valType, uint32_t& size);
+  inline void readMapEnd();
+  inline void readListBegin(TType& elemType, uint32_t& size);
+  inline void readListEnd();
+  inline void readSetBegin(TType& elemType, uint32_t& size);
+  inline void readSetEnd();
+  inline void readBool(bool& value);
+  inline void readBool(std::vector<bool>::reference value);
   inline bool peekMap();
   inline bool peekSet();
   inline bool peekList();
+
+  inline void skip(TType type);
 
  private:
   [[noreturn]] static void throwUnrecognizableAsBoolean(int8_t byte);
@@ -117,4 +123,4 @@ class JSONProtocolReader : public JSONProtocolReaderCommon {
 } // namespace thrift
 } // namespace apache
 
-#include <thrift/lib/cpp2/protocol/JSONProtocol.tcc>
+#include <thrift/lib/cpp2/protocol/JSONProtocol-inl.h>

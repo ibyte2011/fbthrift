@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,10 +19,14 @@
 #include <unordered_set>
 
 #include <folly/io/async/AsyncServerSocket.h>
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/EventHandler.h>
 #include <folly/io/async/HHWheelTimer.h>
+#include <folly/net/NetworkSocket.h>
 #include <thrift/lib/cpp/async/TAsyncSSLSocket.h>
+#include <thrift/lib/cpp2/security/FizzPeeker.h>
+#include <thrift/lib/cpp2/server/RequestsRegistry.h>
 #include <thrift/lib/cpp2/server/ThriftServer.h>
 #include <thrift/lib/cpp2/server/peeking/TLSHelper.h>
 #include <wangle/acceptor/Acceptor.h>
@@ -62,18 +66,38 @@ class Cpp2Worker : public wangle::Acceptor,
   static std::shared_ptr<Cpp2Worker> create(
       ThriftServer* server,
       const std::shared_ptr<HeaderServerChannel>& serverChannel = nullptr,
-      folly::EventBase* eventBase = nullptr) {
+      folly::EventBase* eventBase = nullptr,
+      std::shared_ptr<fizz::server::CertManager> certManager = nullptr,
+      std::shared_ptr<wangle::SSLContextManager> ctxManager = nullptr,
+      std::shared_ptr<const fizz::server::FizzServerContext> fizzContext =
+          nullptr) {
     std::shared_ptr<Cpp2Worker> worker(new Cpp2Worker(server, {}));
-    worker->construct(server, serverChannel, eventBase);
+    worker->setFizzCertManager(certManager);
+    worker->setSSLContextManager(ctxManager);
+    worker->construct(server, serverChannel, eventBase, fizzContext);
     return worker;
   }
 
   void init(
       folly::AsyncServerSocket* serverSocket,
       folly::EventBase* eventBase,
-      wangle::SSLStats* stats = nullptr) override {
+      wangle::SSLStats* stats,
+      std::shared_ptr<const fizz::server::FizzServerContext> fizzContext)
+      override {
+    if (auto thriftConfigBase =
+            folly::get_ptr(accConfig_.customConfigMap, "thrift_tls_config")) {
+      assert(static_cast<ThriftTlsConfig*>((*thriftConfigBase).get()));
+      auto thriftConfig =
+          static_cast<ThriftTlsConfig*>((*thriftConfigBase).get());
+      if (thriftConfig->enableThriftParamsNegotiation) {
+        auto thriftParametersContext =
+            std::make_shared<ThriftParametersContext>();
+        fizzPeeker_.setThriftParametersContext(
+            std::move(thriftParametersContext));
+      }
+    }
     securityProtocolCtxManager_.addPeeker(this);
-    Acceptor::init(serverSocket, eventBase, stats);
+    Acceptor::init(serverSocket, eventBase, stats, fizzContext);
   }
 
   /*
@@ -92,27 +116,36 @@ class Cpp2Worker : public wangle::Acceptor,
   }
 
   /**
-   * Count the number of pending fds. Used for overload detection.
-   * Not thread-safe.
-   */
-  int computePendingCount();
-
-  /**
-   * Cached pending count. Thread-safe.
-   */
-  int getPendingCount() const;
-
-  /**
    * SSL stats hook
    */
   void updateSSLStats(
-      const folly::AsyncTransportWrapper* sock,
+      const folly::AsyncTransport* sock,
       std::chrono::milliseconds acceptLatency,
-      wangle::SSLErrorEnum error) noexcept override;
+      wangle::SSLErrorEnum error,
+      const folly::exception_wrapper& ex) noexcept override;
 
   void handleHeader(
-      folly::AsyncTransportWrapper::UniquePtr sock,
+      folly::AsyncTransport::UniquePtr sock,
       const folly::SocketAddress* addr);
+
+  RequestsRegistry* getRequestsRegistry() const {
+    return requestsRegistry_;
+  }
+
+  bool isStopping() {
+    return stopping_;
+  }
+
+  struct ActiveRequestsDecrement {
+    void operator()(Cpp2Worker* worker) {
+      if (--worker->activeRequests_ == 0 && worker->stopping_) {
+        worker->stopBaton_.post();
+      }
+    }
+  };
+  using ActiveRequestsGuard =
+      std::unique_ptr<Cpp2Worker, ActiveRequestsDecrement>;
+  ActiveRequestsGuard getActiveRequestsGuard();
 
  protected:
   Cpp2Worker(
@@ -121,22 +154,24 @@ class Cpp2Worker : public wangle::Acceptor,
       : Acceptor(server->getServerSocketConfig()),
         wangle::PeekingAcceptorHandshakeHelper::PeekCallback(kPeekCount),
         server_(server),
-        activeRequests_(0),
-        pendingCount_(0),
-        pendingTime_(std::chrono::steady_clock::now()) {}
+        activeRequests_(0) {
+    setGracefulShutdownTimeout(server->workersJoinTimeout_);
+  }
 
   void construct(
       ThriftServer*,
       const std::shared_ptr<HeaderServerChannel>& serverChannel,
-      folly::EventBase* eventBase) {
+      folly::EventBase* eventBase,
+      std::shared_ptr<const fizz::server::FizzServerContext> fizzContext) {
     auto observer = std::dynamic_pointer_cast<folly::EventBaseObserver>(
-        server_->getObserver());
+        server_->getObserverShared());
     if (serverChannel) {
       eventBase = serverChannel->getEventBase();
     } else if (!eventBase) {
       eventBase = folly::EventBaseManager::get()->getEventBase();
     }
-    init(nullptr, eventBase);
+    init(nullptr, eventBase, nullptr, fizzContext);
+    initRequestsRegistry();
 
     if (serverChannel) {
       // duplex
@@ -144,28 +179,26 @@ class Cpp2Worker : public wangle::Acceptor,
     }
 
     if (observer) {
-      eventBase->setObserver(observer);
+      eventBase->add([eventBase, observer = std::move(observer)] {
+        eventBase->setObserver(observer);
+      });
     }
   }
 
   void onNewConnection(
-      folly::AsyncTransportWrapper::UniquePtr,
+      folly::AsyncTransport::UniquePtr,
       const folly::SocketAddress*,
       const std::string&,
       wangle::SecureTransportType,
       const wangle::TransportInfo&) override;
 
-  virtual std::shared_ptr<async::TAsyncTransport> createThriftTransport(
-      folly::AsyncTransportWrapper::UniquePtr);
+  virtual std::shared_ptr<folly::AsyncTransport> createThriftTransport(
+      folly::AsyncTransport::UniquePtr);
 
-  void markSocketAccepted(async::TAsyncSocket* sock);
-
-  SSLPolicy getSSLPolicy() {
-    return server_->getSSLPolicy();
-  }
+  void markSocketAccepted(folly::AsyncSocket* sock);
 
   void plaintextConnectionReady(
-      folly::AsyncTransportWrapper::UniquePtr sock,
+      folly::AsyncTransport::UniquePtr sock,
       const folly::SocketAddress& clientAddr,
       const std::string& nextProtocolName,
       wangle::SecureTransportType secureTransportType,
@@ -173,7 +206,8 @@ class Cpp2Worker : public wangle::Acceptor,
 
   void requestStop();
 
-  void waitForStop(std::chrono::system_clock::time_point deadline);
+  // returns false if timed out due to deadline
+  bool waitForStop(std::chrono::system_clock::time_point deadline);
 
   virtual wangle::AcceptorHandshakeHelper::UniquePtr createSSLHelper(
       const std::vector<uint8_t>& bytes,
@@ -181,9 +215,15 @@ class Cpp2Worker : public wangle::Acceptor,
       std::chrono::steady_clock::time_point acceptTime,
       wangle::TransportInfo& tinfo);
 
+  wangle::DefaultToFizzPeekingCallback* getFizzPeeker() override {
+    return &fizzPeeker_;
+  }
+
  private:
   /// The mother ship.
   ThriftServer* server_;
+
+  FizzPeeker fizzPeeker_;
 
   // For DuplexChannel case, set only during shutdown so that we can extend the
   // lifetime of the ThriftServer if the Worker is kept alive by some
@@ -194,7 +234,7 @@ class Cpp2Worker : public wangle::Acceptor,
       folly::EventBase* base,
       int fd) override {
     return folly::AsyncSocket::UniquePtr(
-        new apache::thrift::async::TAsyncSocket(base, fd));
+        new folly::AsyncSocket(base, folly::NetworkSocket::fromFd(fd)));
   }
 
   folly::AsyncSSLSocket::UniquePtr makeNewAsyncSSLSocket(
@@ -205,7 +245,7 @@ class Cpp2Worker : public wangle::Acceptor,
         new apache::thrift::async::TAsyncSSLSocket(
             ctx,
             base,
-            fd,
+            folly::NetworkSocket::fromFd(fd),
             true, /* set server */
             true /* defer the security negotiation until sslAccept. */));
   }
@@ -217,11 +257,11 @@ class Cpp2Worker : public wangle::Acceptor,
       const std::shared_ptr<HeaderServerChannel>& serverChannel);
 
   uint32_t activeRequests_;
+  RequestsRegistry* requestsRegistry_;
   bool stopping_{false};
   folly::Baton<> stopBaton_;
 
-  int pendingCount_;
-  std::chrono::steady_clock::time_point pendingTime_;
+  void initRequestsRegistry();
 
   wangle::AcceptorHandshakeHelper::UniquePtr getHelper(
       const std::vector<uint8_t>& bytes,
@@ -229,8 +269,22 @@ class Cpp2Worker : public wangle::Acceptor,
       std::chrono::steady_clock::time_point acceptTime,
       wangle::TransportInfo& tinfo) override;
 
+  bool isPlaintextAllowedOnLoopback() {
+    return server_->isPlaintextAllowedOnLoopback();
+  }
+
+  SSLPolicy getSSLPolicy() {
+    return server_->getSSLPolicy();
+  }
+
+  bool shouldPerformSSL(
+      const std::vector<uint8_t>& bytes,
+      const folly::SocketAddress& clientAddr);
+
   friend class Cpp2Connection;
   friend class ThriftServer;
+  friend class RocketRoutingHandler;
+  friend class TestRoutingHandler;
 };
 
 } // namespace thrift

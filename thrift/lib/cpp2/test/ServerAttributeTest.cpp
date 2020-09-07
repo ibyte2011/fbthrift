@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
  */
 
 #include <thrift/lib/cpp2/server/ServerAttribute.h>
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 using namespace apache::thrift;
 
@@ -49,4 +49,36 @@ TEST(ServerAttributeTest, overrideFirst) {
   EXPECT_EQ(a.get(), 2);
   a.unset(AttributeSource::OVERRIDE);
   EXPECT_EQ(a.get(), 0);
+}
+
+TEST(ServerAttributeTest, stringBaselineFirst) {
+  ServerAttribute<std::string> a{"a"};
+  EXPECT_EQ(a.get(), "a");
+
+  a.set("b", AttributeSource::BASELINE);
+  EXPECT_EQ(a.get(), "b");
+  a.set("c", AttributeSource::OVERRIDE);
+  EXPECT_EQ(a.get(), "c");
+
+  a.unset(AttributeSource::OVERRIDE);
+  EXPECT_EQ(a.get(), "b");
+  a.unset(AttributeSource::BASELINE);
+  EXPECT_EQ(a.get(), "a");
+}
+
+TEST(ServerAttributeTest, stringOverrideFirst) {
+  ServerAttribute<std::string> a{"a"};
+  EXPECT_EQ(a.get(), "a");
+
+  a.set("c", AttributeSource::OVERRIDE);
+  EXPECT_EQ(a.get(), "c");
+  a.set("b", AttributeSource::BASELINE);
+  // still return overrided value
+  EXPECT_EQ(a.get(), "c");
+
+  a.unset(AttributeSource::BASELINE);
+  // still return overrided value
+  EXPECT_EQ(a.get(), "c");
+  a.unset(AttributeSource::OVERRIDE);
+  EXPECT_EQ(a.get(), "a");
 }

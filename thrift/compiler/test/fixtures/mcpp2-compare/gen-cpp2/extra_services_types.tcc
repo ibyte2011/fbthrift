@@ -6,15 +6,9 @@
  */
 #pragma once
 
-#include "src/gen-cpp2/extra_services_types.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/extra_services_types.h"
 
-#include <thrift/lib/cpp2/GeneratedSerializationCodeHelper.h>
 #include <thrift/lib/cpp2/gen/module_types_tcc.h>
-
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/protocol/ProtocolReaderStructReadState.h>
-#include <thrift/lib/cpp2/protocol/SimpleJSONProtocol.h>
 
 
 namespace apache {
@@ -22,11 +16,11 @@ namespace thrift {
 namespace detail {
 
 template <>
-struct TccStructTraits< ::extra::svc::containerStruct2> {
+struct TccStructTraits<::extra::svc::containerStruct2> {
   static void translateFieldName(
       folly::StringPiece _fname,
       int16_t& fid,
-      apache::thrift::protocol::TType& _ftype);
+      apache::thrift::protocol::TType& _ftype) noexcept;
 };
 
 } // namespace detail
@@ -43,10 +37,6 @@ void containerStruct2::readNoXfer(Protocol_* iprot) {
 
   using apache::thrift::TProtocolException;
 
-  bool isset_req_fieldA = false;
-  bool isset_req_fieldB = false;
-  bool isset_req_fieldC = false;
-  bool isset_req_fieldE = false;
 
   if (UNLIKELY(!_readState.advanceToNextField(
           iprot,
@@ -57,7 +47,10 @@ void containerStruct2::readNoXfer(Protocol_* iprot) {
   }
 _readField_fieldA:
   {
-    iprot->readBool(this->fieldA);
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::integral, bool>::readWithContext(*iprot, this->fieldA, _readState);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.fieldA = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -69,8 +62,7 @@ _readField_fieldA:
   }
 _readField_req_fieldA:
   {
-    iprot->readBool(this->req_fieldA);
-    isset_req_fieldA = true;
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::integral, bool>::readWithContext(*iprot, this->req_fieldA, _readState);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -82,8 +74,10 @@ _readField_req_fieldA:
   }
 _readField_opt_fieldA:
   {
-    this->opt_fieldA = bool();
-    iprot->readBool(this->opt_fieldA.value());
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::integral, bool>::readWithContext(*iprot, this->opt_fieldA, _readState);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.opt_fieldA = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -95,8 +89,14 @@ _readField_opt_fieldA:
   }
 _readField_fieldB:
   {
-    this->fieldB = std::map<std::string, bool>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::read(*iprot, this->fieldB);
+    _readState.beforeSubobject(iprot);
+    
+    this->fieldB = ::std::map<::std::string, bool>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::read(*iprot, this->fieldB);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.fieldB = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -108,9 +108,11 @@ _readField_fieldB:
   }
 _readField_req_fieldB:
   {
-    this->req_fieldB = std::map<std::string, bool>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::read(*iprot, this->req_fieldB);
-    isset_req_fieldB = true;
+    _readState.beforeSubobject(iprot);
+    
+    this->req_fieldB = ::std::map<::std::string, bool>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::read(*iprot, this->req_fieldB);
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -122,8 +124,14 @@ _readField_req_fieldB:
   }
 _readField_opt_fieldB:
   {
-    this->opt_fieldB = std::map<std::string, bool>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::read(*iprot, this->opt_fieldB.value());
+    _readState.beforeSubobject(iprot);
+    
+    this->opt_fieldB = ::std::map<::std::string, bool>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::read(*iprot, this->opt_fieldB);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.opt_fieldB = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -135,8 +143,14 @@ _readField_opt_fieldB:
   }
 _readField_fieldC:
   {
-    this->fieldC = std::set<int32_t>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::read(*iprot, this->fieldC);
+    _readState.beforeSubobject(iprot);
+    
+    this->fieldC = ::std::set<int32_t>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::read(*iprot, this->fieldC);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.fieldC = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -148,9 +162,11 @@ _readField_fieldC:
   }
 _readField_req_fieldC:
   {
-    this->req_fieldC = std::set<int32_t>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::read(*iprot, this->req_fieldC);
-    isset_req_fieldC = true;
+    _readState.beforeSubobject(iprot);
+    
+    this->req_fieldC = ::std::set<int32_t>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::read(*iprot, this->req_fieldC);
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -162,8 +178,14 @@ _readField_req_fieldC:
   }
 _readField_opt_fieldC:
   {
-    this->opt_fieldC = std::set<int32_t>();
-    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::read(*iprot, this->opt_fieldC.value());
+    _readState.beforeSubobject(iprot);
+    
+    this->opt_fieldC = ::std::set<int32_t>();
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::read(*iprot, this->opt_fieldC);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.opt_fieldC = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
+    _readState.afterSubobject(iprot);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -175,7 +197,11 @@ _readField_opt_fieldC:
   }
 _readField_fieldD:
   {
-    iprot->readString(this->fieldD);
+    
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::read(*iprot, this->fieldD);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.fieldD = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -187,7 +213,11 @@ _readField_fieldD:
   }
 _readField_fieldE:
   {
-    iprot->readString(this->fieldE);
+    
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::read(*iprot, this->fieldE);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.fieldE = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -199,8 +229,8 @@ _readField_fieldE:
   }
 _readField_req_fieldE:
   {
-    iprot->readString(this->req_fieldE);
-    isset_req_fieldE = true;
+    
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::read(*iprot, this->req_fieldE);
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -212,8 +242,11 @@ _readField_req_fieldE:
   }
 _readField_opt_fieldE:
   {
-    this->opt_fieldE = std::string();
-    iprot->readString(this->opt_fieldE.value());
+    
+    ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::read(*iprot, this->opt_fieldE);
+    THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
+    this->__isset.opt_fieldE = true;
+    THRIFT_IGNORE_ISSET_USE_WARNING_END
   }
 
   if (UNLIKELY(!_readState.advanceToNextField(
@@ -227,32 +260,21 @@ _readField_opt_fieldE:
 _end:
   _readState.readStructEnd(iprot);
 
-  if (!isset_req_fieldA) {
-    TProtocolException::throwMissingRequiredField("req_fieldA", "containerStruct2");
-  }
-  if (!isset_req_fieldB) {
-    TProtocolException::throwMissingRequiredField("req_fieldB", "containerStruct2");
-  }
-  if (!isset_req_fieldC) {
-    TProtocolException::throwMissingRequiredField("req_fieldC", "containerStruct2");
-  }
-  if (!isset_req_fieldE) {
-    TProtocolException::throwMissingRequiredField("req_fieldE", "containerStruct2");
-  }
   return;
 
 _loop:
-  if (_readState.fieldType == apache::thrift::protocol::T_STOP) {
+  _readState.afterAdvanceFailure(iprot);
+  if (_readState.atStop()) {
     goto _end;
   }
   if (iprot->kUsesFieldNames()) {
-    apache::thrift::detail::TccStructTraits<containerStruct2>::translateFieldName(_readState.fieldName(), _readState.fieldId, _readState.fieldType);
+    _readState.template fillFieldTraitsFromName<apache::thrift::detail::TccStructTraits<containerStruct2>>();
   }
 
   switch (_readState.fieldId) {
     case 1:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_BOOL)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_BOOL))) {
         goto _readField_fieldA;
       } else {
         goto _skip;
@@ -260,7 +282,7 @@ _loop:
     }
     case 101:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_BOOL)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_BOOL))) {
         goto _readField_req_fieldA;
       } else {
         goto _skip;
@@ -268,7 +290,7 @@ _loop:
     }
     case 201:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_BOOL)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_BOOL))) {
         goto _readField_opt_fieldA;
       } else {
         goto _skip;
@@ -276,7 +298,7 @@ _loop:
     }
     case 2:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_MAP)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_MAP))) {
         goto _readField_fieldB;
       } else {
         goto _skip;
@@ -284,7 +306,7 @@ _loop:
     }
     case 102:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_MAP)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_MAP))) {
         goto _readField_req_fieldB;
       } else {
         goto _skip;
@@ -292,7 +314,7 @@ _loop:
     }
     case 202:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_MAP)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_MAP))) {
         goto _readField_opt_fieldB;
       } else {
         goto _skip;
@@ -300,7 +322,7 @@ _loop:
     }
     case 3:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_SET)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_SET))) {
         goto _readField_fieldC;
       } else {
         goto _skip;
@@ -308,7 +330,7 @@ _loop:
     }
     case 103:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_SET)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_SET))) {
         goto _readField_req_fieldC;
       } else {
         goto _skip;
@@ -316,7 +338,7 @@ _loop:
     }
     case 203:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_SET)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_SET))) {
         goto _readField_opt_fieldC;
       } else {
         goto _skip;
@@ -324,7 +346,7 @@ _loop:
     }
     case 4:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_STRING)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_STRING))) {
         goto _readField_fieldD;
       } else {
         goto _skip;
@@ -332,7 +354,7 @@ _loop:
     }
     case 5:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_STRING)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_STRING))) {
         goto _readField_fieldE;
       } else {
         goto _skip;
@@ -340,7 +362,7 @@ _loop:
     }
     case 105:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_STRING)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_STRING))) {
         goto _readField_req_fieldE;
       } else {
         goto _skip;
@@ -348,7 +370,7 @@ _loop:
     }
     case 205:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::T_STRING)) {
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::T_STRING))) {
         goto _readField_opt_fieldE;
       } else {
         goto _skip;
@@ -357,7 +379,7 @@ _loop:
     default:
     {
 _skip:
-      iprot->skip(_readState.fieldType);
+      _readState.skip(iprot);
       _readState.readFieldEnd(iprot);
       _readState.readFieldBeginNoInline(iprot);
       goto _loop;
@@ -373,35 +395,35 @@ uint32_t containerStruct2::serializedSize(Protocol_ const* prot_) const {
   xfer += prot_->serializedSizeBool(this->fieldA);
   xfer += prot_->serializedFieldSize("req_fieldA", apache::thrift::protocol::T_BOOL, 101);
   xfer += prot_->serializedSizeBool(this->req_fieldA);
-  if (this->opt_fieldA.hasValue()) {
+  if (this->opt_fieldA_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldA", apache::thrift::protocol::T_BOOL, 201);
-    xfer += prot_->serializedSizeBool(this->opt_fieldA.value());
+    xfer += prot_->serializedSizeBool(this->opt_fieldA);
   }
   xfer += prot_->serializedFieldSize("fieldB", apache::thrift::protocol::T_MAP, 2);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->fieldB);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->fieldB);
   xfer += prot_->serializedFieldSize("req_fieldB", apache::thrift::protocol::T_MAP, 102);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->req_fieldB);
-  if (this->opt_fieldB.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->req_fieldB);
+  if (this->opt_fieldB_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldB", apache::thrift::protocol::T_MAP, 202);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->opt_fieldB.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->opt_fieldB);
   }
   xfer += prot_->serializedFieldSize("fieldC", apache::thrift::protocol::T_SET, 3);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->fieldC);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->fieldC);
   xfer += prot_->serializedFieldSize("req_fieldC", apache::thrift::protocol::T_SET, 103);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->req_fieldC);
-  if (this->opt_fieldC.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->req_fieldC);
+  if (this->opt_fieldC_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldC", apache::thrift::protocol::T_SET, 203);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->opt_fieldC.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->opt_fieldC);
   }
   xfer += prot_->serializedFieldSize("fieldD", apache::thrift::protocol::T_STRING, 4);
-  xfer += prot_->serializedSizeString(this->fieldD);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->fieldD);
   xfer += prot_->serializedFieldSize("fieldE", apache::thrift::protocol::T_STRING, 5);
-  xfer += prot_->serializedSizeString(this->fieldE);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->fieldE);
   xfer += prot_->serializedFieldSize("req_fieldE", apache::thrift::protocol::T_STRING, 105);
-  xfer += prot_->serializedSizeString(this->req_fieldE);
-  if (this->opt_fieldE.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->req_fieldE);
+  if (this->opt_fieldE_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldE", apache::thrift::protocol::T_STRING, 205);
-    xfer += prot_->serializedSizeString(this->opt_fieldE.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->opt_fieldE);
   }
   xfer += prot_->serializedSizeStop();
   return xfer;
@@ -415,35 +437,35 @@ uint32_t containerStruct2::serializedSizeZC(Protocol_ const* prot_) const {
   xfer += prot_->serializedSizeBool(this->fieldA);
   xfer += prot_->serializedFieldSize("req_fieldA", apache::thrift::protocol::T_BOOL, 101);
   xfer += prot_->serializedSizeBool(this->req_fieldA);
-  if (this->opt_fieldA.hasValue()) {
+  if (this->opt_fieldA_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldA", apache::thrift::protocol::T_BOOL, 201);
-    xfer += prot_->serializedSizeBool(this->opt_fieldA.value());
+    xfer += prot_->serializedSizeBool(this->opt_fieldA);
   }
   xfer += prot_->serializedFieldSize("fieldB", apache::thrift::protocol::T_MAP, 2);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->fieldB);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->fieldB);
   xfer += prot_->serializedFieldSize("req_fieldB", apache::thrift::protocol::T_MAP, 102);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->req_fieldB);
-  if (this->opt_fieldB.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->req_fieldB);
+  if (this->opt_fieldB_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldB", apache::thrift::protocol::T_MAP, 202);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::serializedSize<false>(*prot_, this->opt_fieldB.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::serializedSize<false>(*prot_, this->opt_fieldB);
   }
   xfer += prot_->serializedFieldSize("fieldC", apache::thrift::protocol::T_SET, 3);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->fieldC);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->fieldC);
   xfer += prot_->serializedFieldSize("req_fieldC", apache::thrift::protocol::T_SET, 103);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->req_fieldC);
-  if (this->opt_fieldC.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->req_fieldC);
+  if (this->opt_fieldC_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldC", apache::thrift::protocol::T_SET, 203);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::serializedSize<false>(*prot_, this->opt_fieldC.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::serializedSize<false>(*prot_, this->opt_fieldC);
   }
   xfer += prot_->serializedFieldSize("fieldD", apache::thrift::protocol::T_STRING, 4);
-  xfer += prot_->serializedSizeString(this->fieldD);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->fieldD);
   xfer += prot_->serializedFieldSize("fieldE", apache::thrift::protocol::T_STRING, 5);
-  xfer += prot_->serializedSizeString(this->fieldE);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->fieldE);
   xfer += prot_->serializedFieldSize("req_fieldE", apache::thrift::protocol::T_STRING, 105);
-  xfer += prot_->serializedSizeString(this->req_fieldE);
-  if (this->opt_fieldE.hasValue()) {
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->req_fieldE);
+  if (this->opt_fieldE_ref().has_value()) {
     xfer += prot_->serializedFieldSize("opt_fieldE", apache::thrift::protocol::T_STRING, 205);
-    xfer += prot_->serializedSizeString(this->opt_fieldE.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::serializedSize<false>(*prot_, this->opt_fieldE);
   }
   xfer += prot_->serializedSizeStop();
   return xfer;
@@ -459,50 +481,63 @@ uint32_t containerStruct2::write(Protocol_* prot_) const {
   xfer += prot_->writeFieldBegin("req_fieldA", apache::thrift::protocol::T_BOOL, 101);
   xfer += prot_->writeBool(this->req_fieldA);
   xfer += prot_->writeFieldEnd();
-  if (this->opt_fieldA.hasValue()) {
+  if (this->opt_fieldA_ref().has_value()) {
     xfer += prot_->writeFieldBegin("opt_fieldA", apache::thrift::protocol::T_BOOL, 201);
-    xfer += prot_->writeBool(this->opt_fieldA.value());
+    xfer += prot_->writeBool(this->opt_fieldA);
     xfer += prot_->writeFieldEnd();
   }
   xfer += prot_->writeFieldBegin("fieldB", apache::thrift::protocol::T_MAP, 2);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::write(*prot_, this->fieldB);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::write(*prot_, this->fieldB);
   xfer += prot_->writeFieldEnd();
   xfer += prot_->writeFieldBegin("req_fieldB", apache::thrift::protocol::T_MAP, 102);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::write(*prot_, this->req_fieldB);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::write(*prot_, this->req_fieldB);
   xfer += prot_->writeFieldEnd();
-  if (this->opt_fieldB.hasValue()) {
+  if (this->opt_fieldB_ref().has_value()) {
     xfer += prot_->writeFieldBegin("opt_fieldB", apache::thrift::protocol::T_MAP, 202);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, std::map<std::string, bool>>::write(*prot_, this->opt_fieldB.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::map<::apache::thrift::type_class::string, ::apache::thrift::type_class::integral>, ::std::map<::std::string, bool>>::write(*prot_, this->opt_fieldB);
     xfer += prot_->writeFieldEnd();
   }
   xfer += prot_->writeFieldBegin("fieldC", apache::thrift::protocol::T_SET, 3);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::write(*prot_, this->fieldC);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::write(*prot_, this->fieldC);
   xfer += prot_->writeFieldEnd();
   xfer += prot_->writeFieldBegin("req_fieldC", apache::thrift::protocol::T_SET, 103);
-  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::write(*prot_, this->req_fieldC);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::write(*prot_, this->req_fieldC);
   xfer += prot_->writeFieldEnd();
-  if (this->opt_fieldC.hasValue()) {
+  if (this->opt_fieldC_ref().has_value()) {
     xfer += prot_->writeFieldBegin("opt_fieldC", apache::thrift::protocol::T_SET, 203);
-    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, std::set<int32_t>>::write(*prot_, this->opt_fieldC.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::set<::apache::thrift::type_class::integral>, ::std::set<int32_t>>::write(*prot_, this->opt_fieldC);
     xfer += prot_->writeFieldEnd();
   }
   xfer += prot_->writeFieldBegin("fieldD", apache::thrift::protocol::T_STRING, 4);
-  xfer += prot_->writeString(this->fieldD);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::write(*prot_, this->fieldD);
   xfer += prot_->writeFieldEnd();
   xfer += prot_->writeFieldBegin("fieldE", apache::thrift::protocol::T_STRING, 5);
-  xfer += prot_->writeString(this->fieldE);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::write(*prot_, this->fieldE);
   xfer += prot_->writeFieldEnd();
   xfer += prot_->writeFieldBegin("req_fieldE", apache::thrift::protocol::T_STRING, 105);
-  xfer += prot_->writeString(this->req_fieldE);
+  xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::write(*prot_, this->req_fieldE);
   xfer += prot_->writeFieldEnd();
-  if (this->opt_fieldE.hasValue()) {
+  if (this->opt_fieldE_ref().has_value()) {
     xfer += prot_->writeFieldBegin("opt_fieldE", apache::thrift::protocol::T_STRING, 205);
-    xfer += prot_->writeString(this->opt_fieldE.value());
+    xfer += ::apache::thrift::detail::pm::protocol_methods< ::apache::thrift::type_class::string, ::std::string>::write(*prot_, this->opt_fieldE);
     xfer += prot_->writeFieldEnd();
   }
   xfer += prot_->writeFieldStop();
   xfer += prot_->writeStructEnd();
   return xfer;
 }
+
+extern template void containerStruct2::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
+extern template uint32_t containerStruct2::write<>(apache::thrift::BinaryProtocolWriter*) const;
+extern template uint32_t containerStruct2::serializedSize<>(apache::thrift::BinaryProtocolWriter const*) const;
+extern template uint32_t containerStruct2::serializedSizeZC<>(apache::thrift::BinaryProtocolWriter const*) const;
+extern template void containerStruct2::readNoXfer<>(apache::thrift::CompactProtocolReader*);
+extern template uint32_t containerStruct2::write<>(apache::thrift::CompactProtocolWriter*) const;
+extern template uint32_t containerStruct2::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
+extern template uint32_t containerStruct2::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+extern template void containerStruct2::readNoXfer<>(apache::thrift::SimpleJSONProtocolReader*);
+extern template uint32_t containerStruct2::write<>(apache::thrift::SimpleJSONProtocolWriter*) const;
+extern template uint32_t containerStruct2::serializedSize<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
+extern template uint32_t containerStruct2::serializedSizeZC<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
 
 }} // extra::svc

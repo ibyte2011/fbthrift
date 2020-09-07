@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_CONCURRENCY_MUTEXIMPL_H_
 #define THRIFT_CONCURRENCY_MUTEXIMPL_H_ 1
 
-#include <folly/portability/PThread.h>
 #include <glog/logging.h>
+
+#include <folly/portability/PThread.h>
+
 #include <thrift/lib/cpp/concurrency/Mutex-portability.h>
 #include <thrift/lib/cpp/concurrency/Util.h>
 
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache {
+namespace thrift {
+namespace concurrency {
 
 /*
  * mutex implementations
@@ -49,17 +54,21 @@ class PthreadMutex {
     CHECK(ret != EDEADLK);
   }
 
-  bool try_lock() { return (0 == pthread_mutex_trylock(&pthread_mutex_)); }
+  bool try_lock() {
+    return (0 == pthread_mutex_trylock(&pthread_mutex_));
+  }
 
-  template<class Rep, class Period>
-  bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration) {
+  template <class Rep, class Period>
+  bool try_lock_for(
+      const std::chrono::duration<Rep, Period>& timeout_duration) {
 #if defined(_POSIX_TIMEOUTS) && _POSIX_TIMEOUTS >= 200112L
-    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        timeout_duration);
+    auto durationMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration);
     struct timespec ts;
     Util::toTimespec(ts, Util::currentTime() + durationMs.count());
     return 0 == pthread_mutex_timedlock(&pthread_mutex_, &ts);
 #else
+    (void)timeout_duration;
     // Some systems, notably macOS, don't have timeouts for pthreads,
     // so we fall back to just trying once.
     return try_lock();
@@ -82,10 +91,12 @@ class PthreadMutex {
     return true;
   }
 
-  void* getUnderlyingImpl() const { return (void*) &pthread_mutex_; }
+  void* getUnderlyingImpl() const {
+    return (void*)&pthread_mutex_;
+  }
 
  private:
-   mutable pthread_mutex_t pthread_mutex_;
+  mutable pthread_mutex_t pthread_mutex_;
 };
 
 /**
@@ -112,15 +123,17 @@ class PthreadRWMutex {
     return !pthread_rwlock_trywrlock(&rw_lock_);
   }
 
-  template<class Rep, class Period>
-  bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration) {
+  template <class Rep, class Period>
+  bool try_lock_for(
+      const std::chrono::duration<Rep, Period>& timeout_duration) {
 #if defined(_POSIX_TIMEOUTS) && _POSIX_TIMEOUTS >= 200112L
-    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        timeout_duration);
+    auto durationMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration);
     struct timespec ts;
     Util::toTimespec(ts, Util::currentTime() + durationMs.count());
     return 0 == pthread_rwlock_timedwrlock(&rw_lock_, &ts);
 #else
+    (void)timeout_duration;
     // Some systems, notably macOS, don't have timeouts for pthreads,
     // so we fall back to just trying once.
     return try_lock();
@@ -128,28 +141,29 @@ class PthreadRWMutex {
   }
 
   void unlock() {
-     pthread_rwlock_unlock(&rw_lock_);
+    pthread_rwlock_unlock(&rw_lock_);
   }
 
   void lock_shared() {
     int ret = pthread_rwlock_rdlock(&rw_lock_);
-    CHECK (ret != EDEADLK);
+    CHECK(ret != EDEADLK);
   }
 
   bool try_lock_shared() {
     return !pthread_rwlock_tryrdlock(&rw_lock_);
   }
 
-  template<class Rep, class Period>
+  template <class Rep, class Period>
   bool try_lock_shared_for(
-      const std::chrono::duration<Rep,Period>& timeout_duration) {
+      const std::chrono::duration<Rep, Period>& timeout_duration) {
 #if defined(_POSIX_TIMEOUTS) && _POSIX_TIMEOUTS >= 200112L
-    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        timeout_duration);
+    auto durationMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(timeout_duration);
     struct timespec ts;
     Util::toTimespec(ts, Util::currentTime() + durationMs.count());
     return 0 == pthread_rwlock_timedrdlock(&rw_lock_, &ts);
 #else
+    (void)timeout_duration;
     // Some systems, notably macOS, don't have timeouts for pthreads,
     // so we fall back to just trying once.
     return try_lock_shared();
@@ -164,8 +178,8 @@ class PthreadRWMutex {
   mutable pthread_rwlock_t rw_lock_;
 };
 
-
-
-}}} // apache::thrift::concurrency
+} // namespace concurrency
+} // namespace thrift
+} // namespace apache
 
 #endif // #ifndef THRIFT_CONCURRENCY_MUTEXIMPL_H_

@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 )
 
 // (needed to ensure safety because of naive import list construction.)
@@ -67,6 +67,7 @@ func (p *Also) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("Also(%+v)", *p)
+
+  return fmt.Sprintf("Also({})")
 }
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2016 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,10 @@
 #include <thrift/compiler/generate/t_generator.h>
 
 using namespace std;
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 /**
  * Top level program generation function. Calls the generator subclass methods
@@ -60,19 +64,23 @@ void t_concat_generator::generate_program() {
     generate_typedef(*td_iter);
   }
 
+  // Validate unions
+  vector<t_struct*>::iterator o_iter;
+  for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
+    if ((*o_iter)->is_union()) {
+      validate_union_members(*o_iter);
+    }
+  }
+
   // Generate constants
   vector<t_const*> consts = program_->get_consts();
   generate_consts(consts);
 
   // Generate structs, exceptions, and unions in declared order
-  vector<t_struct*>::iterator o_iter;
   for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
     if ((*o_iter)->is_xception()) {
       generate_xception(*o_iter);
     } else {
-      if ((*o_iter)->is_union()) {
-        validate_union_members(*o_iter);
-      }
       generate_struct(*o_iter);
     }
   }
@@ -161,9 +169,9 @@ std::string t_concat_generator::generate_structural_id(
       reinterpret_cast<const unsigned char*>(hashable_keys_list.data()),
       hashable_keys_list.size(),
       u.buf);
-  const uint64_t hash = (
-      apache::thrift::compiler::bswap_host_to_little_endian(u.val) &
-      0x7FFFFFFFFFFFFFFFull); // 63 bits
+  const uint64_t hash =
+      (apache::thrift::compiler::bswap_host_to_little_endian(u.val) &
+       0x7FFFFFFFFFFFFFFFull); // 63 bits
 
   // Generate a readable number.
   char structural_id[21];
@@ -181,3 +189,7 @@ void t_concat_generator::validate_union_members(const t_struct* tstruct) {
     }
   }
 }
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache

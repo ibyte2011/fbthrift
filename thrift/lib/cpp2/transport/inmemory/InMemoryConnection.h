@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <thrift/lib/cpp/concurrency/ThreadManager.h>
 #include <thrift/lib/cpp2/async/AsyncProcessor.h>
@@ -29,7 +30,7 @@ class InMemoryConnection : public ClientConnectionIf {
  public:
   InMemoryConnection(
       std::shared_ptr<AsyncProcessorFactory> pFac,
-      const apache::thrift::server::ServerConfigs& serverConfigs);
+      server::ServerConfigs& serverConfigs);
   virtual ~InMemoryConnection() override = default;
 
   InMemoryConnection(const InMemoryConnection&) = delete;
@@ -40,13 +41,12 @@ class InMemoryConnection : public ClientConnectionIf {
   void setCloseCallback(ThriftClient* client, CloseCallback* cb) override;
   folly::EventBase* getEventBase() const override;
 
-  apache::thrift::async::TAsyncTransport* getTransport() override;
+  folly::AsyncTransport* getTransport() override;
   bool good() override;
   ClientChannel::SaturationStatus getSaturationStatus() override;
   void attachEventBase(folly::EventBase* evb) override;
   void detachEventBase() override;
   bool isDetachable() override;
-  bool isSecurityActive() override;
   uint32_t getTimeout() override;
   void setTimeout(uint32_t ms) override;
   void closeNow() override;

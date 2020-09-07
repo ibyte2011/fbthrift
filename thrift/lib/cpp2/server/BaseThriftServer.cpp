@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <thrift/lib/cpp2/server/BaseThriftServer.h>
 
 #include <fcntl.h>
@@ -28,6 +29,7 @@
 #include <folly/Random.h>
 #include <folly/ScopeGuard.h>
 #include <folly/portability/Sockets.h>
+#include <thrift/lib/cpp2/server/admission_strategy/AcceptAllAdmissionStrategy.h>
 
 namespace apache {
 namespace thrift {
@@ -35,7 +37,6 @@ namespace thrift {
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::server;
 using namespace apache::thrift::transport;
-using namespace apache::thrift::async;
 using namespace std;
 using std::shared_ptr;
 
@@ -53,6 +54,10 @@ const std::chrono::milliseconds BaseThriftServer::DEFAULT_QUEUE_TIMEOUT =
 
 const std::chrono::milliseconds BaseThriftServer::DEFAULT_TIMEOUT =
     std::chrono::milliseconds(60000);
+
+BaseThriftServer::BaseThriftServer()
+    : admissionStrategy_(std::make_shared<AcceptAllAdmissionStrategy>()),
+      addresses_(1) {}
 
 void BaseThriftServer::CumulativeFailureInjection::set(
     const FailureInjection& fi) {
@@ -131,30 +136,26 @@ bool BaseThriftServer::getTaskExpireTimeForRequest(
   return queueTimeout != taskTimeout;
 }
 
-int64_t BaseThriftServer::getLoad(
-    const std::string& counter,
-    bool check_custom) {
+int64_t BaseThriftServer::getLoad(const std::string& counter, bool check_custom)
+    const {
   if (check_custom && getLoad_) {
     return getLoad_(counter);
   }
 
-  auto reqload = getRequestLoad();
+  const auto activeRequests = getActiveRequests();
 
   if (VLOG_IS_ON(1)) {
-    FB_LOG_EVERY_MS(INFO, 1000 * 10) << getLoadInfo(reqload);
+    FB_LOG_EVERY_MS(INFO, 1000 * 10) << getLoadInfo(activeRequests);
   }
 
-  return reqload;
+  return activeRequests;
 }
 
-int64_t BaseThriftServer::getRequestLoad() {
-  return activeRequests_;
-}
-
-std::string BaseThriftServer::getLoadInfo(int64_t load) {
+std::string BaseThriftServer::getLoadInfo(int64_t load) const {
   std::stringstream stream;
   stream << "Load is: " << load << "% requests";
   return stream.str();
 }
+
 } // namespace thrift
 } // namespace apache

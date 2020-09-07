@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace java.swift test.fixtures.lazy_constants
 
 const i32 myInt = 1337;
@@ -5,6 +21,10 @@ const string name = "Mark Zuckerberg";
 const list<map<string, i32>> states = [
   {"San Diego": 3211000, "Sacramento": 479600, "SF": 837400},
   {"New York": 8406000, "Albany": 98400}
+];
+const set<string> cities = [
+  "New York",
+  "Sacramento"
 ];
 const double x = 1.0;
 const double y = 1000000;
@@ -22,6 +42,11 @@ enum Company {
   OCULUS = 2,
   INSTAGRAM = 3,
 }
+
+const map<Company, i32> const_enum_map = {
+  Company.FACEBOOK: 123,
+  Company.WHATSAPP: 2
+};
 
 struct Internship {
   1: required i32 weeks;

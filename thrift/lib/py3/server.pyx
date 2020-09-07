@@ -1,3 +1,18 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from cpython.version cimport PY_VERSION_HEX
 from libcpp.memory cimport unique_ptr, shared_ptr, make_shared
 from libc.string cimport const_uchar
 from cython.operator cimport dereference as deref
@@ -9,6 +24,7 @@ from folly.range cimport StringPiece
 
 import asyncio
 import collections
+import functools
 import inspect
 import ipaddress
 from pathlib import Path
@@ -18,6 +34,15 @@ from enum import Enum
 from thrift.py3.common import Priority, Headers
 
 SocketAddress = collections.namedtuple('SocketAddress', 'ip port path')
+
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from contextvars import ContextVar
+    # don't include in the module dict, so only cython can set it
+    THRIFT_REQUEST_CONTEXT = ContextVar('ThriftRequestContext')
+    get_context = THRIFT_REQUEST_CONTEXT.get
+else:
+    def get_context(default=None):
+        raise RuntimeError('get_context requires python >= 3.7.2')
 
 
 cdef inline _get_SocketAddress(const cfollySocketAddress* sadr):
@@ -32,8 +57,18 @@ cdef inline _get_SocketAddress(const cfollySocketAddress* sadr):
 
 def pass_context(func):
     """Decorate a handler as wanting the Request Context"""
-    func.pass_context = True
-    return func
+    if PY_VERSION_HEX < 0x030702F0:  # 3.7.2 Final
+        func.pass_context = True
+        return func
+
+    @functools.wraps(func)
+    def decorated(self, *args, **kwargs):
+        ctx = get_context(None)
+        if ctx is None:
+            return func(self, *args, **kwargs)
+        return func(self, get_context(), *args, **kwargs)
+    return decorated
+
 
 
 class SSLPolicy(Enum):
@@ -47,11 +82,14 @@ cdef class AsyncProcessorFactory:
 
 
 cdef class ServiceInterface(AsyncProcessorFactory):
-    def __cinit__(self, *args, **kws):
-        # Figure out which methods want context and mark them on the handler
-        for name, method in inspect.getmembers(self, inspect.iscoroutinefunction):
-            if hasattr(method, 'pass_context'):
-                setattr(self, f'_pass_context_{name}', True)
+    async def __aenter__(self):
+        # Establish async context managers as a way for end users to async initalize
+        # internal structures used by Service Handlers.
+        return self
+
+    async def __aexit__(self, *exc_info):
+        # Same as above, but allow end users to define things to be cleaned up
+        pass
 
 
 def getServiceName(ServiceInterface svc not None):
@@ -108,6 +146,13 @@ cdef class ThriftServer:
                 self.server.get().serve()
         try:
             await self.loop.run_in_executor(None, _serve)
+            self.address_future.cancel()
+        except asyncio.CancelledError:
+            try:
+                await self.get_address()
+            finally:
+                self.server.get().stop()
+            raise
         except Exception as e:
             self.server.get().stop()
             # If somebody is waiting on get_address and the server died
@@ -158,6 +203,17 @@ cdef class ThriftServer:
     def get_ssl_handshake_worker_threads(self):
         return self.server.get().getNumSSLHandshakeWorkerThreads()
 
+    def get_ssl_policy(self):
+        cdef cSSLPolicy cPolicy = self.server.get().getSSLPolicy()
+        if cPolicy == SSLPolicy__DISABLED:
+            return SSLPolicy.DISABLED
+        elif cPolicy == SSLPolicy__PERMITTED:
+            return SSLPolicy.PERMITTED
+        elif cPolicy == SSLPolicy__REQUIRED:
+            return SSLPolicy.REQUIRED
+        else:
+            raise RuntimeError("Unknown SSLPolicy defined.")
+
     def set_ssl_policy(self, policy):
         cdef cSSLPolicy cPolicy
         if policy == SSLPolicy.DISABLED:
@@ -166,19 +222,39 @@ cdef class ThriftServer:
             cPolicy = SSLPolicy__PERMITTED
         elif policy == SSLPolicy.REQUIRED:
             cPolicy = SSLPolicy__REQUIRED
+        else:
+            raise RuntimeError("Unknown SSLPolicy defined.")
         self.server.get().setSSLPolicy(cPolicy)
+
+    def set_allow_plaintext_on_loopback(self, enabled):
+        self.server.get().setAllowPlaintextOnLoopback(enabled);
+
+    def is_plaintext_allowed_on_loopback(self):
+        return self.server.get().isPlaintextAllowedOnLoopback();
+
+    def set_idle_timeout(self, seconds):
+        self.server.get().setIdleTimeout(milliseconds(<int64_t>(seconds * 1000)))
+
+    def get_idle_timeout(self):
+        return self.server.get().getIdleTimeout().count() / 1000
+
+    def set_queue_timeout(self, seconds):
+        self.server.get().setQueueTimeout(milliseconds(<int64_t>(seconds * 1000)))
+
+    def get_queue_timeout(self):
+        return self.server.get().getQueueTimeout().count() / 1000
 
     def stop(self):
         self.server.get().stop()
-        self.address_future.cancel()
 
 
 cdef class ConnectionContext:
     @staticmethod
     cdef ConnectionContext create(Cpp2ConnContext* ctx):
         inst = <ConnectionContext>ConnectionContext.__new__(ConnectionContext)
-        inst._ctx = ctx
-        inst._peer_address = _get_SocketAddress(ctx.getPeerAddress())
+        if ctx:
+            inst._ctx = ctx
+            inst._peer_address = _get_SocketAddress(ctx.getPeerAddress())
         return inst
 
     @property

@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_CONCURRENCY_MUTEX_H_
 #define THRIFT_CONCURRENCY_MUTEX_H_ 1
 
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 #include <memory>
-#include <boost/noncopyable.hpp>
 
-namespace apache { namespace thrift { namespace concurrency {
+#include <folly/Portability.h>
+
+namespace apache {
+namespace thrift {
+namespace concurrency {
 class PthreadMutex;
 class PthreadRWMutex;
 
@@ -32,15 +36,7 @@ class PthreadRWMutex;
  */
 class Mutex {
  public:
-  // Specifying the type of the mutex with an integer. The value has
-  // to be supported by the underlying implementation, currently
-  // pthread_mutex. So the possible values are PTHREAD_MUTEX_NORMAL,
-  // PTHREAD_MUTEX_ERRORCHECK, PTHREAD_MUTEX_RECURSIVE and
-  // PTHREAD_MUTEX_DEFAULT.
-  //
-  // Backwards compatibility: pass DEFAULT_INITIALIZER for PTHREAD_MUTEX_NORMAL
-  // or RECURSIVE_INITIALIZER for PTHREAD_MUTEX_RECURSIVE.
-  explicit Mutex(int type = DEFAULT_INITIALIZER);
+  Mutex();
 
   virtual ~Mutex() {}
   virtual void lock() const;
@@ -63,15 +59,13 @@ class Mutex {
 
   void* getUnderlyingImpl() const;
 
-  static int DEFAULT_INITIALIZER;
-  static int RECURSIVE_INITIALIZER;
-
  private:
   std::shared_ptr<PthreadMutex> impl_;
 };
 
-class ReadWriteMutex {
-public:
+class [[deprecated(
+    "use folly::SharedMutex, std::shared_mutex, or std::shared_timed_mutex")]] ReadWriteMutex {
+ public:
   ReadWriteMutex();
   virtual ~ReadWriteMutex() {}
 
@@ -91,7 +85,7 @@ public:
   // this releases both read and write locks
   virtual void release() const;
 
-private:
+ private:
   std::shared_ptr<PthreadRWMutex> impl_;
 };
 
@@ -102,8 +96,10 @@ private:
  * released it. In some operating systems, this may already be guaranteed
  * by a regular ReadWriteMutex.
  */
-class NoStarveReadWriteMutex : public ReadWriteMutex {
-public:
+class [[deprecated(
+    "use folly::SharedMutex with SharedMutexWritePriority")]] NoStarveReadWriteMutex
+    : public ReadWriteMutex {
+ public:
   NoStarveReadWriteMutex();
 
   void acquireRead() const override;
@@ -114,16 +110,17 @@ public:
   bool timedRead(std::chrono::milliseconds milliseconds) const override;
   bool timedWrite(std::chrono::milliseconds milliseconds) const override;
 
-private:
+ private:
   Mutex mutex_;
   mutable volatile bool writerWaiting_;
 };
 
-class Guard : boost::noncopyable {
+class FOLLY_NODISCARD Guard {
  public:
-  explicit Guard(const Mutex& value,
-    std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
-    : mutex_(&value) {
+  explicit Guard(
+      const Mutex& value,
+      std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
+      : mutex_(&value) {
     if (timeout == std::chrono::milliseconds::zero()) {
       value.lock();
     } else if (timeout < std::chrono::milliseconds::zero()) {
@@ -139,6 +136,9 @@ class Guard : boost::noncopyable {
   ~Guard() {
     release();
   }
+
+  Guard(const Guard&) = delete;
+  Guard& operator=(const Guard&) = delete;
 
   // Move constructor/assignment.
   Guard(Guard&& other) noexcept {
@@ -177,12 +177,14 @@ enum RWGuardType {
   RW_WRITE = 1,
 };
 
-
-class RWGuard : boost::noncopyable {
+// clang-format off
+class [[deprecated("use std::unique_lock or std::shared_lock")]] RWGuard {
+  // clang-format on
  public:
-  explicit RWGuard(const ReadWriteMutex& value, bool write = false,
-                   std::chrono::milliseconds timeout =
-                    std::chrono::milliseconds::zero())
+  explicit RWGuard(
+      const ReadWriteMutex& value,
+      bool write = false,
+      std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
       : rw_mutex_(&value) {
     bool locked = true;
     if (write) {
@@ -202,17 +204,21 @@ class RWGuard : boost::noncopyable {
       rw_mutex_ = nullptr;
     }
   }
-  RWGuard(const ReadWriteMutex& value, RWGuardType type,
-          std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
-      : RWGuard(value, type == RW_WRITE, timeout) {
-  }
+  RWGuard(
+      const ReadWriteMutex& value,
+      RWGuardType type,
+      std::chrono::milliseconds timeout = std::chrono::milliseconds::zero())
+      : RWGuard(value, type == RW_WRITE, timeout) {}
+
+  RWGuard(const RWGuard&) = delete;
+  RWGuard& operator=(const RWGuard&) = delete;
 
   ~RWGuard() {
     release();
   }
 
   // Move constructor/assignment.
-  RWGuard(RWGuard&& other) noexcept {
+  RWGuard(RWGuard && other) noexcept {
     *this = std::move(other);
   }
   RWGuard& operator=(RWGuard&& other) noexcept {
@@ -229,7 +235,8 @@ class RWGuard : boost::noncopyable {
   }
 
   bool release() {
-    if (rw_mutex_ == nullptr) return false;
+    if (rw_mutex_ == nullptr)
+      return false;
     rw_mutex_->release();
     rw_mutex_ = nullptr;
     return true;
@@ -238,7 +245,8 @@ class RWGuard : boost::noncopyable {
  private:
   const ReadWriteMutex* rw_mutex_ = nullptr;
 };
-
-}}} // apache::thrift::concurrency
+} // namespace concurrency
+} // namespace thrift
+} // namespace apache
 
 #endif // #ifndef THRIFT_CONCURRENCY_MUTEX_H_

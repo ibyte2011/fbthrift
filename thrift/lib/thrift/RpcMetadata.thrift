@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,21 @@
 
 namespace cpp2 apache.thrift
 namespace java.swift org.apache.thrift
+namespace php Thrift_RpcMetadata
+namespace py thrift.lib.thrift.RpcMetadata
+namespace py.asyncio thrift.lib.thrift.asyncio.RpcMetadata
+namespace py3 thrift.lib.thrift
+namespace go thrift.lib.thrift.RpcMetadata
+
+
+cpp_include "thrift/lib/thrift/RpcMetadata_extra.h"
 
 enum ProtocolId {
   // The values must match those in thrift/lib/cpp/protocol/TProtocolTypes.h
   BINARY = 0,
   COMPACT = 2,
-  FROZEN2 = 6,
+  // Deprecated.
+  // FROZEN2 = 6,
 }
 
 enum RpcKind {
@@ -31,6 +40,7 @@ enum RpcKind {
   STREAMING_REQUEST_NO_RESPONSE = 3,
   SINGLE_REQUEST_STREAMING_RESPONSE = 4,
   STREAMING_REQUEST_STREAMING_RESPONSE = 5,
+  SINK = 6,
 }
 
 enum RpcPriority {
@@ -41,6 +51,53 @@ enum RpcPriority {
   BEST_EFFORT = 4,
   // This should be the immediately after the last enumerator.
   N_PRIORITIES = 5,
+}
+
+// Represent the bit position of the compression algorithm that is negotiated
+// in TLS handshake
+enum CompressionAlgorithm {
+  NONE = 0,
+  ZLIB = 1,
+  ZSTD = 2,
+}
+
+struct ZlibCompressionCodecConfig {
+}
+
+struct ZstdCompressionCodecConfig {
+}
+
+union CodecConfig {
+  1: ZlibCompressionCodecConfig zlibConfig
+  2: ZstdCompressionCodecConfig zstdConfig
+}
+
+// Represent the compression config user set
+struct CompressionConfig {
+  1: optional CodecConfig codecConfig
+  2: optional i64 compressionSizeLimit
+}
+
+// A TLS extension used for thrift parameters negotiation during TLS handshake.
+// All fields should be optional i64 bitmaps indicating feature presence.
+struct NegotiationParameters {
+  // nth (zero-based) least significant bit set if CompressionAlgorithm = n + 1
+  // is accepted. For example, 0b10 means ZSTD is accepted.
+  1: optional i64 (cpp.type = "std::uint64_t") compressionAlgos;
+}
+
+enum RequestRpcMetadataFlags {
+  UNKNOWN = 0x0,
+  QUERY_SERVER_LOAD = 0x1,
+}
+
+struct InteractionCreate {
+  // Must be > 0
+  1: i64 interactionId;
+  2: string interactionName;
+}
+struct InteractionTerminate {
+  1: i64 interactionId;
 }
 
 // RPC metadata sent from the client to the server.  The lifetime of
@@ -86,6 +143,61 @@ struct RequestRpcMetadata {
   9: optional string host;
   // The URL supporting the RPC.  Needed for some HTTP2 transports.
   10: optional string url;
+  // The CRC32C of the RPC message.
+  11: optional i32 (cpp.type = "std::uint32_t") crc32c;
+  12: optional i64 (cpp.type = "std::uint64_t") flags;
+  13: optional string loadMetric;
+  // The CompressionAlgorithm used to compress requests (if any)
+  14: optional CompressionAlgorithm compression;
+  // Requested compression policy for responses
+  15: optional CompressionConfig compressionConfig;
+  // Enables TILES
+  // Use interactionCreate for new interactions and this for existing
+  16: optional i64 interactionId;
+  // Id must be unique per connection
+  17: optional InteractionCreate interactionCreate;
+}
+
+struct PayloadResponseMetadata {
+}
+
+struct PayloadDeclaredExceptionMetadata {
+}
+
+struct PayloadProxyExceptionMetadata {
+}
+
+struct PayloadProxiedExceptionMetadata {
+}
+
+struct PayloadAppClientExceptionMetadata {
+}
+
+struct PayloadAppServerExceptionMetadata {
+}
+
+union PayloadExceptionMetadata {
+  1: PayloadDeclaredExceptionMetadata declaredException;
+  2: PayloadProxyExceptionMetadata proxyException;
+  // Deprecated
+  // replaced by PayloadProxyExceptionMetadata + ProxiedPayloadMetadata
+  3: PayloadProxiedExceptionMetadata proxiedException;
+  4: PayloadAppClientExceptionMetadata appClientException;
+  5: PayloadAppServerExceptionMetadata appServerException;
+}
+
+struct PayloadExceptionMetadataBase {
+  1: optional string name_utf8;
+  2: optional string what_utf8;
+  3: optional PayloadExceptionMetadata metadata;
+}
+
+union PayloadMetadata {
+  1: PayloadResponseMetadata responseMetadata;
+  2: PayloadExceptionMetadataBase exceptionMetadata;
+}
+
+struct ProxiedPayloadMetadata {
 }
 
 // RPC metadata sent from the server to the client.  The lifetime of
@@ -106,4 +218,101 @@ struct ResponseRpcMetadata {
   // Any frequently used key-value pair in this map should be replaced
   // by a field in this struct.
   3: optional map<string, string> otherMetadata;
+  // Server load. Returned to client if QUERY_SERVER_LOAD was set in request's
+  // flags.
+  4: optional i64 load;
+  // The CRC32C of the RPC response.
+  5: optional i32 (cpp.type = "std::uint32_t") crc32c;
+  // The CompressionAlgorithm used to compress responses (if any)
+  6: optional CompressionAlgorithm compression;
+  // Additional metadata for the response payload
+  7: optional PayloadMetadata payloadMetadata;
+  // Additional metadata for the response payload (if proxied)
+  8: optional ProxiedPayloadMetadata proxiedPayloadMetadata;
+}
+
+enum ResponseRpcErrorCategory {
+  // Server failed processing the request.
+  // Server may have started processing the request.
+  INTERNAL_ERROR = 0,
+  // Server didn't process the request because the request was invalid.
+  INVALID_REQUEST = 1,
+  // Server didn't process the request because it didn't have the resources.
+  // Request can be safely retried to a different server, or the same server
+  // later.
+  LOADSHEDDING = 2,
+  // Server didn't process request because it was shutting down.
+  // Request can be safely retried to a different server. Request should not
+  // be retried to the same server.
+  SHUTDOWN = 3,
+}
+
+enum ResponseRpcErrorCode {
+  UNKNOWN = 0,
+  OVERLOAD = 1,
+  TASK_EXPIRED = 2,
+  QUEUE_OVERLOADED = 3,
+  SHUTDOWN = 4,
+  INJECTED_FAILURE = 5,
+  REQUEST_PARSING_FAILURE = 6,
+  QUEUE_TIMEOUT = 7,
+  RESPONSE_TOO_BIG = 8,
+  WRONG_RPC_KIND = 9,
+  UNKNOWN_METHOD = 10,
+  CHECKSUM_MISMATCH = 11,
+  INTERRUPTION = 12,
+  APP_OVERLOAD = 13,
+}
+
+struct ResponseRpcError {
+  1: optional string name_utf8;
+  2: optional string what_utf8;
+  3: optional ResponseRpcErrorCategory category;
+  4: optional ResponseRpcErrorCode code;
+  // Server load. Returned to client if QUERY_SERVER_LOAD was set in request's
+  // flags.
+  5: optional i64 load;
+}
+
+struct StreamPayloadMetadata {
+  // The CompressionAlgorithm used to compress responses (if any)
+  1: optional CompressionAlgorithm compression;
+  // A string to string map that can be populated by the server
+  // handler and further populated by plugins on the server side
+  // before it is finally sent back to the client.
+  // Any frequently used key-value pair in this map should be replaced
+  // by a field in this struct.
+  2: optional map<string, string> otherMetadata;
+}
+
+// Setup metadata sent from the client to the server at the time
+// of initial connection.
+enum InterfaceKind {
+  USER = 0,
+  DEBUGGING = 1,
+}
+
+struct RequestSetupMetadata {
+  1: optional map<string, binary>
+      (cpp.template = "apache::thrift::MetadataOpaqueMap") opaque;
+  // Indicates client wants to use admin interface
+  2: optional InterfaceKind interfaceKind;
+  // Min Rocket protocol version supported by the client
+  3: optional i32 minVersion;
+  // Max Rocket protocol version supported by the client
+  4: optional i32 maxVersion;
+}
+
+struct HeadersPayloadContent {
+  // A string to string map that can be populated by the server
+  // handler and further populated by plugins on the server side
+  // before it is finally sent back to the client.
+  // Any frequently used key-value pair in this map should be replaced
+  // by a field in this struct.
+  1: optional map<string, string> otherMetadata;
+}
+
+struct HeadersPayloadMetadata {
+  // The CompressionAlgorithm used to compress responses (if any)
+  1: optional CompressionAlgorithm compression;
 }

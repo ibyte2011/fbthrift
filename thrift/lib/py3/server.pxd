@@ -1,5 +1,20 @@
-from libc.stdint cimport uint16_t, int32_t, uint32_t
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from libc.stdint cimport uint16_t, int32_t, uint32_t, int64_t
 from libcpp.string cimport string
+from libcpp cimport bool as cbool
 from libcpp.map cimport map
 from libcpp.memory cimport shared_ptr, unique_ptr
 from folly.iobuf cimport cIOBuf
@@ -7,8 +22,9 @@ from folly.range cimport StringPiece
 from folly cimport cFollyExecutor
 from cpython.ref cimport PyObject
 from thrift.py3.common cimport cPriority, Priority_to_cpp, Headers
+from thrift.py3.std_libcpp cimport milliseconds
 
-cdef extern from "thrift/lib/py3/server.h" namespace "thrift::py3":
+cdef extern from "thrift/lib/py3/server.h" namespace "::thrift::py3":
     cdef cppclass cfollySocketAddress "folly::SocketAddress":
         uint16_t getPort()
         bint isFamilyInet()
@@ -43,6 +59,11 @@ cdef extern from "thrift/lib/cpp2/async/AsyncProcessor.h" \
 
     cdef cGeneratedAsyncProcessor* dynamic_cast_gen "dynamic_cast<apache::thrift::GeneratedAsyncProcessor*>"(...)
 
+cdef extern from "thrift/lib/cpp2/server/TransportRoutingHandler.h" \
+        namespace "apache::thrift":
+    cdef cppclass cTransportRoutingHandler "apache::thrift::TransportRoutingHandler":
+        pass
+
 cdef extern from "thrift/lib/cpp2/server/ThriftServer.h" \
         namespace "apache::thrift":
 
@@ -62,6 +83,7 @@ cdef extern from "thrift/lib/cpp2/server/ThriftServer.h" \
         void setProcessorFactory(shared_ptr[cAsyncProcessorFactory]) nogil
         void serve() nogil except +
         void stop() nogil except +
+        cSSLPolicy getSSLPolicy() nogil
         void setSSLPolicy(cSSLPolicy policy) nogil
         void setServerEventHandler(shared_ptr[Py3ServerEventHandler] handler) nogil
         int32_t getActiveRequests()
@@ -77,6 +99,12 @@ cdef extern from "thrift/lib/cpp2/server/ThriftServer.h" \
         uint32_t getNumCPUWorkerThreads()
         void setNumSSLHandshakeWorkerThreads(uint32_t nSSLHandshakeThreads)
         uint32_t getNumSSLHandshakeWorkerThreads()
+        void setAllowPlaintextOnLoopback(cbool allow)
+        cbool isPlaintextAllowedOnLoopback()
+        void setIdleTimeout(milliseconds idleTimeout)
+        milliseconds getIdleTimeout()
+        void setQueueTimeout(milliseconds timeout)
+        milliseconds getQueueTimeout()
 
 cdef extern from "folly/ssl/OpenSSLCertUtils.h":
     # I need a opque id for x509 structs
@@ -106,7 +134,6 @@ cdef extern from "thrift/lib/cpp2/server/Cpp2ConnContext.h" \
         Cpp2ConnContext* getConnectionContext()
         cPriority getCallPriority()
         THeader* getHeader()
-
 
 cdef class AsyncProcessorFactory:
     cdef shared_ptr[cAsyncProcessorFactory] _cpp_obj
@@ -151,3 +178,8 @@ cdef class WriteHeaders(Headers):
     cdef RequestContext _parent
     @staticmethod
     cdef create(RequestContext ctx)
+
+cdef extern from "<utility>" namespace "std" nogil:
+    cdef unique_ptr[cTransportRoutingHandler] move(unique_ptr[cTransportRoutingHandler])
+
+cdef object THRIFT_REQUEST_CONTEXT

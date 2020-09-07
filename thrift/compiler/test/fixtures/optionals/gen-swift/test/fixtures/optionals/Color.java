@@ -10,13 +10,24 @@ package test.fixtures.optionals;
 import com.facebook.swift.codec.*;
 import com.facebook.swift.codec.ThriftField.Requiredness;
 import com.facebook.swift.codec.ThriftField.Recursiveness;
+import com.google.common.collect.*;
 import java.util.*;
-
+import org.apache.thrift.*;
+import org.apache.thrift.async.*;
+import org.apache.thrift.meta_data.*;
+import org.apache.thrift.server.*;
+import org.apache.thrift.transport.*;
+import org.apache.thrift.protocol.*;
+import org.apache.thrift.meta_data.FieldMetaData;
+import org.apache.thrift.meta_data.FieldValueMetaData;
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.MoreObjects.ToStringHelper;
 
-@ThriftStruct("Color")
-public final class Color
-{
+@SwiftGenerated
+@ThriftStruct(value="Color", builder=Color.Builder.class)
+public final class Color {
+    private BitSet __isset_bit_vector = new BitSet();
+
     @ThriftConstructor
     public Color(
         @ThriftField(value=1, name="red", requiredness=Requiredness.NONE) final double red,
@@ -29,33 +40,55 @@ public final class Color
         this.blue = blue;
         this.alpha = alpha;
     }
-
+    
+    @ThriftConstructor
+    protected Color() {
+      this.red = 0.;
+      this.green = 0.;
+      this.blue = 0.;
+      this.alpha = 0.;
+    }
+    
     public static class Builder {
-        private double red;
-
+        private final BitSet __optional_isset = new BitSet();
+    
+        private double red = 0.;
+        private double green = 0.;
+        private double blue = 0.;
+        private double alpha = 0.;
+    
+        @ThriftField(value=1, name="red", requiredness=Requiredness.NONE)
         public Builder setRed(double red) {
             this.red = red;
             return this;
         }
-        private double green;
-
+    
+        public double getRed() { return red; }
+    
+            @ThriftField(value=2, name="green", requiredness=Requiredness.NONE)
         public Builder setGreen(double green) {
             this.green = green;
             return this;
         }
-        private double blue;
-
+    
+        public double getGreen() { return green; }
+    
+            @ThriftField(value=3, name="blue", requiredness=Requiredness.NONE)
         public Builder setBlue(double blue) {
             this.blue = blue;
             return this;
         }
-        private double alpha;
-
+    
+        public double getBlue() { return blue; }
+    
+            @ThriftField(value=4, name="alpha", requiredness=Requiredness.NONE)
         public Builder setAlpha(double alpha) {
             this.alpha = alpha;
             return this;
         }
-
+    
+        public double getAlpha() { return alpha; }
+    
         public Builder() { }
         public Builder(Color other) {
             this.red = other.red;
@@ -63,48 +96,95 @@ public final class Color
             this.blue = other.blue;
             this.alpha = other.alpha;
         }
-
+    
+        @ThriftConstructor
         public Color build() {
-            return new Color (
+            Color result = new Color (
                 this.red,
                 this.green,
                 this.blue,
                 this.alpha
             );
+            result.__isset_bit_vector.or(__optional_isset);
+            return result;
         }
     }
-
+    
+    public static final Map<String, Integer> NAMES_TO_IDS = new HashMap();
+    public static final Map<Integer, Object> FIELD_METADATA = new HashMap<>();
+    private static final TStruct STRUCT_DESC = new TStruct("Color");
     private final double red;
-
+    public static final int _RED = 1;
+    private static final TField RED_FIELD_DESC = new TField("red", TType.DOUBLE, (short)1);
+        private final double green;
+    public static final int _GREEN = 2;
+    private static final TField GREEN_FIELD_DESC = new TField("green", TType.DOUBLE, (short)2);
+        private final double blue;
+    public static final int _BLUE = 3;
+    private static final TField BLUE_FIELD_DESC = new TField("blue", TType.DOUBLE, (short)3);
+        private final double alpha;
+    public static final int _ALPHA = 4;
+    private static final TField ALPHA_FIELD_DESC = new TField("alpha", TType.DOUBLE, (short)4);
+    static {
+      NAMES_TO_IDS.put("red", 1);
+      FIELD_METADATA.put(1, RED_FIELD_DESC);
+      NAMES_TO_IDS.put("green", 2);
+      FIELD_METADATA.put(2, GREEN_FIELD_DESC);
+      NAMES_TO_IDS.put("blue", 3);
+      FIELD_METADATA.put(3, BLUE_FIELD_DESC);
+      NAMES_TO_IDS.put("alpha", 4);
+      FIELD_METADATA.put(4, ALPHA_FIELD_DESC);
+    }
+    
     @ThriftField(value=1, name="red", requiredness=Requiredness.NONE)
     public double getRed() { return red; }
-
-    private final double green;
-
+        
+    /** don't use this method for new code, it's here to make migrating to swift easier */
+    @Deprecated
+    public boolean fieldIsSetRed() {
+        return __isset_bit_vector.get(_RED);
+    }
+    
+    
     @ThriftField(value=2, name="green", requiredness=Requiredness.NONE)
     public double getGreen() { return green; }
-
-    private final double blue;
-
+        
+    /** don't use this method for new code, it's here to make migrating to swift easier */
+    @Deprecated
+    public boolean fieldIsSetGreen() {
+        return __isset_bit_vector.get(_GREEN);
+    }
+    
+    
     @ThriftField(value=3, name="blue", requiredness=Requiredness.NONE)
     public double getBlue() { return blue; }
-
-    private final double alpha;
-
+        
+    /** don't use this method for new code, it's here to make migrating to swift easier */
+    @Deprecated
+    public boolean fieldIsSetBlue() {
+        return __isset_bit_vector.get(_BLUE);
+    }
+    
+    
     @ThriftField(value=4, name="alpha", requiredness=Requiredness.NONE)
     public double getAlpha() { return alpha; }
-
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-            .add("red", red)
-            .add("green", green)
-            .add("blue", blue)
-            .add("alpha", alpha)
-            .toString();
+        
+    /** don't use this method for new code, it's here to make migrating to swift easier */
+    @Deprecated
+    public boolean fieldIsSetAlpha() {
+        return __isset_bit_vector.get(_ALPHA);
     }
-
+    
+    @Override
+    public String toString() {
+        ToStringHelper helper = toStringHelper(this);
+        helper.add("red", red);
+        helper.add("green", green);
+        helper.add("blue", blue);
+        helper.add("alpha", alpha);
+        return helper.toString();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -113,16 +193,17 @@ public final class Color
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
+    
         Color other = (Color)o;
-
+    
         return
             Objects.equals(red, other.red) &&
             Objects.equals(green, other.green) &&
             Objects.equals(blue, other.blue) &&
-            Objects.equals(alpha, other.alpha);
+            Objects.equals(alpha, other.alpha) &&
+            true;
     }
-
+    
     @Override
     public int hashCode() {
         return Arrays.deepHashCode(new Object[] {
@@ -132,4 +213,74 @@ public final class Color
             alpha
         });
     }
+    
+    
+    public static Color read0(TProtocol oprot) throws TException {
+      TField __field;
+      oprot.readStructBegin(Color.NAMES_TO_IDS, Color.FIELD_METADATA);
+      Color.Builder builder = new Color.Builder();
+      while (true) {
+        __field = oprot.readFieldBegin();
+        if (__field.type == TType.STOP) { break; }
+        switch (__field.id) {
+        case _RED:
+          if (__field.type == TType.DOUBLE) {
+            double red = oprot.readDouble();
+            builder.setRed(red);
+          } else {
+            TProtocolUtil.skip(oprot, __field.type);
+          }
+          break;
+        case _GREEN:
+          if (__field.type == TType.DOUBLE) {
+            double green = oprot.readDouble();
+            builder.setGreen(green);
+          } else {
+            TProtocolUtil.skip(oprot, __field.type);
+          }
+          break;
+        case _BLUE:
+          if (__field.type == TType.DOUBLE) {
+            double blue = oprot.readDouble();
+            builder.setBlue(blue);
+          } else {
+            TProtocolUtil.skip(oprot, __field.type);
+          }
+          break;
+        case _ALPHA:
+          if (__field.type == TType.DOUBLE) {
+            double alpha = oprot.readDouble();
+            builder.setAlpha(alpha);
+          } else {
+            TProtocolUtil.skip(oprot, __field.type);
+          }
+          break;
+        default:
+          TProtocolUtil.skip(oprot, __field.type);
+          break;
+        }
+        oprot.readFieldEnd();
+      }
+      oprot.readStructEnd();
+      return builder.build();
+    }
+    
+    public void write0(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(RED_FIELD_DESC);
+      oprot.writeDouble(this.red);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(GREEN_FIELD_DESC);
+      oprot.writeDouble(this.green);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(BLUE_FIELD_DESC);
+      oprot.writeDouble(this.blue);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(ALPHA_FIELD_DESC);
+      oprot.writeDouble(this.alpha);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+    
 }

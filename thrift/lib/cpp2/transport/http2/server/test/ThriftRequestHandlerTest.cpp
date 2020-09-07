@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <folly/io/IOBuf.h>
 #include <folly/io/async/EventBase.h>
@@ -28,6 +28,15 @@
 #include <thrift/lib/cpp2/transport/http2/common/testutil/FakeProcessors.h>
 #include <thrift/lib/cpp2/transport/http2/common/testutil/FakeResponseHandler.h>
 #include <thrift/lib/cpp2/transport/http2/server/ThriftRequestHandler.h>
+
+namespace {
+proxygen::HTTPException makeHTTPException(proxygen::ProxygenError err) {
+  proxygen::HTTPException ex(
+      proxygen::HTTPException::Direction::INGRESS_AND_EGRESS, "");
+  ex.setProxygenError(err);
+  return ex;
+}
+} // namespace
 
 namespace apache {
 namespace thrift {
@@ -51,7 +60,7 @@ class ThriftRequestHandlerTest : public testing::Test {
     // to use SingleRpcChannel.  The second parameter 1 enables this.
     // requestHandler_ deletes itself.
     requestHandler_ = new ThriftRequestHandler(processor_.get());
-    requestHandler_->setResponseHandler(responseHandler_.get());
+    responseHandler_->getTransaction()->setHandler(requestHandler_);
   }
 
   // Tears down after the test.
@@ -64,6 +73,12 @@ class ThriftRequestHandlerTest : public testing::Test {
     writer.writeMessageBegin("dummy", T_CALL, 0);
     queue->append("payload");
     return queue->move();
+  }
+
+  void onError(proxygen::ProxygenError error) {
+    // This simulates the HTTPTransaction behavior
+    requestHandler_->onError(makeHTTPException(error));
+    requestHandler_->detachTransaction();
   }
 
  protected:
@@ -81,11 +96,11 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelNoErrors) {
   auto& headers = msg->getHeaders();
   headers.rawSet("key1", "value1");
   headers.rawSet("key2", "value2");
-  requestHandler_->onRequest(std::move(msg));
+  requestHandler_->onHeadersComplete(std::move(msg));
   requestHandler_->onBody(makeBody());
   requestHandler_->onEOM();
   eventBase_->loopOnce();
-  requestHandler_->requestComplete();
+  requestHandler_->detachTransaction();
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();
   EXPECT_EQ(3, outputHeaders->size());
@@ -103,11 +118,11 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorAtEnd) {
   auto& headers = msg->getHeaders();
   headers.rawSet("key1", "value1");
   headers.rawSet("key2", "value2");
-  requestHandler_->onRequest(std::move(msg));
+  requestHandler_->onHeadersComplete(std::move(msg));
   requestHandler_->onBody(makeBody());
   requestHandler_->onEOM();
   eventBase_->loopOnce();
-  requestHandler_->onError(proxygen::kErrorNone);
+  onError(proxygen::kErrorUnknown);
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();
   EXPECT_EQ(3, outputHeaders->size());
@@ -125,10 +140,10 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorBeforeCallbacks) {
   auto& headers = msg->getHeaders();
   headers.rawSet("key1", "value1");
   headers.rawSet("key2", "value2");
-  requestHandler_->onRequest(std::move(msg));
+  requestHandler_->onHeadersComplete(std::move(msg));
   requestHandler_->onBody(makeBody());
   requestHandler_->onEOM();
-  requestHandler_->onError(proxygen::kErrorNone);
+  onError(proxygen::kErrorUnknown);
   eventBase_->loopOnce();
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();
@@ -143,9 +158,9 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorBeforeEOM) {
   auto& headers = msg->getHeaders();
   headers.rawSet("key1", "value1");
   headers.rawSet("key2", "value2");
-  requestHandler_->onRequest(std::move(msg));
+  requestHandler_->onHeadersComplete(std::move(msg));
   requestHandler_->onBody(makeBody());
-  requestHandler_->onError(proxygen::kErrorNone);
+  onError(proxygen::kErrorUnknown);
   eventBase_->loopOnce();
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();
@@ -160,9 +175,30 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorBeforeOnBody) {
   auto& headers = msg->getHeaders();
   headers.rawSet("key1", "value1");
   headers.rawSet("key2", "value2");
-  requestHandler_->onRequest(std::move(msg));
-  requestHandler_->onError(proxygen::kErrorNone);
+  requestHandler_->onHeadersComplete(std::move(msg));
+  onError(proxygen::kErrorUnknown);
   eventBase_->loopOnce();
+  auto outputHeaders = responseHandler_->getHeaders();
+  auto outputPayload = responseHandler_->getBody();
+  EXPECT_EQ(0, outputHeaders->size());
+  EXPECT_EQ("", outputPayload);
+}
+
+// Tests the interaction between ThriftRequestHandler and
+// SingleRpcChannel with a timeout between onBody calls
+TEST_F(ThriftRequestHandlerTest, SingleRpcChannelTimeoutDuringBody) {
+  auto msg = std::make_unique<HTTPMessage>();
+  auto& headers = msg->getHeaders();
+  headers.rawSet("key1", "value1");
+  headers.rawSet("key2", "value2");
+  responseHandler_->getTransaction()->onIngressHeadersComplete(std::move(msg));
+  responseHandler_->getTransaction()->onIngressBody(
+      folly::IOBuf::wrapBuffer("hello world", 11), 0);
+  responseHandler_->getTransaction()->onIngressTimeout();
+  EXPECT_TRUE(responseHandler_->getTransaction()->isEgressComplete());
+  eventBase_->loopOnce();
+  responseHandler_->getTransaction()->onIngressBody(
+      folly::IOBuf::wrapBuffer("hello world", 11), 0);
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();
   EXPECT_EQ(0, outputHeaders->size());
@@ -172,7 +208,7 @@ TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorBeforeOnBody) {
 // Tests the interaction between ThriftRequestHandler and
 // SingleRpcChannel with an error right at the beginning.
 TEST_F(ThriftRequestHandlerTest, SingleRpcChannelErrorAtBeginning) {
-  requestHandler_->onError(proxygen::kErrorNone);
+  onError(proxygen::kErrorUnknown);
   eventBase_->loopOnce();
   auto outputHeaders = responseHandler_->getHeaders();
   auto outputPayload = responseHandler_->getBody();

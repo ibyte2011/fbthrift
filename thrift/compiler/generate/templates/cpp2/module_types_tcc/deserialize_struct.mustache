@@ -1,12 +1,12 @@
 <%!
 
-  Copyright 2016 Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,9 @@ void <%struct:name%>::readNoXfer(Protocol_* iprot) {
 
   using apache::thrift::TProtocolException;
 
-<%#struct:fields%><%#field:required?%>
-  bool isset_<%field:name%> = false;
-<%/field:required?%><%/struct:fields%>
+<%#program:enforce_required?%><%#struct:fields%><%#field:required?%>
+  bool isset_<%field:cpp_name%> = false;
+<%/field:required?%><%/struct:fields%><%/program:enforce_required?%>
 
 <%#struct:fields?%>
 <%#struct:fields%>
@@ -38,7 +38,7 @@ void <%struct:name%>::readNoXfer(Protocol_* iprot) {
     goto _loop;
   }
 <%/first?%>
-_readField_<%field:name%>:
+_readField_<%field:cpp_name%>:
   {
     <% > module_types_tcc/deserialize_struct_field%>
 
@@ -80,27 +80,28 @@ _readField_<%field:name%>:
 _end:
   _readState.readStructEnd(iprot);
 
-  <%#struct:fields%><%#field:required?%>
-  if (!isset_<%field:name%>) {
+  <%#program:enforce_required?%><%#struct:fields%><%#field:required?%>
+  if (!isset_<%field:cpp_name%>) {
     TProtocolException::throwMissingRequiredField("<%field:name%>", "<%struct:name%>");
   }
-  <%/field:required?%><%/struct:fields%>
+  <%/field:required?%><%/struct:fields%><%/program:enforce_required?%>
   return;
 
 _loop:
-  if (_readState.fieldType == apache::thrift::protocol::T_STOP) {
+  _readState.afterAdvanceFailure(iprot);
+  if (_readState.atStop()) {
     goto _end;
   }
   if (iprot->kUsesFieldNames()) {
-    apache::thrift::detail::TccStructTraits<<%struct:name%>>::translateFieldName(_readState.fieldName(), _readState.fieldId, _readState.fieldType);
+    _readState.template fillFieldTraitsFromName<apache::thrift::detail::TccStructTraits<<%struct:name%>>>();
   }
 
   switch (_readState.fieldId) {
 <%#struct:fields%><%#field:type%>
     case <%field:key%>:
     {
-      if (LIKELY(_readState.fieldType == apache::thrift::protocol::<% > module_types_tcc/struct_type%>)) {
-        goto _readField_<%field:name%>;
+      if (LIKELY(_readState.isCompatibleWithType(iprot, apache::thrift::protocol::<% > module_types_tcc/struct_type%>))) {
+        goto _readField_<%field:cpp_name%>;
       } else {
         goto _skip;
       }
@@ -111,7 +112,7 @@ _loop:
 <%#struct:fields?%>
 _skip:
 <%/struct:fields?%>
-      iprot->skip(_readState.fieldType);
+      _readState.skip(iprot);
       _readState.readFieldEnd(iprot);
       _readState.readFieldBeginNoInline(iprot);
       goto _loop;

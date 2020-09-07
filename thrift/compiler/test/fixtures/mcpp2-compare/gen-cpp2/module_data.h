@@ -6,106 +6,152 @@
  */
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <thrift/lib/cpp/Thrift.h>
+#include <thrift/lib/cpp2/gen/module_data_h.h>
 
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/module_types.h"
 
-namespace some { namespace valid { namespace ns {
+namespace apache { namespace thrift {
 
-struct _MyEnumAEnumDataStorage {
-  using type = MyEnumA;
+template <> struct TEnumDataStorage<::some::valid::ns::MyEnumA> {
+  using type = ::some::valid::ns::MyEnumA;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<MyEnumA, 3> values = {{
-    MyEnumA::fieldA,
-    MyEnumA::fieldB,
-    MyEnumA::fieldC,
+  static constexpr const std::array<type, size> values = {{
+    type::fieldA,
+    type::fieldB,
+    type::fieldC,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "fieldA",
     "fieldB",
     "fieldC",
   }};
 };
-
-}}} // some::valid::ns
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::some::valid::ns::MyEnumA> {
-  using storage_type =  ::some::valid::ns::_MyEnumAEnumDataStorage;
-};
-
-}} // apache::thrift
-namespace some { namespace valid { namespace ns {
-
-struct _AnnotatedEnumEnumDataStorage {
-  using type = AnnotatedEnum;
+template <> struct TEnumDataStorage<::some::valid::ns::AnnotatedEnum> {
+  using type = ::some::valid::ns::AnnotatedEnum;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<AnnotatedEnum, 3> values = {{
-    AnnotatedEnum::FIELDA,
-    AnnotatedEnum::FIELDB,
-    AnnotatedEnum::FIELDC,
+  static constexpr const std::array<type, size> values = {{
+    type::FIELDA,
+    type::FIELDB,
+    type::FIELDC,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "FIELDA",
     "FIELDB",
     "FIELDC",
   }};
 };
-
-}}} // some::valid::ns
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::some::valid::ns::AnnotatedEnum> {
-  using storage_type =  ::some::valid::ns::_AnnotatedEnumEnumDataStorage;
-};
-
-}} // apache::thrift
-namespace some { namespace valid { namespace ns {
-
-struct _AnnotatedEnum2EnumDataStorage {
-  using type = AnnotatedEnum2;
+template <> struct TEnumDataStorage<::some::valid::ns::AnnotatedEnum2> {
+  using type = ::some::valid::ns::AnnotatedEnum2;
   static constexpr const std::size_t size = 3;
-  static constexpr const std::array<AnnotatedEnum2, 3> values = {{
-    AnnotatedEnum2::FIELDA,
-    AnnotatedEnum2::FIELDB,
-    AnnotatedEnum2::FIELDC,
+  static constexpr const std::array<type, size> values = {{
+    type::FIELDA,
+    type::FIELDB,
+    type::FIELDC,
   }};
-  static constexpr const std::array<folly::StringPiece, 3> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "FIELDA",
     "FIELDB",
     "FIELDC",
   }};
 };
-
-}}} // some::valid::ns
-namespace apache { namespace thrift {
-
-template <> struct TEnumDataStorage< ::some::valid::ns::AnnotatedEnum2> {
-  using storage_type =  ::some::valid::ns::_AnnotatedEnum2EnumDataStorage;
-};
-
-}} // apache::thrift
-namespace some { namespace valid { namespace ns {
-
-struct _MyEnumBEnumDataStorage {
-  using type = MyEnumB;
+template <> struct TEnumDataStorage<::some::valid::ns::MyEnumB> {
+  using type = ::some::valid::ns::MyEnumB;
   static constexpr const std::size_t size = 1;
-  static constexpr const std::array<MyEnumB, 1> values = {{
-    MyEnumB::AField,
+  static constexpr const std::array<type, size> values = {{
+    type::AField,
   }};
-  static constexpr const std::array<folly::StringPiece, 1> names = {{
+  static constexpr const std::array<folly::StringPiece, size> names = {{
     "AField",
   }};
 };
 
-}}} // some::valid::ns
-namespace apache { namespace thrift {
+template <> struct TEnumDataStorage<::some::valid::ns::SimpleUnion::Type> {
+  using type = ::some::valid::ns::SimpleUnion::Type;
+  static constexpr const std::size_t size = 2;
+  static constexpr const std::array<type, size> values = {{
+    type::intValue,
+    type::stringValue,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "intValue",
+    "stringValue",
+  }};
+};
 
-template <> struct TEnumDataStorage< ::some::valid::ns::MyEnumB> {
-  using storage_type =  ::some::valid::ns::_MyEnumBEnumDataStorage;
+template <> struct TEnumDataStorage<::some::valid::ns::ComplexUnion::Type> {
+  using type = ::some::valid::ns::ComplexUnion::Type;
+  static constexpr const std::size_t size = 27;
+  static constexpr const std::array<type, size> values = {{
+    type::intValue,
+    type::opt_intValue,
+    type::stringValue,
+    type::opt_stringValue,
+    type::intValue2,
+    type::intValue3,
+    type::doubelValue,
+    type::boolValue,
+    type::union_list,
+    type::union_set,
+    type::union_map,
+    type::opt_union_map,
+    type::enum_field,
+    type::enum_container,
+    type::a_struct,
+    type::a_set_struct,
+    type::a_union,
+    type::opt_a_union,
+    type::a_union_list,
+    type::a_union_typedef,
+    type::a_union_typedef_list,
+    type::MyBinaryField,
+    type::MyBinaryField2,
+    type::MyBinaryListField4,
+    type::ref_field,
+    type::ref_field2,
+    type::excp_field,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "intValue",
+    "opt_intValue",
+    "stringValue",
+    "opt_stringValue",
+    "intValue2",
+    "intValue3",
+    "doubelValue",
+    "boolValue",
+    "union_list",
+    "union_set",
+    "union_map",
+    "opt_union_map",
+    "enum_field",
+    "enum_container",
+    "a_struct",
+    "a_set_struct",
+    "a_union",
+    "opt_a_union",
+    "a_union_list",
+    "a_union_typedef",
+    "a_union_typedef_list",
+    "MyBinaryField",
+    "MyBinaryField2",
+    "MyBinaryListField4",
+    "ref_field",
+    "ref_field2",
+    "excp_field",
+  }};
+};
+
+template <> struct TEnumDataStorage<::some::valid::ns::FloatUnion::Type> {
+  using type = ::some::valid::ns::FloatUnion::Type;
+  static constexpr const std::size_t size = 2;
+  static constexpr const std::array<type, size> values = {{
+    type::floatSide,
+    type::doubleSide,
+  }};
+  static constexpr const std::array<folly::StringPiece, size> names = {{
+    "floatSide",
+    "doubleSide",
+  }};
 };
 
 }} // apache::thrift
-

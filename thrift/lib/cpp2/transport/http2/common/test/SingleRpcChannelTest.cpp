@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,8 @@
 #include <proxygen/httpserver/HTTPServerOptions.h>
 #include <proxygen/httpserver/ScopedHTTPServer.h>
 
-#include <thrift/lib/cpp/async/TAsyncSocket.h>
+#include <folly/io/async/AsyncSocket.h>
+#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
 #include <thrift/lib/cpp2/transport/core/ThriftClientCallback.h>
 #include <thrift/lib/cpp2/transport/core/testutil/CoreTestFixture.h>
 #include <thrift/lib/cpp2/transport/core/testutil/ServerConfigsMock.h>
@@ -118,6 +119,51 @@ TEST_F(ChannelTestFixture, SingleRpcChannelErrorNoEnvelope) {
   EXPECT_EQ("Invalid envelope: see logs for error", tae.getMessage());
 }
 
+TEST_F(ChannelTestFixture, BadHeaderFields) {
+  apache::thrift::server::ServerConfigsMock server;
+  EchoProcessor processor(
+      server, "extrakey", "extravalue", "<eom>", eventBase_.get());
+  unordered_map<string, string> headersExpectNoEncoding{
+      {"X-FB-Header-Uppercase", "good value"},
+      {"x-fb-header-lowercase", "good value"},
+      {"good header1", "good value"}};
+  unordered_map<string, string> headersExpectEncoding{
+      {"good header2", "bad\x01\x02value\r\n"},
+      {"bad\x01header", "good value"},
+      {"header:with:colon", "bad value\r\n\r\n"},
+      {"asdf:gh", "{\"json\":\"data\"}"}};
+  unordered_map<string, string> inputHeaders;
+  inputHeaders.insert(
+      headersExpectNoEncoding.begin(), headersExpectNoEncoding.end());
+  inputHeaders.insert(
+      headersExpectEncoding.begin(), headersExpectEncoding.end());
+  string inputPayload = "single stream payload";
+  unordered_map<string, string>* outputHeaders;
+  IOBuf* outputPayload;
+  sendAndReceiveStream(
+      &processor, inputHeaders, inputPayload, 0, outputHeaders, outputPayload);
+  EXPECT_EQ(
+      1 /* extrakey/value */ + headersExpectEncoding.size() +
+          headersExpectNoEncoding.size(),
+      outputHeaders->size());
+  auto numUnencoded = 0;
+  for (const auto& elem : *outputHeaders) {
+    LOG(INFO) << elem.first << ":" << elem.second;
+    if (elem.first.find("encode_") != 0) {
+      if (elem.first == "extrakey") {
+        EXPECT_EQ(elem.second, "extravalue");
+      } else {
+        numUnencoded++;
+        EXPECT_TRUE(
+            headersExpectNoEncoding.find(elem.first) !=
+            headersExpectNoEncoding.end());
+      }
+    }
+  }
+  EXPECT_EQ(numUnencoded, headersExpectNoEncoding.size());
+  EXPECT_EQ("single stream payload<eom>", toString(outputPayload));
+}
+
 struct RequestState {
   bool sent{false};
   bool reply{false};
@@ -130,15 +176,15 @@ class TestRequestCallback : public apache::thrift::RequestCallback {
   explicit TestRequestCallback(folly::Promise<RequestState> promise)
       : promise_(std::move(promise)) {}
 
-  virtual void requestSent() override final {
+  void requestSent() final {
     rstate_.sent = true;
   }
-  virtual void replyReceived(ClientReceiveState&& state) override final {
+  void replyReceived(ClientReceiveState&& state) final {
     rstate_.reply = true;
     rstate_.receiveState = std::move(state);
     promise_.setValue(std::move(rstate_));
   }
-  virtual void requestError(ClientReceiveState&& state) override final {
+  void requestError(ClientReceiveState&& state) final {
     rstate_.error = true;
     rstate_.receiveState = std::move(state);
     promise_.setValue(std::move(rstate_));
@@ -171,6 +217,10 @@ void httpHandler(
     proxygen::ResponseBuilder& builder) {
   if (message.getURL() == "internal_error") {
     builder.status(500, "Internal Server Error").body("internal error");
+  } else if (message.getURL() == "thrift_serialized_internal_error") {
+    builder.status(500, "OOM")
+        .header(proxygen::HTTP_HEADER_CONTENT_TYPE, "application/x-thrift")
+        .body("oom");
   } else if (message.getURL() == "eof") {
     builder.status(200, "OK");
   } else {
@@ -185,21 +235,24 @@ folly::Future<RequestState> sendRequest(
   folly::Promise<RequestState> promise;
   auto f = promise.getFuture();
 
+  apache::thrift::RequestCallback::Context context;
+  context.protocolId = detail::compact::PROTOCOL_ID;
+  context.ctx = std::make_unique<ContextStack>("test");
   auto cb = std::make_unique<ThriftClientCallback>(
       &evb,
-      std::make_unique<TestRequestCallback>(std::move(promise)),
-      std::make_unique<ContextStack>("test"),
       false,
-      detail::compact::PROTOCOL_ID,
+      toRequestClientCallbackPtr(
+          std::make_unique<TestRequestCallback>(std::move(promise)),
+          std::move(context)),
       std::chrono::milliseconds{10000});
 
   // Send a bad request.
   evb.runInEventBaseThread(
       [&channel, url = std::move(url), cb = std::move(cb)]() mutable {
-        auto metadata = std::make_unique<RequestRpcMetadata>();
-        metadata->set_url(url);
-        metadata->set_kind(
-            ::apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE);
+        RequestRpcMetadata metadata;
+        metadata.url_ref() = url;
+        metadata.kind_ref() =
+            ::apache::thrift::RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE;
         channel.sendThriftRequest(
             std::move(metadata), folly::IOBuf::create(1), std::move(cb));
       });
@@ -234,7 +287,7 @@ TEST(SingleRpcChannel, ClientExceptions) {
   folly::SocketAddress addr;
   addr.setFromLocalPort(port);
 
-  async::TAsyncSocket::UniquePtr sock(new async::TAsyncSocket(&evb, addr));
+  folly::AsyncSocket::UniquePtr sock(new folly::AsyncSocket(&evb, addr));
   auto conn = H2ClientConnection::newHTTP2Connection(std::move(sock));
   EXPECT_TRUE(conn->good());
   auto channel = conn->getChannel();
@@ -246,6 +299,21 @@ TEST(SingleRpcChannel, ClientExceptions) {
       rstate,
       transport::TTransportException::UNKNOWN,
       "Bad status: 500 Internal Server Error");
+
+  // The connection should be still good!
+  EXPECT_TRUE(conn->good());
+
+  // Follow up with a request that results in a server error that gets thrift
+  // serialized.
+  channel = conn->getChannel();
+  rstate = sendRequest(evb, *channel, "thrift_serialized_internal_error")
+               .getVia(&evb);
+
+  EXPECT_TRUE(rstate.sent);
+  EXPECT_FALSE(rstate.error);
+  EXPECT_TRUE(rstate.reply);
+  ASSERT_FALSE(rstate.receiveState.isException());
+  EXPECT_EQ("oom", folly::StringPiece(rstate.receiveState.buf()->coalesce()));
 
   // The connection should be still good!
   EXPECT_TRUE(conn->good());
@@ -270,6 +338,49 @@ TEST(SingleRpcChannel, ClientExceptions) {
 
   conn->closeNow();
   evb.loopOnce();
+}
+
+TEST(H2ChannelTest, decodeHeaders) {
+  // Declare a subclass to expose decodeHeaders for testing
+  class FakeChannel : public H2Channel {
+    void onH2StreamBegin(
+        std::unique_ptr<proxygen::HTTPMessage>) noexcept override {}
+    void onH2BodyFrame(std::unique_ptr<folly::IOBuf>) noexcept override {}
+    void onH2StreamEnd() noexcept override {}
+
+   public:
+    static void decodeHeaders(
+        proxygen::HTTPMessage& message,
+        std::map<std::string, std::string>& otherMetadata,
+        RequestRpcMetadata* metadata) {
+      H2Channel::decodeHeaders(message, otherMetadata, metadata);
+    }
+  };
+
+  proxygen::HTTPMessage req;
+  req.getHeaders().set(
+      proxygen::HTTP_HEADER_CONTENT_TYPE, "application/x-thrift");
+  req.getHeaders().set(proxygen::HTTP_HEADER_USER_AGENT, "C++/THttpClient");
+  req.getHeaders().set(proxygen::HTTP_HEADER_HOST, "graph.facebook.com");
+  req.getHeaders().set("client_timeout", "500");
+  req.getHeaders().set("rpckind", "0");
+  req.getHeaders().set("other", "metadatametadatametadatametadata");
+  req.getHeaders().set("encode_1", "ZW5jb2RlZDpPdGhlcg_aGVsbG8NCndvcmxk");
+  req.getHeaders().set(
+      proxygen::HTTP_HEADER_CONTENT_LANGUAGE,
+      "Arrgh, this be pirate tongue matey");
+  RequestRpcMetadata metadata;
+  std::map<std::string, std::string> otherMetadata;
+  FakeChannel::decodeHeaders(req, otherMetadata, &metadata);
+  EXPECT_EQ(otherMetadata.size(), 3);
+  EXPECT_EQ(
+      otherMetadata[std::string("other")], "metadatametadatametadatametadata");
+  EXPECT_EQ(otherMetadata[std::string("encoded:Other")], "hello\r\nworld");
+  EXPECT_EQ(
+      otherMetadata[std::string("Content-Language")],
+      "Arrgh, this be pirate tongue matey");
+  EXPECT_EQ(*metadata.get_clientTimeoutMs(), 500);
+  EXPECT_EQ(*metadata.get_kind(), RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE);
 }
 
 } // namespace thrift

@@ -5,11 +5,8 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/MyLeaf.h"
-#include "src/gen-cpp2/MyLeaf.tcc"
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/MyLeaf.h"
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/MyLeaf.tcc"
 
 namespace cpp2 {
 } // cpp2
-namespace apache { namespace thrift {
-
-}} // apache::thrift

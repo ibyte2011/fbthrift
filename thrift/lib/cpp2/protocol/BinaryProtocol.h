@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@
 #include <folly/io/Cursor.h>
 #include <folly/io/IOBuf.h>
 #include <folly/io/IOBufQueue.h>
+#include <folly/lang/Bits.h>
 #include <folly/portability/GFlags.h>
 #include <thrift/lib/cpp/protocol/TProtocol.h>
 #include <thrift/lib/cpp2/protocol/Protocol.h>
@@ -58,6 +59,10 @@ class BinaryProtocolWriter {
     return ProtocolType::T_BINARY_PROTOCOL;
   }
 
+  static constexpr bool kSortKeys() {
+    return false;
+  }
+
   /**
    * ...
    * The IOBuf itself is managed by the caller.
@@ -78,7 +83,7 @@ class BinaryProtocolWriter {
   }
 
   inline uint32_t writeMessageBegin(
-      const std::string& name,
+      folly::StringPiece name,
       MessageType messageType,
       int32_t seqid);
   inline uint32_t writeMessageEnd();
@@ -110,10 +115,17 @@ class BinaryProtocolWriter {
       const std::unique_ptr<folly::IOBuf>& data);
 
   /**
-   * Functions that return the serialized size
+   * Functions that return the [estimated] serialized size
+   * Notes:
+   * * Serialized size estimates for Binary protocol are generally accurate,
+   *   but this is not the case for other protocols, e.g. Compact.
+   *   Don't use these values as more than an estimate.
+   *
+   * * ZC versions are the preallocated estimate if any IOBufs are shared (i.e.
+   *   there are IOBuf fields, and their sizes aren't too small to be packed),
+   *   and won't count in the ZC estimate.
    */
-
-  inline uint32_t serializedMessageSize(const std::string& name) const;
+  inline uint32_t serializedMessageSize(folly::StringPiece name) const;
   inline uint32_t
   serializedFieldSize(const char* name, TType fieldType, int16_t fieldId) const;
   inline uint32_t serializedStructSize(const char* name) const;
@@ -261,8 +273,12 @@ class BinaryProtocolReader {
     apache::thrift::skip(*this, type);
   }
 
-  const Cursor& getCurrentPosition() const {
+  const Cursor& getCursor() const {
     return in_;
+  }
+
+  size_t getCursorPosition() const {
+    return in_.getCurrentPosition();
   }
 
   inline uint32_t readFromPositionAndAppend(
@@ -272,6 +288,8 @@ class BinaryProtocolReader {
   struct StructReadState {
     int16_t fieldId;
     apache::thrift::protocol::TType fieldType;
+
+    constexpr static bool kAcceptsContext = false;
 
     void readStructBegin(BinaryProtocolReader* /*iprot*/) {}
 
@@ -295,7 +313,37 @@ class BinaryProtocolReader {
       return iprot->advanceToNextField(nextFieldId, nextFieldType, *this);
     }
 
+    /*
+     * This is used in generated deserialization code only. When deserializing
+     * fields in "non-advanceToNextField" case, we delegate the type check to
+     * each protocol since some protocol (such as NimbleProtocol) may not encode
+     * type information.
+     */
+    FOLLY_ALWAYS_INLINE bool isCompatibleWithType(
+        BinaryProtocolReader* /*iprot*/,
+        TType expectedFieldType) {
+      return fieldType == expectedFieldType;
+    }
+
+    inline void skip(BinaryProtocolReader* iprot) {
+      iprot->skip(fieldType);
+    }
+
     std::string& fieldName() {
+      throw std::logic_error("BinaryProtocol doesn't support field names");
+    }
+
+    void afterAdvanceFailure(BinaryProtocolReader* /*iprot*/) {}
+
+    void beforeSubobject(BinaryProtocolReader* /* iprot */) {}
+    void afterSubobject(BinaryProtocolReader* /* iprot */) {}
+
+    bool atStop() {
+      return fieldType == apache::thrift::protocol::T_STOP;
+    }
+
+    template <typename StructTraits>
+    void fillFieldTraitsFromName() {
       throw std::logic_error("BinaryProtocol doesn't support field names");
     }
   };
@@ -351,6 +399,6 @@ struct ProtocolReaderStructReadState<BinaryProtocolReader>
 } // namespace thrift
 } // namespace apache
 
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.tcc>
+#include <thrift/lib/cpp2/protocol/BinaryProtocol-inl.h>
 
 #endif // #ifndef CPP2_PROTOCOL_TBINARYPROTOCOL_H_

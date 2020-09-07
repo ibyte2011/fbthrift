@@ -1,11 +1,11 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@
 #include <folly/ExceptionString.h>
 #include <folly/io/Cursor.h>
 #include <thrift/lib/cpp/server/TServerObserver.h>
+#include <thrift/lib/cpp2/server/Cpp2Worker.h>
 #include <thrift/lib/cpp2/server/peeking/TLSHelper.h>
 #include <wangle/acceptor/Acceptor.h>
 #include <wangle/acceptor/ManagedConnection.h>
@@ -64,7 +65,7 @@ class PeekingManager : public wangle::ManagedConnection,
   ~PeekingManager() override = default;
 
   void start(
-      folly::AsyncTransportWrapper::UniquePtr socket,
+      folly::AsyncTransport::UniquePtr socket,
       std::shared_ptr<apache::thrift::server::TServerObserver> obs) noexcept {
     socket_ = std::move(socket);
     observer_ = std::move(obs);
@@ -166,7 +167,7 @@ class PeekingManager : public wangle::ManagedConnection,
     dropConnection();
   }
 
-  void dropConnection() override {
+  void dropConnection(const std::string& /* errorMsg */ = "") override {
     peeker_ = nullptr;
     acceptor_->getConnectionManager()->removeConnection(this);
     if (socket_) {
@@ -190,7 +191,7 @@ class PeekingManager : public wangle::ManagedConnection,
   void dumpConnectionState(uint8_t /* loglevel */) override {}
 
  private:
-  folly::AsyncTransportWrapper::UniquePtr socket_;
+  folly::AsyncTransport::UniquePtr socket_;
   std::shared_ptr<apache::thrift::server::TServerObserver> observer_;
   typename wangle::SocketPeeker::UniquePtr peeker_;
 

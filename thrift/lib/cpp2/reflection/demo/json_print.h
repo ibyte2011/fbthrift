@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,7 +54,7 @@ template <>
 struct printer<apache::thrift::type_class::enumeration> {
   template <typename T>
   static void print(T const& what) {
-    std::cout << '"' << fatal::enum_to_string(what) << '"';
+    std::cout << '"' << fatal::enum_to_string(what, nullptr) << '"';
   }
 };
 
@@ -135,7 +135,7 @@ struct printer<apache::thrift::type_class::structure> {
 struct variant_member_printer {
   template <typename Member, std::size_t Index, typename T>
   void operator()(fatal::indexed<Member, Index>, T const& what) const {
-    auto const name = fatal::enum_to_string(what.getType());
+    auto const name = fatal::enum_to_string(what.getType(), nullptr);
     std::cout << '"' << name << "\":";
 
     auto const& value = Member::get(what);

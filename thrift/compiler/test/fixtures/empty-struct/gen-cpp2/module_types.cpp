@@ -4,30 +4,22 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/module_types.h"
-#include "src/gen-cpp2/module_types.tcc"
+#include "thrift/compiler/test/fixtures/empty-struct/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/empty-struct/gen-cpp2/module_types.tcc"
 
-#include <algorithm>
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_types_cpp.h>
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/empty-struct/gen-cpp2/module_data.h"
 
 
 namespace apache {
 namespace thrift {
 namespace detail {
 
-void TccStructTraits< ::cpp2::Empty>::translateFieldName(
+void TccStructTraits<::cpp2::Empty>::translateFieldName(
     FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
     FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-}
-void TccStructTraits< ::cpp2::Nada>::translateFieldName(
-    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
-    FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
 }
 
 } // namespace detail
@@ -36,8 +28,9 @@ void TccStructTraits< ::cpp2::Nada>::translateFieldName(
 
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 Empty::Empty(apache::thrift::FragileConstructor) {}
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void Empty::__clear() {
   // clear all fields
 }
@@ -72,7 +65,45 @@ template uint32_t Empty::write<>(apache::thrift::CompactProtocolWriter*) const;
 template uint32_t Empty::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t Empty::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
 
+
+
 } // cpp2
+namespace apache {
+namespace thrift {
+namespace detail {
+
+void TccStructTraits<::cpp2::Nada>::translateFieldName(
+    FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
+    FOLLY_MAYBE_UNUSED int16_t& fid,
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+}
+
+} // namespace detail
+} // namespace thrift
+} // namespace apache
+
+namespace apache { namespace thrift {
+
+constexpr std::size_t const TEnumTraits<::cpp2::Nada::Type>::size;
+folly::Range<::cpp2::Nada::Type const*> const TEnumTraits<::cpp2::Nada::Type>::values = folly::range(TEnumDataStorage<::cpp2::Nada::Type>::values);
+folly::Range<folly::StringPiece const*> const TEnumTraits<::cpp2::Nada::Type>::names = folly::range(TEnumDataStorage<::cpp2::Nada::Type>::names);
+
+char const* TEnumTraits<::cpp2::Nada::Type>::findName(type value) {
+  using factory = detail::TEnumMapFactory<::cpp2::Nada::Type>;
+  static folly::Indestructible<factory::ValuesToNamesMapType> const map{
+      factory::makeValuesToNamesMap()};
+  auto found = map->find(value);
+  return found == map->end() ? nullptr : found->second;
+}
+
+bool TEnumTraits<::cpp2::Nada::Type>::findValue(char const* name, type* out) {
+  using factory = detail::TEnumMapFactory<::cpp2::Nada::Type>;
+  static folly::Indestructible<factory::NamesToValuesMapType> const map{
+      factory::makeNamesToValuesMap()};
+  auto found = map->find(name);
+  return found == map->end() ? false : (*out = found->second, true);
+}
+}} // apache::thrift
 namespace cpp2 {
 
 void Nada::__clear() {
@@ -125,5 +156,7 @@ template void Nada::readNoXfer<>(apache::thrift::CompactProtocolReader*);
 template uint32_t Nada::write<>(apache::thrift::CompactProtocolWriter*) const;
 template uint32_t Nada::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t Nada::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+
+
 
 } // cpp2

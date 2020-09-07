@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -40,6 +50,8 @@ cimport hsmodule.services as _hsmodule_services
 import hsmodule.services as _hsmodule_services
 import hsmodule.types as _hsmodule_types
 cimport hsmodule.types as _hsmodule_types
+
+cimport my.namespacing.extend.test.extend.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -54,6 +66,7 @@ cdef extern from "<utility>" namespace "std":
     cdef cFollyPromise[cbool] move_promise_cbool "std::move"(
         cFollyPromise[cbool])
 
+@cython.auto_pickle(False)
 cdef class Promise_cbool:
     cdef cFollyPromise[cbool] cPromise
 
@@ -67,6 +80,7 @@ cdef object _ExtendTestService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class ExtendTestServiceInterface(
     _hsmodule_services.HsTestServiceInterface
 ):
@@ -87,6 +101,11 @@ cdef class ExtendTestServiceInterface(
             struct1):
         raise NotImplementedError("async def check is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__ExtendTestService(for_clients=False)
+
+
 
 cdef api void call_cy_ExtendTestService_check(
     object self,
@@ -94,13 +113,12 @@ cdef api void call_cy_ExtendTestService_check(
     cFollyPromise[cbool] cPromise,
     unique_ptr[_hsmodule_types.cHsFoo] struct1
 ):
-    cdef ExtendTestServiceInterface __iface
-    __iface = self
     __promise = Promise_cbool.create(move_promise_cbool(cPromise))
     arg_struct1 = _hsmodule_types.HsFoo.create(shared_ptr[_hsmodule_types.cHsFoo](struct1.release()))
-    __context = None
-    if __iface._pass_context_check:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         ExtendTestService_check_coro(
             self,
@@ -109,6 +127,8 @@ cdef api void call_cy_ExtendTestService_check(
             arg_struct1
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def ExtendTestService_check_coro(
     object self,
@@ -117,7 +137,7 @@ async def ExtendTestService_check_coro(
     struct1
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.check, "pass_context", False):
             result = await self.check(ctx,
                       struct1)
         else:

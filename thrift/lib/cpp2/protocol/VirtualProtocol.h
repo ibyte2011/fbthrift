@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,10 +73,12 @@ class VirtualReaderBase {
   virtual void readString(folly::fbstring& str) = 0;
   virtual void readBinary(std::string& str) = 0;
   virtual void readBinary(folly::fbstring& str) = 0;
+  virtual void readBinary(detail::SkipNoopString& str) = 0;
   virtual void readBinary(std::unique_ptr<folly::IOBuf>& str) = 0;
   virtual void readBinary(folly::IOBuf& str) = 0;
   virtual void skip(TType type) = 0;
-  virtual const folly::io::Cursor& getCurrentPosition() const = 0;
+  virtual const folly::io::Cursor& getCursor() const = 0;
+  virtual size_t getCursorPosition() const = 0;
   virtual uint32_t readFromPositionAndAppend(
       folly::io::Cursor& cursor,
       std::unique_ptr<folly::IOBuf>& ser) = 0;
@@ -97,6 +99,8 @@ class VirtualWriterBase {
   virtual ~VirtualWriterBase() {}
 
   virtual ProtocolType protocolType() const = 0;
+
+  virtual bool kSortKeys() const = 0;
 
   virtual void setOutput(
       folly::IOBufQueue* queue,
@@ -280,6 +284,9 @@ class VirtualReader : public VirtualReaderBase {
   void readBinary(folly::fbstring& str) override {
     protocol_.readBinary(str);
   }
+  virtual void readBinary(detail::SkipNoopString& str) override {
+    protocol_.readBinary(str);
+  }
   void readBinary(std::unique_ptr<folly::IOBuf>& str) override {
     protocol_.readBinary(str);
   }
@@ -289,8 +296,11 @@ class VirtualReader : public VirtualReaderBase {
   void skip(TType type) override {
     protocol_.skip(type);
   }
-  const folly::io::Cursor& getCurrentPosition() const override {
-    return protocol_.getCurrentPosition();
+  const folly::io::Cursor& getCursor() const override {
+    return protocol_.getCursor();
+  }
+  size_t getCursorPosition() const override {
+    return protocol_.getCursorPosition();
   }
   uint32_t readFromPositionAndAppend(
       folly::io::Cursor& cursor,
@@ -321,6 +331,10 @@ class VirtualWriter : public VirtualWriterBase {
 
   ProtocolType protocolType() const override {
     return protocol_.protocolType();
+  }
+
+  bool kSortKeys() const override {
+    return protocol_.kSortKeys();
   }
 
   void setOutput(

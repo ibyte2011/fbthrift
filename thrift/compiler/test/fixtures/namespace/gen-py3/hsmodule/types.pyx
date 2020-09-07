@@ -4,41 +4,46 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 
+cimport hsmodule.types_reflection as _types_reflection
 
-cdef cHsFoo _HsFoo_defaults = cHsFoo()
 
+
+@__cython.auto_pickle(False)
 cdef class HsFoo(thrift.py3.types.Struct):
 
     def __init__(
@@ -48,9 +53,10 @@ cdef class HsFoo(thrift.py3.types.Struct):
         if MyInt is not None:
             if not isinstance(MyInt, int):
                 raise TypeError(f'MyInt is not a { int !r}.')
-            MyInt = <int64_t> MyInt
+            MyInt = <cint64_t> MyInt
 
-        self._cpp_obj = move(HsFoo._make_instance(
+        self._cpp_obj = __fbthrift_move(HsFoo._make_instance(
+          NULL,
           NULL,
           MyInt,
         ))
@@ -59,29 +65,39 @@ cdef class HsFoo(thrift.py3.types.Struct):
         HsFoo self,
         MyInt=__NOTSET
     ):
-        changes = any((
-            MyInt is not __NOTSET,
-        ))
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[1] __isNOTSET  # so make_instance is typed
 
-        if not changes:
+        __fbthrift_changed = False
+        if MyInt is ___NOTSET:
+            __isNOTSET[0] = True
+            MyInt = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not MyInt is not __NOTSET:
+        if MyInt is not None:
             if not isinstance(MyInt, int):
                 raise TypeError(f'MyInt is not a { int !r}.')
-            MyInt = <int64_t> MyInt
+            MyInt = <cint64_t> MyInt
 
-        inst = <HsFoo>HsFoo.__new__(HsFoo)
-        inst._cpp_obj = move(HsFoo._make_instance(
+        __fbthrift_inst = <HsFoo>HsFoo.__new__(HsFoo)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(HsFoo._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           MyInt,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cHsFoo] _make_instance(
         cHsFoo* base_instance,
-        object MyInt
+        bint* __isNOTSET,
+        object MyInt 
     ) except *:
         cdef unique_ptr[cHsFoo] c_inst
         if base_instance:
@@ -91,19 +107,23 @@ cdef class HsFoo(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if MyInt is None:
-                deref(c_inst).MyInt = _HsFoo_defaults.MyInt
+            if not __isNOTSET[0] and MyInt is None:
+                deref(c_inst).MyInt_ref().assign(default_inst[cHsFoo]().MyInt_ref().value())
                 deref(c_inst).__isset.MyInt = False
                 pass
-            elif MyInt is __NOTSET:
-                MyInt = None
 
         if MyInt is not None:
-            deref(c_inst).MyInt = MyInt
+            deref(c_inst).MyInt_ref().assign(MyInt)
             deref(c_inst).__isset.MyInt = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("HsFoo", {
+          "MyInt": cpp_obj.MyInt_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'MyInt', self.MyInt
@@ -113,14 +133,14 @@ cdef class HsFoo(thrift.py3.types.Struct):
 
     @staticmethod
     cdef create(shared_ptr[cHsFoo] cpp_obj):
-        inst = <HsFoo>HsFoo.__new__(HsFoo)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <HsFoo>HsFoo.__new__(HsFoo)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def MyInt(self):
 
-        return deref(self._cpp_obj).MyInt
+        return deref(self._cpp_obj).MyInt_ref().value()
 
 
     def __hash__(HsFoo self):
@@ -136,7 +156,7 @@ cdef class HsFoo(thrift.py3.types.Struct):
         cdef shared_ptr[cHsFoo] cpp_obj = make_shared[cHsFoo](
             deref(self._cpp_obj)
         )
-        return HsFoo.create(move_shared(cpp_obj))
+        return HsFoo.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -150,56 +170,36 @@ cdef class HsFoo(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cHsFoo cself = deref((<HsFoo>self)._cpp_obj)
-        cdef cHsFoo cother = deref((<HsFoo>other)._cpp_obj)
+        cdef cHsFoo* cself = (<HsFoo>self)._cpp_obj.get()
+        cdef cHsFoo* cother = (<HsFoo>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(HsFoo self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cHsFoo* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cHsFoo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cHsFoo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cHsFoo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cHsFoo](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__HsFoo()
 
-    cdef uint32_t _deserialize(HsFoo self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(HsFoo self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cHsFoo](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(HsFoo self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cHsFoo]()
-        cdef cHsFoo* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cHsFoo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cHsFoo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cHsFoo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cHsFoo](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cHsFoo](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):

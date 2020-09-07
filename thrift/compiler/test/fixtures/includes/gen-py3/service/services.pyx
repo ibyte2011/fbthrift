@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,10 +46,14 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport service.types as _service_types
 import service.types as _service_types
-import module.types as _module_types
-cimport module.types as _module_types
 import includes.types as _includes_types
 cimport includes.types as _includes_types
+import module.types as _module_types
+cimport module.types as _module_types
+import transitive.types as _transitive_types
+cimport transitive.types as _transitive_types
+
+cimport service.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -54,6 +68,7 @@ cdef extern from "<utility>" namespace "std":
     cdef cFollyPromise[cFollyUnit] move_promise_cFollyUnit "std::move"(
         cFollyPromise[cFollyUnit])
 
+@cython.auto_pickle(False)
 cdef class Promise_cFollyUnit:
     cdef cFollyPromise[cFollyUnit] cPromise
 
@@ -67,6 +82,7 @@ cdef object _MyService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class MyServiceInterface(
     ServiceInterface
 ):
@@ -98,6 +114,11 @@ cdef class MyServiceInterface(
             i):
         raise NotImplementedError("async def has_arg_docs is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__MyService(for_clients=False)
+
+
 
 cdef api void call_cy_MyService_query(
     object self,
@@ -106,14 +127,13 @@ cdef api void call_cy_MyService_query(
     unique_ptr[_module_types.cMyStruct] s,
     unique_ptr[_includes_types.cIncluded] i
 ):
-    cdef MyServiceInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
     arg_s = _module_types.MyStruct.create(shared_ptr[_module_types.cMyStruct](s.release()))
     arg_i = _includes_types.Included.create(shared_ptr[_includes_types.cIncluded](i.release()))
-    __context = None
-    if __iface._pass_context_query:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         MyService_query_coro(
             self,
@@ -123,6 +143,8 @@ cdef api void call_cy_MyService_query(
             arg_i
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def MyService_query_coro(
     object self,
@@ -132,7 +154,7 @@ async def MyService_query_coro(
     i
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.query, "pass_context", False):
             result = await self.query(ctx,
                       s,
                       i)
@@ -163,14 +185,13 @@ cdef api void call_cy_MyService_has_arg_docs(
     unique_ptr[_module_types.cMyStruct] s,
     unique_ptr[_includes_types.cIncluded] i
 ):
-    cdef MyServiceInterface __iface
-    __iface = self
     __promise = Promise_cFollyUnit.create(move_promise_cFollyUnit(cPromise))
     arg_s = _module_types.MyStruct.create(shared_ptr[_module_types.cMyStruct](s.release()))
     arg_i = _includes_types.Included.create(shared_ptr[_includes_types.cIncluded](i.release()))
-    __context = None
-    if __iface._pass_context_has_arg_docs:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         MyService_has_arg_docs_coro(
             self,
@@ -180,6 +201,8 @@ cdef api void call_cy_MyService_has_arg_docs(
             arg_i
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def MyService_has_arg_docs_coro(
     object self,
@@ -189,7 +212,7 @@ async def MyService_has_arg_docs_coro(
     i
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.has_arg_docs, "pass_context", False):
             result = await self.has_arg_docs(ctx,
                       s,
                       i)

@@ -5,10 +5,16 @@
 #  @generated
 #
 
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+    uint32_t as cuint32_t,
+)
 from libcpp.string cimport string
 from libcpp cimport bool as cbool, nullptr, nullptr_t
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
@@ -17,43 +23,42 @@ from thrift.py3.exceptions cimport cTException
 cimport folly.iobuf as __iobuf
 cimport thrift.py3.exceptions
 cimport thrift.py3.types
-from thrift.py3.types cimport bstring, move
+from thrift.py3.common cimport Protocol as __Protocol
+from thrift.py3.types cimport bstring, move, field_ref as __FieldRef, optional_field_ref as __OptionalFieldRef
 from folly.optional cimport cOptional
+cdef extern from "gen-py3/hsmodule/types.h":
+  pass
 
 
 
 
 
-cdef extern from "gen-cpp2/hsmodule_types_custom_protocol.h" namespace "cpp2":
-    # Forward Declaration
-    cdef cppclass cHsFoo "cpp2::HsFoo"
-
-cdef extern from "gen-cpp2/hsmodule_types.h" namespace "cpp2":
-    cdef cppclass cHsFoo__isset "cpp2::HsFoo::__isset":
+cdef extern from "gen-cpp2/hsmodule_types_custom_protocol.h" namespace "::cpp2":
+    cdef cppclass cHsFoo__isset "::cpp2::HsFoo::__isset":
         bint MyInt
 
-    cdef cppclass cHsFoo "cpp2::HsFoo":
+    cdef cppclass cHsFoo "::cpp2::HsFoo":
         cHsFoo() except +
         cHsFoo(const cHsFoo&) except +
         bint operator==(cHsFoo&)
+        bint operator!=(cHsFoo&)
         bint operator<(cHsFoo&)
         bint operator>(cHsFoo&)
         bint operator<=(cHsFoo&)
         bint operator>=(cHsFoo&)
-        int64_t MyInt
+        __FieldRef[cint64_t] MyInt_ref()
+        cint64_t MyInt
         cHsFoo__isset __isset
 
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[cHsFoo] move(unique_ptr[cHsFoo])
-    cdef shared_ptr[cHsFoo] move_shared "std::move"(shared_ptr[cHsFoo])
-    cdef unique_ptr[cHsFoo] move_unique "std::move"(unique_ptr[cHsFoo])
+    cdef shared_ptr[cHsFoo] __fbthrift_move "std::move"(unique_ptr[cHsFoo])
+    cdef shared_ptr[cHsFoo] __fbthrift_move_shared "std::move"(shared_ptr[cHsFoo])
+    cdef unique_ptr[cHsFoo] __fbthrift_move_unique "std::move"(unique_ptr[cHsFoo])
 
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const cHsFoo] const_pointer_cast "std::const_pointer_cast<const cpp2::HsFoo>"(shared_ptr[cHsFoo])
+    cdef shared_ptr[const cHsFoo] const_pointer_cast "std::const_pointer_cast<const ::cpp2::HsFoo>"(shared_ptr[cHsFoo])
 
-# Forward Definition of the cython struct
-cdef class HsFoo(thrift.py3.types.Struct)
 
 
 cdef class HsFoo(thrift.py3.types.Struct):
@@ -64,6 +69,7 @@ cdef class HsFoo(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cHsFoo] _make_instance(
         cHsFoo* base_instance,
+        bint* __isNOTSET,
         object MyInt
     ) except *
 

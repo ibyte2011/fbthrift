@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <array>
@@ -30,17 +31,16 @@
 #include "thrift/compiler/parse/yy_scanner.h"
 
 /**
- * Provide the custom yylex signature to flex.
+ * Provide the custom fbthrift_compiler_parse_lex signature to flex.
  */
-#define YY_DECL                                  \
-  apache::thrift::yy::parser::symbol_type yylex( \
-      apache::thrift::parsing_driver& driver, yyscan_t yyscanner)
+#define YY_DECL                                     \
+  apache::thrift::compiler::yy::parser::symbol_type \
+  fbthrift_compiler_parse_lex(                      \
+      apache::thrift::compiler::parsing_driver& driver, yyscan_t yyscanner)
 
 namespace apache {
 namespace thrift {
-
-// TODO: Parsing driver should itself be moved into apache::thrift::compiler
-using namespace compiler;
+namespace compiler {
 
 namespace yy {
 class parser;
@@ -51,7 +51,7 @@ enum class diagnostic_level {
   YY_ERROR = 1,
   WARNING = 2,
   VERBOSE = 3,
-  DEBUG = 4,
+  DBG = 4,
 };
 
 struct diagnostic_message {
@@ -81,6 +81,8 @@ enum class parsing_mode {
 
 struct parsing_params {
   // Default values are taken from the original global variables.
+
+  parsing_params() noexcept {} // Disable aggregate initialization
 
   bool debug = false;
   bool verbose = false;
@@ -189,9 +191,9 @@ class parsing_driver {
   ~parsing_driver();
 
   /**
-   * Parses a program. The resulted AST is stored in the t_program object passed
-   * in via params.program. A vector containing diagnostic message (warnings,
-   * debug messages, etc.) is returned.
+   * Parses a program and returns the resulted AST.
+   * Diagnostic messages (warnings, debug messages, etc.) are stored in the
+   * vector passed in via params.messages.
    */
   std::unique_ptr<t_program_bundle> parse(
       std::vector<diagnostic_message>& messages);
@@ -206,7 +208,7 @@ class parsing_driver {
     }
 
     auto message = construct_diagnostic_message(
-        diagnostic_level::DEBUG, fmt, std::forward<Arg>(arg)...);
+        diagnostic_level::DBG, fmt, std::forward<Arg>(arg)...);
     diagnostic_messages_.push_back(std::move(message));
   }
 
@@ -284,6 +286,13 @@ class parsing_driver {
   void validate_field_value(t_field* field, t_const_value* cv);
 
   /**
+   * Check that the constant name does not refer to an ambiguous enum.
+   * An ambiguous enum is one that is redefined but not referred to by
+   * ENUM_NAME.ENUM_VALUE.
+   */
+  void validate_not_ambiguous_enum(const std::string& name);
+
+  /**
    * Clears any previously stored doctext string.
    * Also prints a warning if we are discarding information.
    */
@@ -345,7 +354,7 @@ class parsing_driver {
   std::set<std::string> already_parsed_paths_;
   std::set<std::string> circular_deps_;
 
-  std::unique_ptr<apache::thrift::yy::parser> parser_;
+  std::unique_ptr<yy::parser> parser_;
 
   std::vector<diagnostic_message> diagnostic_messages_;
 
@@ -402,5 +411,6 @@ class parsing_driver {
   }
 };
 
+} // namespace compiler
 } // namespace thrift
 } // namespace apache

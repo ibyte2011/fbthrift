@@ -5,16 +5,18 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/frozen-struct/gen-cpp2/module_data.h"
 
-namespace some { namespace ns {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _EnumBEnumDataStorage::size;
-constexpr const std::array<EnumB, 1> _EnumBEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 1> _EnumBEnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-}} // some::ns
-namespace apache { namespace thrift {
 
-}} // apache::thrift
+constexpr const std::size_t TEnumDataStorage<::some::ns::EnumB>::size;
+constexpr const std::array<::some::ns::EnumB, 1> TEnumDataStorage<::some::ns::EnumB>::values;
+constexpr const std::array<folly::StringPiece, 1> TEnumDataStorage<::some::ns::EnumB>::names;
 
+
+} // namespace thrift
+} // namespace apache

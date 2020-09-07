@@ -5,10 +5,16 @@
 #  @generated
 #
 
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+    uint32_t as cuint32_t,
+)
 from libcpp.string cimport string
 from libcpp cimport bool as cbool, nullptr, nullptr_t
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
@@ -17,9 +23,12 @@ from thrift.py3.exceptions cimport cTException
 cimport folly.iobuf as __iobuf
 cimport thrift.py3.exceptions
 cimport thrift.py3.types
-from thrift.py3.types cimport bstring, move
+from thrift.py3.common cimport Protocol as __Protocol
+from thrift.py3.types cimport bstring, move, field_ref as __FieldRef, optional_field_ref as __OptionalFieldRef
 from folly.optional cimport cOptional
 cimport includes.types as _includes_types
+cdef extern from "src/gen-py3/module/types.h":
+  pass
 
 cdef extern from "<folly/small_vector.h>":
   pass
@@ -144,23 +153,23 @@ cdef extern from * nogil:
 cdef extern from *:
     ctypedef double Bar "Bar"
 cdef extern from *:
-    ctypedef int32_t Baz "Baz"
+    ctypedef cint32_t Baz "Baz"
 cdef extern from *:
     ctypedef string FooBar "FooBar"
 cdef extern from *:
-    ctypedef int32_t CppFakeI32 "CppFakeI32"
+    ctypedef cint32_t CppFakeI32 "CppFakeI32"
 cdef extern from * nogil:
     cdef cppclass folly_small_vector_int64_t_8 "folly::small_vector<int64_t, 8 /* maxInline */>":
-        ctypedef int64_t value_type
+        ctypedef cint64_t value_type
         ctypedef size_t size_type
 
         cppclass iterator:
-            int64_t& operator*()
+            cint64_t& operator*()
             iterator operator++()
             bint operator==(iterator)
             bint operator!=(iterator)
         cppclass reverse_iterator:
-            int64_t& operator*()
+            cint64_t& operator*()
             iterator operator++()
             bint operator==(reverse_iterator)
             bint operator!=(reverse_iterator)
@@ -168,8 +177,8 @@ cdef extern from * nogil:
         folly_small_vector_int64_t_8() except +
         folly_small_vector_int64_t_8(folly_small_vector_int64_t_8&) except +
 
-        int64_t& operator[](size_type)
-        void push_back(int64_t&) except +
+        cint64_t& operator[](size_type)
+        void push_back(cint64_t&) except +
         size_type size()
         iterator begin()
         iterator end()
@@ -209,17 +218,17 @@ cdef extern from * nogil:
 
 cdef extern from * nogil:
     cdef cppclass FakeMap "FakeMap":
-        ctypedef int64_t key_type
+        ctypedef cint64_t key_type
         ctypedef double mapped_type
         ctypedef size_t size_type
 
         cppclass iterator:
-            cpair[int64_t, double]& operator*()
+            cpair[cint64_t, double]& operator*()
             iterator operator++()
             bint operator==(iterator)
             bint operator!=(iterator)
         cppclass reverse_iterator:
-            cpair[int64_t, double]& operator*()
+            cpair[cint64_t, double]& operator*()
             iterator operator++()
             bint operator==(reverse_iterator)
             bint operator!=(reverse_iterator)
@@ -227,9 +236,9 @@ cdef extern from * nogil:
         FakeMap() except +
         FakeMap(FakeMap&) except +
 
-        double& operator[](int64_t&)
-        iterator find(const int64_t&)
-        size_type count(const int64_t&)
+        double& operator[](cint64_t&)
+        iterator find(const cint64_t&)
+        size_type count(const cint64_t&)
         size_type size()
         iterator begin()
         iterator end()
@@ -270,27 +279,21 @@ cdef extern from * nogil:
         bint empty()
 
 cdef extern from *:
-    ctypedef int64_t Foo "Foo"
+    ctypedef cint64_t Foo "Foo"
 
-cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
-    cdef cppclass cMyEnumA "some::valid::ns::MyEnumA":
-        bint operator==(cMyEnumA&)
-    cMyEnumA MyEnumA__fieldA "some::valid::ns::MyEnumA::fieldA"
-    cMyEnumA MyEnumA__fieldB "some::valid::ns::MyEnumA::fieldB"
-    cMyEnumA MyEnumA__fieldC "some::valid::ns::MyEnumA::fieldC"
-    cdef cppclass cAnnotatedEnum "some::valid::ns::AnnotatedEnum":
-        bint operator==(cAnnotatedEnum&)
-    cAnnotatedEnum AnnotatedEnum__FIELDA "some::valid::ns::AnnotatedEnum::FIELDA"
-    cAnnotatedEnum AnnotatedEnum__FIELDB "some::valid::ns::AnnotatedEnum::FIELDB"
-    cAnnotatedEnum AnnotatedEnum__FIELDC "some::valid::ns::AnnotatedEnum::FIELDC"
-    cdef cppclass cAnnotatedEnum2 "some::valid::ns::AnnotatedEnum2":
-        bint operator==(cAnnotatedEnum2&)
-    cAnnotatedEnum2 AnnotatedEnum2__FIELDA "some::valid::ns::AnnotatedEnum2::FIELDA"
-    cAnnotatedEnum2 AnnotatedEnum2__FIELDB "some::valid::ns::AnnotatedEnum2::FIELDB"
-    cAnnotatedEnum2 AnnotatedEnum2__FIELDC "some::valid::ns::AnnotatedEnum2::FIELDC"
-    cdef cppclass cMyEnumB "some::valid::ns::MyEnumB":
-        bint operator==(cMyEnumB&)
-    cMyEnumB MyEnumB__AField "some::valid::ns::MyEnumB::AField"
+cdef extern from "src/gen-cpp2/module_types.h" namespace "::some::valid::ns":
+    cdef cppclass cMyEnumA "::some::valid::ns::MyEnumA":
+        pass
+
+    cdef cppclass cAnnotatedEnum "::some::valid::ns::AnnotatedEnum":
+        pass
+
+    cdef cppclass cAnnotatedEnum2 "::some::valid::ns::AnnotatedEnum2":
+        pass
+
+    cdef cppclass cMyEnumB "::some::valid::ns::MyEnumB":
+        pass
+
 
 
 
@@ -299,106 +302,61 @@ cdef class MyEnumA(thrift.py3.types.CompiledEnum):
     pass
 
 
-cdef cMyEnumA MyEnumA_to_cpp(MyEnumA value)
-
-
-
-
 cdef class AnnotatedEnum(thrift.py3.types.CompiledEnum):
     pass
-
-
-cdef cAnnotatedEnum AnnotatedEnum_to_cpp(AnnotatedEnum value)
-
-
 
 
 cdef class AnnotatedEnum2(thrift.py3.types.CompiledEnum):
     pass
 
 
-cdef cAnnotatedEnum2 AnnotatedEnum2_to_cpp(AnnotatedEnum2 value)
-
-
-
-
 cdef class MyEnumB(thrift.py3.types.CompiledEnum):
     pass
 
-
-cdef cMyEnumB MyEnumB_to_cpp(MyEnumB value)
-
-
-
-cdef extern from "src/gen-cpp2/module_types_custom_protocol.h" namespace "some::valid::ns":
-    # Forward Declaration
-    cdef cppclass cEmpty "some::valid::ns::Empty"
-    # Forward Declaration
-    cdef cppclass cASimpleStruct "some::valid::ns::ASimpleStruct"
-    # Forward Declaration
-    cdef cppclass cASimpleStructNoexcept "some::valid::ns::ASimpleStructNoexcept"
-    # Forward Declaration
-    cdef cppclass cMyStruct "some::valid::ns::MyStruct"
-    # Forward Declaration
-    cdef cppclass cSimpleUnion "some::valid::ns::SimpleUnion"
-    # Forward Declaration
-    cdef cppclass cComplexUnion "some::valid::ns::ComplexUnion"
-    # Forward Declaration
-    cdef cppclass cAnException "some::valid::ns::AnException"(cTException)
-    # Forward Declaration
-    cdef cppclass cAnotherException "some::valid::ns::AnotherException"(cTException)
-    # Forward Declaration
-    cdef cppclass ccontainerStruct "some::valid::ns::containerStruct"
-    # Forward Declaration
-    cdef cppclass cMyIncludedStruct "some::valid::ns::MyIncludedStruct"
-    # Forward Declaration
-    cdef cppclass cAnnotatedStruct "some::valid::ns::AnnotatedStruct"
-    # Forward Declaration
-    cdef cppclass cFloatStruct "some::valid::ns::FloatStruct"
-    # Forward Declaration
-    cdef cppclass cFloatUnion "some::valid::ns::FloatUnion"
-    # Forward Declaration
-    cdef cppclass cAllRequiredNoExceptMoveCtrStruct "some::valid::ns::AllRequiredNoExceptMoveCtrStruct"
-
-cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
-    cdef cppclass cEmpty__isset "some::valid::ns::Empty::__isset":
+cdef extern from "src/gen-cpp2/module_types_custom_protocol.h" namespace "::some::valid::ns":
+    cdef cppclass cEmpty__isset "::some::valid::ns::Empty::__isset":
         pass
 
-    cdef cppclass cEmpty "some::valid::ns::Empty":
+    cdef cppclass cEmpty "::some::valid::ns::Empty":
         cEmpty() except +
         cEmpty(const cEmpty&) except +
         bint operator==(cEmpty&)
+        bint operator!=(cEmpty&)
         bint operator<(cEmpty&)
         bint operator>(cEmpty&)
         bint operator<=(cEmpty&)
         bint operator>=(cEmpty&)
         cEmpty__isset __isset
 
-    cdef cppclass cASimpleStruct__isset "some::valid::ns::ASimpleStruct::__isset":
+    cdef cppclass cASimpleStruct__isset "::some::valid::ns::ASimpleStruct::__isset":
         bint boolField
 
-    cdef cppclass cASimpleStruct "some::valid::ns::ASimpleStruct":
+    cdef cppclass cASimpleStruct "::some::valid::ns::ASimpleStruct":
         cASimpleStruct() except +
         cASimpleStruct(const cASimpleStruct&) except +
         bint operator==(cASimpleStruct&)
-        int64_t boolField
+        bint operator!=(cASimpleStruct&)
+        __FieldRef[cint64_t] boolField_ref()
+        cint64_t boolField
         cASimpleStruct__isset __isset
 
-    cdef cppclass cASimpleStructNoexcept__isset "some::valid::ns::ASimpleStructNoexcept::__isset":
+    cdef cppclass cASimpleStructNoexcept__isset "::some::valid::ns::ASimpleStructNoexcept::__isset":
         bint boolField
 
-    cdef cppclass cASimpleStructNoexcept "some::valid::ns::ASimpleStructNoexcept":
+    cdef cppclass cASimpleStructNoexcept "::some::valid::ns::ASimpleStructNoexcept":
         cASimpleStructNoexcept() except +
         cASimpleStructNoexcept(const cASimpleStructNoexcept&) except +
         bint operator==(cASimpleStructNoexcept&)
+        bint operator!=(cASimpleStructNoexcept&)
         bint operator<(cASimpleStructNoexcept&)
         bint operator>(cASimpleStructNoexcept&)
         bint operator<=(cASimpleStructNoexcept&)
         bint operator>=(cASimpleStructNoexcept&)
-        int64_t boolField
+        __FieldRef[cint64_t] boolField_ref()
+        cint64_t boolField
         cASimpleStructNoexcept__isset __isset
 
-    cdef cppclass cMyStruct__isset "some::valid::ns::MyStruct::__isset":
+    cdef cppclass cMyStruct__isset "::some::valid::ns::MyStruct::__isset":
         bint MyBoolField
         bint MyIntField
         bint MyStringField
@@ -409,118 +367,118 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         bint MyBinaryListField4
         bint MyMapEnumAndInt
 
-    cdef cppclass cMyStruct "some::valid::ns::MyStruct":
+    cdef cppclass cMyStruct "::some::valid::ns::MyStruct":
         cMyStruct() except +
         cMyStruct(const cMyStruct&) except +
         bint operator==(cMyStruct&)
+        bint operator!=(cMyStruct&)
         bint operator<(cMyStruct&)
         bint operator>(cMyStruct&)
         bint operator<=(cMyStruct&)
         bint operator>=(cMyStruct&)
+        __FieldRef[cbool] MyBoolField_ref()
         cbool MyBoolField
-        int64_t MyIntField
+        __FieldRef[cint64_t] MyIntField_ref()
+        cint64_t MyIntField
+        __FieldRef[string] MyStringField_ref()
         string MyStringField
+        __FieldRef[string] MyStringField2_ref()
         string MyStringField2
+        __FieldRef[string] MyBinaryField_ref()
         string MyBinaryField
+        __OptionalFieldRef[string] MyBinaryField2_ref()
         string MyBinaryField2
         string MyBinaryField3
+        __FieldRef[vector[string]] MyBinaryListField4_ref()
         vector[string] MyBinaryListField4
+        __FieldRef[cmap[cMyEnumA,string]] MyMapEnumAndInt_ref()
         cmap[cMyEnumA,string] MyMapEnumAndInt
         cMyStruct__isset __isset
 
-    cdef enum cSimpleUnion__type "some::valid::ns::SimpleUnion::Type":
-        cSimpleUnion__type___EMPTY__ "some::valid::ns::SimpleUnion::Type::__EMPTY__",
-        cSimpleUnion__type_intValue "some::valid::ns::SimpleUnion::Type::intValue",
-        cSimpleUnion__type_stringValue "some::valid::ns::SimpleUnion::Type::stringValue",
+    cdef enum cSimpleUnion__type "::some::valid::ns::SimpleUnion::Type":
+        cSimpleUnion__type___EMPTY__ "::some::valid::ns::SimpleUnion::Type::__EMPTY__",
+        cSimpleUnion__type_intValue "::some::valid::ns::SimpleUnion::Type::intValue",
+        cSimpleUnion__type_stringValue "::some::valid::ns::SimpleUnion::Type::stringValue",
 
-    cdef cppclass cSimpleUnion "some::valid::ns::SimpleUnion":
+    cdef cppclass cSimpleUnion "::some::valid::ns::SimpleUnion":
         cSimpleUnion() except +
         cSimpleUnion(const cSimpleUnion&) except +
         bint operator==(cSimpleUnion&)
+        bint operator!=(cSimpleUnion&)
         bint operator<(cSimpleUnion&)
         bint operator>(cSimpleUnion&)
         bint operator<=(cSimpleUnion&)
         bint operator>=(cSimpleUnion&)
         cSimpleUnion__type getType() const
-        const int64_t& get_intValue() const
-        int64_t& set_intValue(const int64_t&)
+        const cint64_t& get_intValue() const
+        cint64_t& set_intValue(const cint64_t&)
         const string& get_stringValue() const
         string& set_stringValue(const string&)
 
-    cdef enum cComplexUnion__type "some::valid::ns::ComplexUnion::Type":
-        cComplexUnion__type___EMPTY__ "some::valid::ns::ComplexUnion::Type::__EMPTY__",
-        cComplexUnion__type_intValue "some::valid::ns::ComplexUnion::Type::intValue",
-        cComplexUnion__type_req_intValue "some::valid::ns::ComplexUnion::Type::req_intValue",
-        cComplexUnion__type_opt_intValue "some::valid::ns::ComplexUnion::Type::opt_intValue",
-        cComplexUnion__type_stringValue "some::valid::ns::ComplexUnion::Type::stringValue",
-        cComplexUnion__type_req_stringValue "some::valid::ns::ComplexUnion::Type::req_stringValue",
-        cComplexUnion__type_opt_stringValue "some::valid::ns::ComplexUnion::Type::opt_stringValue",
-        cComplexUnion__type_intValue2 "some::valid::ns::ComplexUnion::Type::intValue2",
-        cComplexUnion__type_intValue3 "some::valid::ns::ComplexUnion::Type::intValue3",
-        cComplexUnion__type_doubelValue "some::valid::ns::ComplexUnion::Type::doubelValue",
-        cComplexUnion__type_boolValue "some::valid::ns::ComplexUnion::Type::boolValue",
-        cComplexUnion__type_union_list "some::valid::ns::ComplexUnion::Type::union_list",
-        cComplexUnion__type_union_set "some::valid::ns::ComplexUnion::Type::union_set",
-        cComplexUnion__type_union_map "some::valid::ns::ComplexUnion::Type::union_map",
-        cComplexUnion__type_req_union_map "some::valid::ns::ComplexUnion::Type::req_union_map",
-        cComplexUnion__type_opt_union_map "some::valid::ns::ComplexUnion::Type::opt_union_map",
-        cComplexUnion__type_enum_field "some::valid::ns::ComplexUnion::Type::enum_field",
-        cComplexUnion__type_enum_container "some::valid::ns::ComplexUnion::Type::enum_container",
-        cComplexUnion__type_a_struct "some::valid::ns::ComplexUnion::Type::a_struct",
-        cComplexUnion__type_a_set_struct "some::valid::ns::ComplexUnion::Type::a_set_struct",
-        cComplexUnion__type_a_union "some::valid::ns::ComplexUnion::Type::a_union",
-        cComplexUnion__type_req_a_union "some::valid::ns::ComplexUnion::Type::req_a_union",
-        cComplexUnion__type_opt_a_union "some::valid::ns::ComplexUnion::Type::opt_a_union",
-        cComplexUnion__type_a_union_list "some::valid::ns::ComplexUnion::Type::a_union_list",
-        cComplexUnion__type_a_union_typedef "some::valid::ns::ComplexUnion::Type::a_union_typedef",
-        cComplexUnion__type_a_union_typedef_list "some::valid::ns::ComplexUnion::Type::a_union_typedef_list",
-        cComplexUnion__type_MyBinaryField "some::valid::ns::ComplexUnion::Type::MyBinaryField",
-        cComplexUnion__type_MyBinaryField2 "some::valid::ns::ComplexUnion::Type::MyBinaryField2",
-        cComplexUnion__type_MyBinaryField3 "some::valid::ns::ComplexUnion::Type::MyBinaryField3",
-        cComplexUnion__type_MyBinaryListField4 "some::valid::ns::ComplexUnion::Type::MyBinaryListField4",
-        cComplexUnion__type_ref_field "some::valid::ns::ComplexUnion::Type::ref_field",
-        cComplexUnion__type_ref_field2 "some::valid::ns::ComplexUnion::Type::ref_field2",
-        cComplexUnion__type_excp_field "some::valid::ns::ComplexUnion::Type::excp_field",
+    cdef enum cComplexUnion__type "::some::valid::ns::ComplexUnion::Type":
+        cComplexUnion__type___EMPTY__ "::some::valid::ns::ComplexUnion::Type::__EMPTY__",
+        cComplexUnion__type_intValue "::some::valid::ns::ComplexUnion::Type::intValue",
+        cComplexUnion__type_opt_intValue "::some::valid::ns::ComplexUnion::Type::opt_intValue",
+        cComplexUnion__type_stringValue "::some::valid::ns::ComplexUnion::Type::stringValue",
+        cComplexUnion__type_opt_stringValue "::some::valid::ns::ComplexUnion::Type::opt_stringValue",
+        cComplexUnion__type_intValue2 "::some::valid::ns::ComplexUnion::Type::intValue2",
+        cComplexUnion__type_intValue3 "::some::valid::ns::ComplexUnion::Type::intValue3",
+        cComplexUnion__type_doubelValue "::some::valid::ns::ComplexUnion::Type::doubelValue",
+        cComplexUnion__type_boolValue "::some::valid::ns::ComplexUnion::Type::boolValue",
+        cComplexUnion__type_union_list "::some::valid::ns::ComplexUnion::Type::union_list",
+        cComplexUnion__type_union_set "::some::valid::ns::ComplexUnion::Type::union_set",
+        cComplexUnion__type_union_map "::some::valid::ns::ComplexUnion::Type::union_map",
+        cComplexUnion__type_opt_union_map "::some::valid::ns::ComplexUnion::Type::opt_union_map",
+        cComplexUnion__type_enum_field "::some::valid::ns::ComplexUnion::Type::enum_field",
+        cComplexUnion__type_enum_container "::some::valid::ns::ComplexUnion::Type::enum_container",
+        cComplexUnion__type_a_struct "::some::valid::ns::ComplexUnion::Type::a_struct",
+        cComplexUnion__type_a_set_struct "::some::valid::ns::ComplexUnion::Type::a_set_struct",
+        cComplexUnion__type_a_union "::some::valid::ns::ComplexUnion::Type::a_union",
+        cComplexUnion__type_opt_a_union "::some::valid::ns::ComplexUnion::Type::opt_a_union",
+        cComplexUnion__type_a_union_list "::some::valid::ns::ComplexUnion::Type::a_union_list",
+        cComplexUnion__type_a_union_typedef "::some::valid::ns::ComplexUnion::Type::a_union_typedef",
+        cComplexUnion__type_a_union_typedef_list "::some::valid::ns::ComplexUnion::Type::a_union_typedef_list",
+        cComplexUnion__type_MyBinaryField "::some::valid::ns::ComplexUnion::Type::MyBinaryField",
+        cComplexUnion__type_MyBinaryField2 "::some::valid::ns::ComplexUnion::Type::MyBinaryField2",
+        cComplexUnion__type_MyBinaryListField4 "::some::valid::ns::ComplexUnion::Type::MyBinaryListField4",
+        cComplexUnion__type_ref_field "::some::valid::ns::ComplexUnion::Type::ref_field",
+        cComplexUnion__type_ref_field2 "::some::valid::ns::ComplexUnion::Type::ref_field2",
+        cComplexUnion__type_excp_field "::some::valid::ns::ComplexUnion::Type::excp_field",
 
-    cdef cppclass cComplexUnion "some::valid::ns::ComplexUnion":
+    cdef cppclass cComplexUnion "::some::valid::ns::ComplexUnion":
         cComplexUnion() except +
         cComplexUnion(const cComplexUnion&) except +
         bint operator==(cComplexUnion&)
+        bint operator!=(cComplexUnion&)
         bint operator<(cComplexUnion&)
         bint operator>(cComplexUnion&)
         bint operator<=(cComplexUnion&)
         bint operator>=(cComplexUnion&)
         cComplexUnion__type getType() const
-        const int64_t& get_intValue() const
-        int64_t& set_intValue(const int64_t&)
-        const int64_t& get_req_intValue() const
-        int64_t& set_req_intValue(const int64_t&)
-        const int64_t& get_opt_intValue() const
-        int64_t& set_opt_intValue(const int64_t&)
+        const cint64_t& get_intValue() const
+        cint64_t& set_intValue(const cint64_t&)
+        const cint64_t& get_opt_intValue() const
+        cint64_t& set_opt_intValue(const cint64_t&)
         const string& get_stringValue() const
         string& set_stringValue(const string&)
-        const string& get_req_stringValue() const
-        string& set_req_stringValue(const string&)
         const string& get_opt_stringValue() const
         string& set_opt_stringValue(const string&)
-        const int16_t& get_intValue2() const
-        int16_t& set_intValue2(const int16_t&)
-        const int32_t& get_intValue3() const
-        int32_t& set_intValue3(const int32_t&)
+        const cint16_t& get_intValue2() const
+        cint16_t& set_intValue2(const cint16_t&)
+        const cint32_t& get_intValue3() const
+        cint32_t& set_intValue3(const cint32_t&)
         const double& get_doubelValue() const
         double& set_doubelValue(const double&)
         const cbool& get_boolValue() const
         cbool& set_boolValue(const cbool&)
-        const vector[int32_t]& get_union_list() const
-        vector[int32_t]& set_union_list(const vector[int32_t]&)
-        const cset[int64_t]& get_union_set() const
-        cset[int64_t]& set_union_set(const cset[int64_t]&)
-        const cmap[string,int32_t]& get_union_map() const
-        cmap[string,int32_t]& set_union_map(const cmap[string,int32_t]&)
-        const cmap[string,int32_t]& get_req_union_map() const
-        cmap[string,int32_t]& set_req_union_map(const cmap[string,int32_t]&)
-        const cmap[string,int32_t]& get_opt_union_map() const
-        cmap[string,int32_t]& set_opt_union_map(const cmap[string,int32_t]&)
+        const vector[cint32_t]& get_union_list() const
+        vector[cint32_t]& set_union_list(const vector[cint32_t]&)
+        const cset[cint64_t]& get_union_set() const
+        cset[cint64_t]& set_union_set(const cset[cint64_t]&)
+        const cmap[string,cint32_t]& get_union_map() const
+        cmap[string,cint32_t]& set_union_map(const cmap[string,cint32_t]&)
+        const cmap[string,cint32_t]& get_opt_union_map() const
+        cmap[string,cint32_t]& set_opt_union_map(const cmap[string,cint32_t]&)
         const cMyEnumA& get_enum_field() const
         cMyEnumA& set_enum_field(const cMyEnumA&)
         const vector[cMyEnumA]& get_enum_container() const
@@ -531,8 +489,6 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         cset[cMyStruct]& set_a_set_struct(const cset[cMyStruct]&)
         const cSimpleUnion& get_a_union() const
         cSimpleUnion& set_a_union(const cSimpleUnion&)
-        const cSimpleUnion& get_req_a_union() const
-        cSimpleUnion& set_req_a_union(const cSimpleUnion&)
         const cSimpleUnion& get_opt_a_union() const
         cSimpleUnion& set_opt_a_union(const cSimpleUnion&)
         const vector[cSimpleUnion]& get_a_union_list() const
@@ -545,8 +501,6 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         string& set_MyBinaryField(const string&)
         const string& get_MyBinaryField2() const
         string& set_MyBinaryField2(const string&)
-        const string& get_MyBinaryField3() const
-        string& set_MyBinaryField3(const string&)
         const vector[string]& get_MyBinaryListField4() const
         vector[string]& set_MyBinaryListField4(const vector[string]&)
         const unique_ptr[cMyStruct]& get_ref_field() const
@@ -556,7 +510,7 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         const cAnException& get_excp_field() const
         cAnException& set_excp_field(const cAnException&)
 
-    cdef cppclass cAnException__isset "some::valid::ns::AnException::__isset":
+    cdef cppclass cAnException__isset "::some::valid::ns::AnException::__isset":
         bint code
         bint req_code
         bint message2
@@ -573,50 +527,66 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         bint union_typedef
         bint a_union_typedef_list
 
-    cdef cppclass cAnException "some::valid::ns::AnException"(cTException):
+    cdef cppclass cAnException "::some::valid::ns::AnException"(cTException):
         cAnException() except +
         cAnException(const cAnException&) except +
         bint operator==(cAnException&)
+        bint operator!=(cAnException&)
         bint operator<(cAnException&)
         bint operator>(cAnException&)
         bint operator<=(cAnException&)
         bint operator>=(cAnException&)
-        int32_t code
-        int32_t req_code
+        __FieldRef[cint32_t] code_ref()
+        cint32_t code
+        cint32_t req_code
+        __FieldRef[string] message2_ref()
         string message2
         string req_message
-        vector[int32_t] exception_list
-        cset[int64_t] exception_set
-        cmap[string,int32_t] exception_map
-        cmap[string,int32_t] req_exception_map
+        __FieldRef[vector[cint32_t]] exception_list_ref()
+        vector[cint32_t] exception_list
+        __FieldRef[cset[cint64_t]] exception_set_ref()
+        cset[cint64_t] exception_set
+        __FieldRef[cmap[string,cint32_t]] exception_map_ref()
+        cmap[string,cint32_t] exception_map
+        cmap[string,cint32_t] req_exception_map
+        __FieldRef[cMyEnumA] enum_field_ref()
         cMyEnumA enum_field
+        __FieldRef[vector[cMyEnumA]] enum_container_ref()
         vector[cMyEnumA] enum_container
+        __FieldRef[cMyStruct] a_struct_ref()
         cMyStruct a_struct
+        __FieldRef[cset[cMyStruct]] a_set_struct_ref()
         cset[cMyStruct] a_set_struct
+        __FieldRef[vector[cSimpleUnion]] a_union_list_ref()
         vector[cSimpleUnion] a_union_list
+        __FieldRef[cset[cSimpleUnion]] union_typedef_ref()
         cset[cSimpleUnion] union_typedef
+        __FieldRef[vector[cset[cSimpleUnion]]] a_union_typedef_list_ref()
         vector[cset[cSimpleUnion]] a_union_typedef_list
         cAnException__isset __isset
 
-    cdef cppclass cAnotherException__isset "some::valid::ns::AnotherException::__isset":
+    cdef cppclass cAnotherException__isset "::some::valid::ns::AnotherException::__isset":
         bint code
         bint req_code
         bint message
 
-    cdef cppclass cAnotherException "some::valid::ns::AnotherException"(cTException):
+    cdef cppclass cAnotherException "::some::valid::ns::AnotherException"(cTException):
         cAnotherException() except +
         cAnotherException(const cAnotherException&) except +
         bint operator==(cAnotherException&)
+        bint operator!=(cAnotherException&)
         bint operator<(cAnotherException&)
         bint operator>(cAnotherException&)
         bint operator<=(cAnotherException&)
         bint operator>=(cAnotherException&)
-        int32_t code
-        int32_t req_code
+        __FieldRef[cint32_t] code_ref()
+        cint32_t code
+        cint32_t req_code
+        __FieldRef[string] message_ref()
         string message
         cAnotherException__isset __isset
 
-    cdef cppclass ccontainerStruct__isset "some::valid::ns::containerStruct::__isset":
+    cdef cppclass ccontainerStruct__isset "::some::valid::ns::containerStruct::__isset":
         bint fieldA
         bint req_fieldA
         bint opt_fieldA
@@ -664,83 +634,126 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         bint fieldAE
         bint fieldSD
 
-    cdef cppclass ccontainerStruct "some::valid::ns::containerStruct":
+    cdef cppclass ccontainerStruct "::some::valid::ns::containerStruct":
         ccontainerStruct() except +
         ccontainerStruct(const ccontainerStruct&) except +
         bint operator==(ccontainerStruct&)
+        bint operator!=(ccontainerStruct&)
         bint operator<(ccontainerStruct&)
         bint operator>(ccontainerStruct&)
         bint operator<=(ccontainerStruct&)
         bint operator>=(ccontainerStruct&)
+        __FieldRef[cbool] fieldA_ref()
         cbool fieldA
         cbool req_fieldA
+        __OptionalFieldRef[cbool] opt_fieldA_ref()
         cbool opt_fieldA
+        __FieldRef[cmap[string,cbool]] fieldB_ref()
         cmap[string,cbool] fieldB
         cmap[string,cbool] req_fieldB
+        __OptionalFieldRef[cmap[string,cbool]] opt_fieldB_ref()
         cmap[string,cbool] opt_fieldB
-        cset[int32_t] fieldC
-        cset[int32_t] req_fieldC
-        cset[int32_t] opt_fieldC
+        __FieldRef[cset[cint32_t]] fieldC_ref()
+        cset[cint32_t] fieldC
+        cset[cint32_t] req_fieldC
+        __OptionalFieldRef[cset[cint32_t]] opt_fieldC_ref()
+        cset[cint32_t] opt_fieldC
+        __FieldRef[string] fieldD_ref()
         string fieldD
+        __FieldRef[string] fieldE_ref()
         string fieldE
         string req_fieldE
+        __OptionalFieldRef[string] opt_fieldE_ref()
         string opt_fieldE
-        vector[vector[int32_t]] fieldF
-        cmap[string,cmap[string,cmap[string,int32_t]]] fieldG
-        vector[cset[int32_t]] fieldH
+        __FieldRef[vector[vector[cint32_t]]] fieldF_ref()
+        vector[vector[cint32_t]] fieldF
+        __FieldRef[cmap[string,cmap[string,cmap[string,cint32_t]]]] fieldG_ref()
+        cmap[string,cmap[string,cmap[string,cint32_t]]] fieldG
+        __FieldRef[vector[cset[cint32_t]]] fieldH_ref()
+        vector[cset[cint32_t]] fieldH
+        __FieldRef[cbool] fieldI_ref()
         cbool fieldI
-        cmap[string,vector[int32_t]] fieldJ
-        vector[vector[vector[vector[int32_t]]]] fieldK
+        __FieldRef[cmap[string,vector[cint32_t]]] fieldJ_ref()
+        cmap[string,vector[cint32_t]] fieldJ
+        __FieldRef[vector[vector[vector[vector[cint32_t]]]]] fieldK_ref()
+        vector[vector[vector[vector[cint32_t]]]] fieldK
+        __FieldRef[cset[cset[cset[cbool]]]] fieldL_ref()
         cset[cset[cset[cbool]]] fieldL
-        cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]] fieldM
-        int32_t fieldN
+        __FieldRef[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] fieldM_ref()
+        cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]] fieldM
+        __FieldRef[cint32_t] fieldN_ref()
+        cint32_t fieldN
+        __FieldRef[vector[cmap[cEmpty,cMyStruct]]] fieldO_ref()
         vector[cmap[cEmpty,cMyStruct]] fieldO
+        __FieldRef[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] fieldP_ref()
         vector[vector[vector[cmap[cEmpty,cMyStruct]]]] fieldP
+        __FieldRef[cMyEnumA] fieldQ_ref()
         cMyEnumA fieldQ
+        __FieldRef[cMyEnumA] fieldR_ref()
         cMyEnumA fieldR
         cMyEnumA req_fieldR
+        __OptionalFieldRef[cMyEnumA] opt_fieldR_ref()
         cMyEnumA opt_fieldR
+        __FieldRef[cMyEnumA] fieldS_ref()
         cMyEnumA fieldS
+        __FieldRef[vector[cMyEnumA]] fieldT_ref()
         vector[cMyEnumA] fieldT
+        __FieldRef[vector[cMyEnumA]] fieldU_ref()
         vector[cMyEnumA] fieldU
+        __FieldRef[cMyStruct] fieldV_ref()
         cMyStruct fieldV
         cMyStruct req_fieldV
+        __OptionalFieldRef[cMyStruct] opt_fieldV_ref()
         cMyStruct opt_fieldV
+        __FieldRef[cset[cMyStruct]] fieldW_ref()
         cset[cMyStruct] fieldW
+        __FieldRef[cComplexUnion] fieldX_ref()
         cComplexUnion fieldX
         cComplexUnion req_fieldX
+        __OptionalFieldRef[cComplexUnion] opt_fieldX_ref()
         cComplexUnion opt_fieldX
+        __FieldRef[vector[cComplexUnion]] fieldY_ref()
         vector[cComplexUnion] fieldY
+        __FieldRef[cset[cSimpleUnion]] fieldZ_ref()
         cset[cSimpleUnion] fieldZ
+        __FieldRef[vector[cset[cSimpleUnion]]] fieldAA_ref()
         vector[cset[cSimpleUnion]] fieldAA
+        __FieldRef[cmap[Bar,Baz]] fieldAB_ref()
         cmap[Bar,Baz] fieldAB
+        __FieldRef[cMyEnumB] fieldAC_ref()
         cMyEnumB fieldAC
+        __FieldRef[_includes_types.cAnEnum] fieldAD_ref()
         _includes_types.cAnEnum fieldAD
-        cmap[string,int32_t] fieldAE
+        __FieldRef[cmap[string,cint32_t]] fieldAE_ref()
+        cmap[string,cint32_t] fieldAE
+        __FieldRef[FooBar] fieldSD_ref()
         FooBar fieldSD
         ccontainerStruct__isset __isset
 
-    cdef cppclass cMyIncludedStruct__isset "some::valid::ns::MyIncludedStruct::__isset":
+    cdef cppclass cMyIncludedStruct__isset "::some::valid::ns::MyIncludedStruct::__isset":
         bint MyIncludedInt
         bint MyIncludedStruct
         bint ARefField
         bint ARequiredField
 
-    cdef cppclass cMyIncludedStruct "some::valid::ns::MyIncludedStruct":
+    cdef cppclass cMyIncludedStruct "::some::valid::ns::MyIncludedStruct":
         cMyIncludedStruct() except +
         cMyIncludedStruct(const cMyIncludedStruct&) except +
         bint operator==(cMyIncludedStruct&)
+        bint operator!=(cMyIncludedStruct&)
         bint operator<(cMyIncludedStruct&)
         bint operator>(cMyIncludedStruct&)
         bint operator<=(cMyIncludedStruct&)
         bint operator>=(cMyIncludedStruct&)
-        int64_t MyIncludedInt
+        __FieldRef[cint64_t] MyIncludedInt_ref()
+        cint64_t MyIncludedInt
+        __FieldRef[_includes_types.cAStruct] MyIncludedStruct_ref()
         _includes_types.cAStruct MyIncludedStruct
         unique_ptr[_includes_types.cAStruct] ARefField
         _includes_types.cAStruct ARequiredField
         cMyIncludedStruct__isset __isset
 
-    cdef cppclass cAnnotatedStruct__isset "some::valid::ns::AnnotatedStruct::__isset":
+    cdef cppclass cAnnotatedStruct__isset "::some::valid::ns::AnnotatedStruct::__isset":
         bint no_annotation
         bint cpp_unique_ref
         bint cpp2_unique_ref
@@ -782,77 +795,121 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         bint iobuf_ptr_val
         bint struct_struct
 
-    cdef cppclass cAnnotatedStruct "some::valid::ns::AnnotatedStruct":
+    cdef cppclass cAnnotatedStruct "::some::valid::ns::AnnotatedStruct":
         cAnnotatedStruct() except +
         cAnnotatedStruct(const cAnnotatedStruct&) except +
         bint operator==(cAnnotatedStruct&)
+        bint operator!=(cAnnotatedStruct&)
+        __FieldRef[ccontainerStruct] no_annotation_ref()
         ccontainerStruct no_annotation
         unique_ptr[ccontainerStruct] cpp_unique_ref
         unique_ptr[ccontainerStruct] cpp2_unique_ref
-        unique_ptr[cmap[int32_t,vector[string]]] container_with_ref
+        unique_ptr[cmap[cint32_t,vector[string]]] container_with_ref
         unique_ptr[ccontainerStruct] req_cpp_unique_ref
         unique_ptr[ccontainerStruct] req_cpp2_unique_ref
         unique_ptr[vector[string]] req_container_with_ref
         unique_ptr[ccontainerStruct] opt_cpp_unique_ref
         unique_ptr[ccontainerStruct] opt_cpp2_unique_ref
-        unique_ptr[cset[int32_t]] opt_container_with_ref
+        unique_ptr[cset[cint32_t]] opt_container_with_ref
         unique_ptr[ccontainerStruct] ref_type_unique
         shared_ptr[ccontainerStruct] ref_type_shared
-        shared_ptr[const cmap[int32_t,vector[string]]] ref_type_const
+        shared_ptr[const cmap[cint32_t,vector[string]]] ref_type_const
         shared_ptr[ccontainerStruct] req_ref_type_shared
         shared_ptr[const ccontainerStruct] req_ref_type_const
         unique_ptr[vector[string]] req_ref_type_unique
         shared_ptr[const ccontainerStruct] opt_ref_type_const
         unique_ptr[ccontainerStruct] opt_ref_type_unique
-        shared_ptr[cset[int32_t]] opt_ref_type_shared
+        shared_ptr[cset[cint32_t]] opt_ref_type_shared
+        __FieldRef[CppFakeI32] base_type_ref()
         CppFakeI32 base_type
+        __FieldRef[folly_small_vector_int64_t_8] list_type_ref()
         folly_small_vector_int64_t_8 list_type
+        __FieldRef[folly_sorted_vector_set_std_string] set_type_ref()
         folly_sorted_vector_set_std_string set_type
+        __FieldRef[FakeMap] map_type_ref()
         FakeMap map_type
+        __FieldRef[std_unordered_map_std_string_containerStruct] map_struct_type_ref()
         std_unordered_map_std_string_containerStruct map_struct_type
+        __FieldRef[__iobuf.cIOBuf] iobuf_type_ref()
         __iobuf.cIOBuf iobuf_type
         unique_ptr[__iobuf.cIOBuf] iobuf_ptr
-        std_list[int32_t] list_i32_template
+        __FieldRef[std_list[cint32_t]] list_i32_template_ref()
+        std_list[cint32_t] list_i32_template
+        __FieldRef[std_deque[string]] list_string_template_ref()
         std_deque[string] list_string_template
+        __FieldRef[folly_sorted_vector_set[string]] set_template_ref()
         folly_sorted_vector_set[string] set_template
-        folly_sorted_vector_map[int64_t,string] map_template
-        std_list[int32_t] typedef_list_template
+        __FieldRef[folly_sorted_vector_map[cint64_t,string]] map_template_ref()
+        folly_sorted_vector_map[cint64_t,string] map_template
+        __FieldRef[std_list[cint32_t]] typedef_list_template_ref()
+        std_list[cint32_t] typedef_list_template
+        __FieldRef[std_deque[string]] typedef_deque_template_ref()
         std_deque[string] typedef_deque_template
+        __FieldRef[folly_sorted_vector_set[string]] typedef_set_template_ref()
         folly_sorted_vector_set[string] typedef_set_template
-        folly_sorted_vector_map[int64_t,string] typedef_map_template
+        __FieldRef[folly_sorted_vector_map[cint64_t,string]] typedef_map_template_ref()
+        folly_sorted_vector_map[cint64_t,string] typedef_map_template
+        __FieldRef[Foo] indirection_a_ref()
         Foo indirection_a
+        __FieldRef[vector[Bar]] indirection_b_ref()
         vector[Bar] indirection_b
+        __FieldRef[cset[Baz]] indirection_c_ref()
         cset[Baz] indirection_c
+        __FieldRef[__iobuf.cIOBuf] iobuf_type_val_ref()
         __iobuf.cIOBuf iobuf_type_val
         unique_ptr[__iobuf.cIOBuf] iobuf_ptr_val
+        __FieldRef[ccontainerStruct] struct_struct_ref()
         ccontainerStruct struct_struct
         cAnnotatedStruct__isset __isset
 
-    cdef cppclass cFloatStruct__isset "some::valid::ns::FloatStruct::__isset":
+    cdef cppclass cComplexContainerStruct__isset "::some::valid::ns::ComplexContainerStruct::__isset":
+        bint map_of_iobufs
+        bint map_of_iobuf_ptrs
+
+    cdef cppclass cComplexContainerStruct "::some::valid::ns::ComplexContainerStruct":
+        cComplexContainerStruct() except +
+        cComplexContainerStruct(const cComplexContainerStruct&) except +
+        bint operator==(cComplexContainerStruct&)
+        bint operator!=(cComplexContainerStruct&)
+        bint operator<(cComplexContainerStruct&)
+        bint operator>(cComplexContainerStruct&)
+        bint operator<=(cComplexContainerStruct&)
+        bint operator>=(cComplexContainerStruct&)
+        __FieldRef[cmap[string,__iobuf.cIOBuf]] map_of_iobufs_ref()
+        cmap[string,__iobuf.cIOBuf] map_of_iobufs
+        __FieldRef[cmap[string,unique_ptr[__iobuf.cIOBuf]]] map_of_iobuf_ptrs_ref()
+        cmap[string,unique_ptr[__iobuf.cIOBuf]] map_of_iobuf_ptrs
+        cComplexContainerStruct__isset __isset
+
+    cdef cppclass cFloatStruct__isset "::some::valid::ns::FloatStruct::__isset":
         bint floatField
         bint doubleField
 
-    cdef cppclass cFloatStruct "some::valid::ns::FloatStruct":
+    cdef cppclass cFloatStruct "::some::valid::ns::FloatStruct":
         cFloatStruct() except +
         cFloatStruct(const cFloatStruct&) except +
         bint operator==(cFloatStruct&)
+        bint operator!=(cFloatStruct&)
         bint operator<(cFloatStruct&)
         bint operator>(cFloatStruct&)
         bint operator<=(cFloatStruct&)
         bint operator>=(cFloatStruct&)
+        __FieldRef[float] floatField_ref()
         float floatField
+        __FieldRef[double] doubleField_ref()
         double doubleField
         cFloatStruct__isset __isset
 
-    cdef enum cFloatUnion__type "some::valid::ns::FloatUnion::Type":
-        cFloatUnion__type___EMPTY__ "some::valid::ns::FloatUnion::Type::__EMPTY__",
-        cFloatUnion__type_floatSide "some::valid::ns::FloatUnion::Type::floatSide",
-        cFloatUnion__type_doubleSide "some::valid::ns::FloatUnion::Type::doubleSide",
+    cdef enum cFloatUnion__type "::some::valid::ns::FloatUnion::Type":
+        cFloatUnion__type___EMPTY__ "::some::valid::ns::FloatUnion::Type::__EMPTY__",
+        cFloatUnion__type_floatSide "::some::valid::ns::FloatUnion::Type::floatSide",
+        cFloatUnion__type_doubleSide "::some::valid::ns::FloatUnion::Type::doubleSide",
 
-    cdef cppclass cFloatUnion "some::valid::ns::FloatUnion":
+    cdef cppclass cFloatUnion "::some::valid::ns::FloatUnion":
         cFloatUnion() except +
         cFloatUnion(const cFloatUnion&) except +
         bint operator==(cFloatUnion&)
+        bint operator!=(cFloatUnion&)
         bint operator<(cFloatUnion&)
         bint operator>(cFloatUnion&)
         bint operator<=(cFloatUnion&)
@@ -863,179 +920,184 @@ cdef extern from "src/gen-cpp2/module_types.h" namespace "some::valid::ns":
         const double& get_doubleSide() const
         double& set_doubleSide(const double&)
 
-    cdef cppclass cAllRequiredNoExceptMoveCtrStruct__isset "some::valid::ns::AllRequiredNoExceptMoveCtrStruct::__isset":
+    cdef cppclass cAllRequiredNoExceptMoveCtrStruct__isset "::some::valid::ns::AllRequiredNoExceptMoveCtrStruct::__isset":
         bint intField
 
-    cdef cppclass cAllRequiredNoExceptMoveCtrStruct "some::valid::ns::AllRequiredNoExceptMoveCtrStruct":
+    cdef cppclass cAllRequiredNoExceptMoveCtrStruct "::some::valid::ns::AllRequiredNoExceptMoveCtrStruct":
         cAllRequiredNoExceptMoveCtrStruct() except +
         cAllRequiredNoExceptMoveCtrStruct(const cAllRequiredNoExceptMoveCtrStruct&) except +
         bint operator==(cAllRequiredNoExceptMoveCtrStruct&)
+        bint operator!=(cAllRequiredNoExceptMoveCtrStruct&)
         bint operator<(cAllRequiredNoExceptMoveCtrStruct&)
         bint operator>(cAllRequiredNoExceptMoveCtrStruct&)
         bint operator<=(cAllRequiredNoExceptMoveCtrStruct&)
         bint operator>=(cAllRequiredNoExceptMoveCtrStruct&)
-        int64_t intField
+        cint64_t intField
         cAllRequiredNoExceptMoveCtrStruct__isset __isset
 
-    cdef shared_ptr[vector[string]] reference_shared_ptr_MyBinaryListField4 "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cMyStruct]&, vector[string]&)
-    cdef shared_ptr[cmap[cMyEnumA,string]] reference_shared_ptr_MyMapEnumAndInt "thrift::py3::reference_shared_ptr<std::map<some::valid::ns::MyEnumA,std::string>>"(shared_ptr[cMyStruct]&, cmap[cMyEnumA,string]&)
-    cdef shared_ptr[vector[int32_t]] reference_shared_ptr_union_list "thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(shared_ptr[cComplexUnion]&, vector[int32_t]&)
-    cdef shared_ptr[cset[int64_t]] reference_shared_ptr_union_set "thrift::py3::reference_shared_ptr<std::set<int64_t>>"(shared_ptr[cComplexUnion]&, cset[int64_t]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_union_map "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cComplexUnion]&, cmap[string,int32_t]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_req_union_map "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cComplexUnion]&, cmap[string,int32_t]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_opt_union_map "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cComplexUnion]&, cmap[string,int32_t]&)
-    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_enum_container "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::MyEnumA>>"(shared_ptr[cComplexUnion]&, vector[cMyEnumA]&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_a_struct "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
-    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_a_set_struct "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::MyStruct>>"(shared_ptr[cComplexUnion]&, cset[cMyStruct]&)
-    cdef shared_ptr[cSimpleUnion] reference_shared_ptr_a_union "thrift::py3::reference_shared_ptr<some::valid::ns::SimpleUnion>"(shared_ptr[cComplexUnion]&, cSimpleUnion&)
-    cdef shared_ptr[cSimpleUnion] reference_shared_ptr_req_a_union "thrift::py3::reference_shared_ptr<some::valid::ns::SimpleUnion>"(shared_ptr[cComplexUnion]&, cSimpleUnion&)
-    cdef shared_ptr[cSimpleUnion] reference_shared_ptr_opt_a_union "thrift::py3::reference_shared_ptr<some::valid::ns::SimpleUnion>"(shared_ptr[cComplexUnion]&, cSimpleUnion&)
-    cdef shared_ptr[vector[cSimpleUnion]] reference_shared_ptr_a_union_list "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::SimpleUnion>>"(shared_ptr[cComplexUnion]&, vector[cSimpleUnion]&)
-    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_a_union_typedef "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::SimpleUnion>>"(shared_ptr[cComplexUnion]&, cset[cSimpleUnion]&)
-    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_a_union_typedef_list "thrift::py3::reference_shared_ptr<std::vector<std::set<some::valid::ns::SimpleUnion>>>"(shared_ptr[cComplexUnion]&, vector[cset[cSimpleUnion]]&)
-    cdef shared_ptr[vector[string]] reference_shared_ptr_MyBinaryListField4 "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cComplexUnion]&, vector[string]&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_ref_field "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_ref_field2 "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
-    cdef shared_ptr[cAnException] reference_shared_ptr_excp_field "thrift::py3::reference_shared_ptr<some::valid::ns::AnException>"(shared_ptr[cComplexUnion]&, cAnException&)
-    cdef shared_ptr[vector[int32_t]] reference_shared_ptr_exception_list "thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(shared_ptr[cAnException]&, vector[int32_t]&)
-    cdef shared_ptr[cset[int64_t]] reference_shared_ptr_exception_set "thrift::py3::reference_shared_ptr<std::set<int64_t>>"(shared_ptr[cAnException]&, cset[int64_t]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_exception_map "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cAnException]&, cmap[string,int32_t]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_req_exception_map "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cAnException]&, cmap[string,int32_t]&)
-    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_enum_container "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::MyEnumA>>"(shared_ptr[cAnException]&, vector[cMyEnumA]&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_a_struct "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[cAnException]&, cMyStruct&)
-    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_a_set_struct "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::MyStruct>>"(shared_ptr[cAnException]&, cset[cMyStruct]&)
-    cdef shared_ptr[vector[cSimpleUnion]] reference_shared_ptr_a_union_list "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::SimpleUnion>>"(shared_ptr[cAnException]&, vector[cSimpleUnion]&)
-    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_union_typedef "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::SimpleUnion>>"(shared_ptr[cAnException]&, cset[cSimpleUnion]&)
-    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_a_union_typedef_list "thrift::py3::reference_shared_ptr<std::vector<std::set<some::valid::ns::SimpleUnion>>>"(shared_ptr[cAnException]&, vector[cset[cSimpleUnion]]&)
-    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_fieldB "thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
-    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_req_fieldB "thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
-    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_opt_fieldB "thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
-    cdef shared_ptr[cset[int32_t]] reference_shared_ptr_fieldC "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[int32_t]&)
-    cdef shared_ptr[cset[int32_t]] reference_shared_ptr_req_fieldC "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[int32_t]&)
-    cdef shared_ptr[cset[int32_t]] reference_shared_ptr_opt_fieldC "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[int32_t]&)
-    cdef shared_ptr[vector[vector[int32_t]]] reference_shared_ptr_fieldF "thrift::py3::reference_shared_ptr<std::vector<std::vector<int32_t>>>"(shared_ptr[ccontainerStruct]&, vector[vector[int32_t]]&)
-    cdef shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]] reference_shared_ptr_fieldG "thrift::py3::reference_shared_ptr<std::map<std::string,std::map<std::string,std::map<std::string,int32_t>>>>"(shared_ptr[ccontainerStruct]&, cmap[string,cmap[string,cmap[string,int32_t]]]&)
-    cdef shared_ptr[vector[cset[int32_t]]] reference_shared_ptr_fieldH "thrift::py3::reference_shared_ptr<std::vector<std::set<int32_t>>>"(shared_ptr[ccontainerStruct]&, vector[cset[int32_t]]&)
-    cdef shared_ptr[cmap[string,vector[int32_t]]] reference_shared_ptr_fieldJ "thrift::py3::reference_shared_ptr<std::map<std::string,std::vector<int32_t>>>"(shared_ptr[ccontainerStruct]&, cmap[string,vector[int32_t]]&)
-    cdef shared_ptr[vector[vector[vector[vector[int32_t]]]]] reference_shared_ptr_fieldK "thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<std::vector<int32_t>>>>>"(shared_ptr[ccontainerStruct]&, vector[vector[vector[vector[int32_t]]]]&)
-    cdef shared_ptr[cset[cset[cset[cbool]]]] reference_shared_ptr_fieldL "thrift::py3::reference_shared_ptr<std::set<std::set<std::set<bool>>>>"(shared_ptr[ccontainerStruct]&, cset[cset[cset[cbool]]]&)
-    cdef shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] reference_shared_ptr_fieldM "thrift::py3::reference_shared_ptr<std::map<std::set<std::vector<int32_t>>,std::map<std::vector<std::set<std::string>>,std::string>>>"(shared_ptr[ccontainerStruct]&, cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]&)
-    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] reference_shared_ptr_fieldO "thrift::py3::reference_shared_ptr<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>"(shared_ptr[ccontainerStruct]&, vector[cmap[cEmpty,cMyStruct]]&)
-    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] reference_shared_ptr_fieldP "thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>>"(shared_ptr[ccontainerStruct]&, vector[vector[vector[cmap[cEmpty,cMyStruct]]]]&)
-    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_fieldT "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::MyEnumA>>"(shared_ptr[ccontainerStruct]&, vector[cMyEnumA]&)
-    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_fieldU "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::MyEnumA>>"(shared_ptr[ccontainerStruct]&, vector[cMyEnumA]&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_fieldV "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_req_fieldV "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
-    cdef shared_ptr[cMyStruct] reference_shared_ptr_opt_fieldV "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
-    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_fieldW "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::MyStruct>>"(shared_ptr[ccontainerStruct]&, cset[cMyStruct]&)
-    cdef shared_ptr[cComplexUnion] reference_shared_ptr_fieldX "thrift::py3::reference_shared_ptr<some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
-    cdef shared_ptr[cComplexUnion] reference_shared_ptr_req_fieldX "thrift::py3::reference_shared_ptr<some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
-    cdef shared_ptr[cComplexUnion] reference_shared_ptr_opt_fieldX "thrift::py3::reference_shared_ptr<some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
-    cdef shared_ptr[vector[cComplexUnion]] reference_shared_ptr_fieldY "thrift::py3::reference_shared_ptr<std::vector<some::valid::ns::ComplexUnion>>"(shared_ptr[ccontainerStruct]&, vector[cComplexUnion]&)
-    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_fieldZ "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::SimpleUnion>>"(shared_ptr[ccontainerStruct]&, cset[cSimpleUnion]&)
-    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_fieldAA "thrift::py3::reference_shared_ptr<std::vector<std::set<some::valid::ns::SimpleUnion>>>"(shared_ptr[ccontainerStruct]&, vector[cset[cSimpleUnion]]&)
-    cdef shared_ptr[cmap[Bar,Baz]] reference_shared_ptr_fieldAB "thrift::py3::reference_shared_ptr<std::map<Bar,Baz>>"(shared_ptr[ccontainerStruct]&, cmap[Bar,Baz]&)
-    cdef shared_ptr[cmap[string,int32_t]] reference_shared_ptr_fieldAE "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[ccontainerStruct]&, cmap[string,int32_t]&)
-    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_MyIncludedStruct "thrift::py3::reference_shared_ptr<a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
-    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_ARefField "thrift::py3::reference_shared_ptr<a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
-    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_ARequiredField "thrift::py3::reference_shared_ptr<a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_no_annotation "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_cpp_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_cpp2_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[cmap[int32_t,vector[string]]] reference_shared_ptr_container_with_ref "thrift::py3::reference_shared_ptr<std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cAnnotatedStruct]&, cmap[int32_t,vector[string]]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_cpp_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_cpp2_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[vector[string]] reference_shared_ptr_req_container_with_ref "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cAnnotatedStruct]&, vector[string]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_cpp_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_cpp2_unique_ref "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[cset[int32_t]] reference_shared_ptr_opt_container_with_ref "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[cAnnotatedStruct]&, cset[int32_t]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_ref_type_unique "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_ref_type_shared "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[cmap[int32_t,vector[string]]] reference_shared_ptr_ref_type_const "thrift::py3::reference_shared_ptr<std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cAnnotatedStruct]&, cmap[int32_t,vector[string]]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_ref_type_shared "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_ref_type_const "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[vector[string]] reference_shared_ptr_req_ref_type_unique "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cAnnotatedStruct]&, vector[string]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_ref_type_const "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_ref_type_unique "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
-    cdef shared_ptr[cset[int32_t]] reference_shared_ptr_opt_ref_type_shared "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[cAnnotatedStruct]&, cset[int32_t]&)
-    cdef shared_ptr[folly_small_vector_int64_t_8] reference_shared_ptr_list_type "thrift::py3::reference_shared_ptr<folly::small_vector<int64_t, 8 /* maxInline */>>"(shared_ptr[cAnnotatedStruct]&, folly_small_vector_int64_t_8&)
-    cdef shared_ptr[folly_sorted_vector_set_std_string] reference_shared_ptr_set_type "thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set_std_string&)
-    cdef shared_ptr[FakeMap] reference_shared_ptr_map_type "thrift::py3::reference_shared_ptr<FakeMap>"(shared_ptr[cAnnotatedStruct]&, FakeMap&)
-    cdef shared_ptr[std_unordered_map_std_string_containerStruct] reference_shared_ptr_map_struct_type "thrift::py3::reference_shared_ptr<std::unordered_map<std::string, containerStruct>>"(shared_ptr[cAnnotatedStruct]&, std_unordered_map_std_string_containerStruct&)
-    cdef shared_ptr[std_list[int32_t]] reference_shared_ptr_list_i32_template "thrift::py3::reference_shared_ptr<std::list<int32_t>>"(shared_ptr[cAnnotatedStruct]&, std_list[int32_t]&)
-    cdef shared_ptr[std_deque[string]] reference_shared_ptr_list_string_template "thrift::py3::reference_shared_ptr<std::deque<std::string>>"(shared_ptr[cAnnotatedStruct]&, std_deque[string]&)
-    cdef shared_ptr[folly_sorted_vector_set[string]] reference_shared_ptr_set_template "thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set[string]&)
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] reference_shared_ptr_map_template "thrift::py3::reference_shared_ptr<folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_map[int64_t,string]&)
-    cdef shared_ptr[std_list[int32_t]] reference_shared_ptr_typedef_list_template "thrift::py3::reference_shared_ptr<std::list<int32_t>>"(shared_ptr[cAnnotatedStruct]&, std_list[int32_t]&)
-    cdef shared_ptr[std_deque[string]] reference_shared_ptr_typedef_deque_template "thrift::py3::reference_shared_ptr<std::deque<std::string>>"(shared_ptr[cAnnotatedStruct]&, std_deque[string]&)
-    cdef shared_ptr[folly_sorted_vector_set[string]] reference_shared_ptr_typedef_set_template "thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set[string]&)
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] reference_shared_ptr_typedef_map_template "thrift::py3::reference_shared_ptr<folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_map[int64_t,string]&)
-    cdef shared_ptr[vector[Bar]] reference_shared_ptr_indirection_b "thrift::py3::reference_shared_ptr<std::vector<Bar>>"(shared_ptr[cAnnotatedStruct]&, vector[Bar]&)
-    cdef shared_ptr[cset[Baz]] reference_shared_ptr_indirection_c "thrift::py3::reference_shared_ptr<std::set<Baz>>"(shared_ptr[cAnnotatedStruct]&, cset[Baz]&)
-    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_struct_struct "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[vector[string]] reference_shared_ptr_MyBinaryListField4 "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cMyStruct]&, vector[string]&)
+    cdef shared_ptr[cmap[cMyEnumA,string]] reference_shared_ptr_MyMapEnumAndInt "::thrift::py3::reference_shared_ptr<std::map<::some::valid::ns::MyEnumA,std::string>>"(shared_ptr[cMyStruct]&, cmap[cMyEnumA,string]&)
+    cdef shared_ptr[vector[cint32_t]] reference_shared_ptr_union_list "::thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(shared_ptr[cComplexUnion]&, vector[cint32_t]&)
+    cdef shared_ptr[cset[cint64_t]] reference_shared_ptr_union_set "::thrift::py3::reference_shared_ptr<std::set<int64_t>>"(shared_ptr[cComplexUnion]&, cset[cint64_t]&)
+    cdef shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_union_map "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cComplexUnion]&, cmap[string,cint32_t]&)
+    cdef shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_opt_union_map "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cComplexUnion]&, cmap[string,cint32_t]&)
+    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_enum_container "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::MyEnumA>>"(shared_ptr[cComplexUnion]&, vector[cMyEnumA]&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_a_struct "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
+    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_a_set_struct "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::MyStruct>>"(shared_ptr[cComplexUnion]&, cset[cMyStruct]&)
+    cdef shared_ptr[cSimpleUnion] reference_shared_ptr_a_union "::thrift::py3::reference_shared_ptr<::some::valid::ns::SimpleUnion>"(shared_ptr[cComplexUnion]&, cSimpleUnion&)
+    cdef shared_ptr[cSimpleUnion] reference_shared_ptr_opt_a_union "::thrift::py3::reference_shared_ptr<::some::valid::ns::SimpleUnion>"(shared_ptr[cComplexUnion]&, cSimpleUnion&)
+    cdef shared_ptr[vector[cSimpleUnion]] reference_shared_ptr_a_union_list "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::SimpleUnion>>"(shared_ptr[cComplexUnion]&, vector[cSimpleUnion]&)
+    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_a_union_typedef "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::SimpleUnion>>"(shared_ptr[cComplexUnion]&, cset[cSimpleUnion]&)
+    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_a_union_typedef_list "::thrift::py3::reference_shared_ptr<std::vector<std::set<::some::valid::ns::SimpleUnion>>>"(shared_ptr[cComplexUnion]&, vector[cset[cSimpleUnion]]&)
+    cdef shared_ptr[vector[string]] reference_shared_ptr_MyBinaryListField4 "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cComplexUnion]&, vector[string]&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_ref_field "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_ref_field2 "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[cComplexUnion]&, cMyStruct&)
+    cdef shared_ptr[cAnException] reference_shared_ptr_excp_field "::thrift::py3::reference_shared_ptr<::some::valid::ns::AnException>"(shared_ptr[cComplexUnion]&, cAnException&)
+    cdef shared_ptr[vector[cint32_t]] reference_shared_ptr_exception_list "::thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(shared_ptr[cAnException]&, vector[cint32_t]&)
+    cdef shared_ptr[cset[cint64_t]] reference_shared_ptr_exception_set "::thrift::py3::reference_shared_ptr<std::set<int64_t>>"(shared_ptr[cAnException]&, cset[cint64_t]&)
+    cdef shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_exception_map "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cAnException]&, cmap[string,cint32_t]&)
+    cdef shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_req_exception_map "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[cAnException]&, cmap[string,cint32_t]&)
+    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_enum_container "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::MyEnumA>>"(shared_ptr[cAnException]&, vector[cMyEnumA]&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_a_struct "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[cAnException]&, cMyStruct&)
+    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_a_set_struct "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::MyStruct>>"(shared_ptr[cAnException]&, cset[cMyStruct]&)
+    cdef shared_ptr[vector[cSimpleUnion]] reference_shared_ptr_a_union_list "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::SimpleUnion>>"(shared_ptr[cAnException]&, vector[cSimpleUnion]&)
+    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_union_typedef "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::SimpleUnion>>"(shared_ptr[cAnException]&, cset[cSimpleUnion]&)
+    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_a_union_typedef_list "::thrift::py3::reference_shared_ptr<std::vector<std::set<::some::valid::ns::SimpleUnion>>>"(shared_ptr[cAnException]&, vector[cset[cSimpleUnion]]&)
+    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_fieldB "::thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
+    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_req_fieldB "::thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
+    cdef shared_ptr[cmap[string,cbool]] reference_shared_ptr_opt_fieldB "::thrift::py3::reference_shared_ptr<std::map<std::string,bool>>"(shared_ptr[ccontainerStruct]&, cmap[string,cbool]&)
+    cdef shared_ptr[cset[cint32_t]] reference_shared_ptr_fieldC "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[cint32_t]&)
+    cdef shared_ptr[cset[cint32_t]] reference_shared_ptr_req_fieldC "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[cint32_t]&)
+    cdef shared_ptr[cset[cint32_t]] reference_shared_ptr_opt_fieldC "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[ccontainerStruct]&, cset[cint32_t]&)
+    cdef shared_ptr[vector[vector[cint32_t]]] reference_shared_ptr_fieldF "::thrift::py3::reference_shared_ptr<std::vector<std::vector<int32_t>>>"(shared_ptr[ccontainerStruct]&, vector[vector[cint32_t]]&)
+    cdef shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]] reference_shared_ptr_fieldG "::thrift::py3::reference_shared_ptr<std::map<std::string,std::map<std::string,std::map<std::string,int32_t>>>>"(shared_ptr[ccontainerStruct]&, cmap[string,cmap[string,cmap[string,cint32_t]]]&)
+    cdef shared_ptr[vector[cset[cint32_t]]] reference_shared_ptr_fieldH "::thrift::py3::reference_shared_ptr<std::vector<std::set<int32_t>>>"(shared_ptr[ccontainerStruct]&, vector[cset[cint32_t]]&)
+    cdef shared_ptr[cmap[string,vector[cint32_t]]] reference_shared_ptr_fieldJ "::thrift::py3::reference_shared_ptr<std::map<std::string,std::vector<int32_t>>>"(shared_ptr[ccontainerStruct]&, cmap[string,vector[cint32_t]]&)
+    cdef shared_ptr[vector[vector[vector[vector[cint32_t]]]]] reference_shared_ptr_fieldK "::thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<std::vector<int32_t>>>>>"(shared_ptr[ccontainerStruct]&, vector[vector[vector[vector[cint32_t]]]]&)
+    cdef shared_ptr[cset[cset[cset[cbool]]]] reference_shared_ptr_fieldL "::thrift::py3::reference_shared_ptr<std::set<std::set<std::set<bool>>>>"(shared_ptr[ccontainerStruct]&, cset[cset[cset[cbool]]]&)
+    cdef shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] reference_shared_ptr_fieldM "::thrift::py3::reference_shared_ptr<std::map<std::set<std::vector<int32_t>>,std::map<std::vector<std::set<std::string>>,std::string>>>"(shared_ptr[ccontainerStruct]&, cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]&)
+    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] reference_shared_ptr_fieldO "::thrift::py3::reference_shared_ptr<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>"(shared_ptr[ccontainerStruct]&, vector[cmap[cEmpty,cMyStruct]]&)
+    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] reference_shared_ptr_fieldP "::thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>>"(shared_ptr[ccontainerStruct]&, vector[vector[vector[cmap[cEmpty,cMyStruct]]]]&)
+    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_fieldT "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::MyEnumA>>"(shared_ptr[ccontainerStruct]&, vector[cMyEnumA]&)
+    cdef shared_ptr[vector[cMyEnumA]] reference_shared_ptr_fieldU "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::MyEnumA>>"(shared_ptr[ccontainerStruct]&, vector[cMyEnumA]&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_fieldV "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_req_fieldV "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
+    cdef shared_ptr[cMyStruct] reference_shared_ptr_opt_fieldV "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(shared_ptr[ccontainerStruct]&, cMyStruct&)
+    cdef shared_ptr[cset[cMyStruct]] reference_shared_ptr_fieldW "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::MyStruct>>"(shared_ptr[ccontainerStruct]&, cset[cMyStruct]&)
+    cdef shared_ptr[cComplexUnion] reference_shared_ptr_fieldX "::thrift::py3::reference_shared_ptr<::some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
+    cdef shared_ptr[cComplexUnion] reference_shared_ptr_req_fieldX "::thrift::py3::reference_shared_ptr<::some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
+    cdef shared_ptr[cComplexUnion] reference_shared_ptr_opt_fieldX "::thrift::py3::reference_shared_ptr<::some::valid::ns::ComplexUnion>"(shared_ptr[ccontainerStruct]&, cComplexUnion&)
+    cdef shared_ptr[vector[cComplexUnion]] reference_shared_ptr_fieldY "::thrift::py3::reference_shared_ptr<std::vector<::some::valid::ns::ComplexUnion>>"(shared_ptr[ccontainerStruct]&, vector[cComplexUnion]&)
+    cdef shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_fieldZ "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::SimpleUnion>>"(shared_ptr[ccontainerStruct]&, cset[cSimpleUnion]&)
+    cdef shared_ptr[vector[cset[cSimpleUnion]]] reference_shared_ptr_fieldAA "::thrift::py3::reference_shared_ptr<std::vector<std::set<::some::valid::ns::SimpleUnion>>>"(shared_ptr[ccontainerStruct]&, vector[cset[cSimpleUnion]]&)
+    cdef shared_ptr[cmap[Bar,Baz]] reference_shared_ptr_fieldAB "::thrift::py3::reference_shared_ptr<std::map<Bar,Baz>>"(shared_ptr[ccontainerStruct]&, cmap[Bar,Baz]&)
+    cdef shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_fieldAE "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(shared_ptr[ccontainerStruct]&, cmap[string,cint32_t]&)
+    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_MyIncludedStruct "::thrift::py3::reference_shared_ptr<::a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
+    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_ARefField "::thrift::py3::reference_shared_ptr<::a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
+    cdef shared_ptr[_includes_types.cAStruct] reference_shared_ptr_ARequiredField "::thrift::py3::reference_shared_ptr<::a::different::ns::AStruct>"(shared_ptr[cMyIncludedStruct]&, _includes_types.cAStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_no_annotation "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_cpp_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_cpp2_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] reference_shared_ptr_container_with_ref "::thrift::py3::reference_shared_ptr<std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cAnnotatedStruct]&, cmap[cint32_t,vector[string]]&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_cpp_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_cpp2_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[vector[string]] reference_shared_ptr_req_container_with_ref "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cAnnotatedStruct]&, vector[string]&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_cpp_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_cpp2_unique_ref "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[cset[cint32_t]] reference_shared_ptr_opt_container_with_ref "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[cAnnotatedStruct]&, cset[cint32_t]&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_ref_type_unique "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_ref_type_shared "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] reference_shared_ptr_ref_type_const "::thrift::py3::reference_shared_ptr<std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cAnnotatedStruct]&, cmap[cint32_t,vector[string]]&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_ref_type_shared "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_req_ref_type_const "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[vector[string]] reference_shared_ptr_req_ref_type_unique "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(shared_ptr[cAnnotatedStruct]&, vector[string]&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_ref_type_const "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_opt_ref_type_unique "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[cset[cint32_t]] reference_shared_ptr_opt_ref_type_shared "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(shared_ptr[cAnnotatedStruct]&, cset[cint32_t]&)
+    cdef shared_ptr[folly_small_vector_int64_t_8] reference_shared_ptr_list_type "::thrift::py3::reference_shared_ptr<folly::small_vector<int64_t, 8 /* maxInline */>>"(shared_ptr[cAnnotatedStruct]&, folly_small_vector_int64_t_8&)
+    cdef shared_ptr[folly_sorted_vector_set_std_string] reference_shared_ptr_set_type "::thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set_std_string&)
+    cdef shared_ptr[FakeMap] reference_shared_ptr_map_type "::thrift::py3::reference_shared_ptr<FakeMap>"(shared_ptr[cAnnotatedStruct]&, FakeMap&)
+    cdef shared_ptr[std_unordered_map_std_string_containerStruct] reference_shared_ptr_map_struct_type "::thrift::py3::reference_shared_ptr<std::unordered_map<std::string, containerStruct>>"(shared_ptr[cAnnotatedStruct]&, std_unordered_map_std_string_containerStruct&)
+    cdef shared_ptr[__iobuf.cIOBuf] reference_shared_ptr_iobuf_type "::thrift::py3::reference_shared_ptr<folly::IOBuf>"(shared_ptr[cAnnotatedStruct]&, __iobuf.cIOBuf&)
+    cdef shared_ptr[std_list[cint32_t]] reference_shared_ptr_list_i32_template "::thrift::py3::reference_shared_ptr<std::list<int32_t>>"(shared_ptr[cAnnotatedStruct]&, std_list[cint32_t]&)
+    cdef shared_ptr[std_deque[string]] reference_shared_ptr_list_string_template "::thrift::py3::reference_shared_ptr<std::deque<std::string>>"(shared_ptr[cAnnotatedStruct]&, std_deque[string]&)
+    cdef shared_ptr[folly_sorted_vector_set[string]] reference_shared_ptr_set_template "::thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set[string]&)
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] reference_shared_ptr_map_template "::thrift::py3::reference_shared_ptr<folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_map[cint64_t,string]&)
+    cdef shared_ptr[std_list[cint32_t]] reference_shared_ptr_typedef_list_template "::thrift::py3::reference_shared_ptr<std::list<int32_t>>"(shared_ptr[cAnnotatedStruct]&, std_list[cint32_t]&)
+    cdef shared_ptr[std_deque[string]] reference_shared_ptr_typedef_deque_template "::thrift::py3::reference_shared_ptr<std::deque<std::string>>"(shared_ptr[cAnnotatedStruct]&, std_deque[string]&)
+    cdef shared_ptr[folly_sorted_vector_set[string]] reference_shared_ptr_typedef_set_template "::thrift::py3::reference_shared_ptr<folly::sorted_vector_set<std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_set[string]&)
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] reference_shared_ptr_typedef_map_template "::thrift::py3::reference_shared_ptr<folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[cAnnotatedStruct]&, folly_sorted_vector_map[cint64_t,string]&)
+    cdef shared_ptr[vector[Bar]] reference_shared_ptr_indirection_b "::thrift::py3::reference_shared_ptr<std::vector<Bar>>"(shared_ptr[cAnnotatedStruct]&, vector[Bar]&)
+    cdef shared_ptr[cset[Baz]] reference_shared_ptr_indirection_c "::thrift::py3::reference_shared_ptr<std::set<Baz>>"(shared_ptr[cAnnotatedStruct]&, cset[Baz]&)
+    cdef shared_ptr[__iobuf.cIOBuf] reference_shared_ptr_iobuf_type_val "::thrift::py3::reference_shared_ptr<folly::IOBuf>"(shared_ptr[cAnnotatedStruct]&, __iobuf.cIOBuf&)
+    cdef shared_ptr[ccontainerStruct] reference_shared_ptr_struct_struct "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(shared_ptr[cAnnotatedStruct]&, ccontainerStruct&)
+    cdef shared_ptr[cmap[string,__iobuf.cIOBuf]] reference_shared_ptr_map_of_iobufs "::thrift::py3::reference_shared_ptr<std::map<std::string,folly::IOBuf>>"(shared_ptr[cComplexContainerStruct]&, cmap[string,__iobuf.cIOBuf]&)
+    cdef shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]] reference_shared_ptr_map_of_iobuf_ptrs "::thrift::py3::reference_shared_ptr<std::map<std::string,std::unique_ptr<folly::IOBuf>>>"(shared_ptr[cComplexContainerStruct]&, cmap[string,unique_ptr[__iobuf.cIOBuf]]&)
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[cEmpty] move(unique_ptr[cEmpty])
-    cdef shared_ptr[cEmpty] move_shared "std::move"(shared_ptr[cEmpty])
-    cdef unique_ptr[cEmpty] move_unique "std::move"(unique_ptr[cEmpty])
-    cdef shared_ptr[cASimpleStruct] move(unique_ptr[cASimpleStruct])
-    cdef shared_ptr[cASimpleStruct] move_shared "std::move"(shared_ptr[cASimpleStruct])
-    cdef unique_ptr[cASimpleStruct] move_unique "std::move"(unique_ptr[cASimpleStruct])
-    cdef shared_ptr[cASimpleStructNoexcept] move(unique_ptr[cASimpleStructNoexcept])
-    cdef shared_ptr[cASimpleStructNoexcept] move_shared "std::move"(shared_ptr[cASimpleStructNoexcept])
-    cdef unique_ptr[cASimpleStructNoexcept] move_unique "std::move"(unique_ptr[cASimpleStructNoexcept])
-    cdef shared_ptr[cMyStruct] move(unique_ptr[cMyStruct])
-    cdef shared_ptr[cMyStruct] move_shared "std::move"(shared_ptr[cMyStruct])
-    cdef unique_ptr[cMyStruct] move_unique "std::move"(unique_ptr[cMyStruct])
-    cdef shared_ptr[cSimpleUnion] move(unique_ptr[cSimpleUnion])
-    cdef shared_ptr[cSimpleUnion] move_shared "std::move"(shared_ptr[cSimpleUnion])
-    cdef unique_ptr[cSimpleUnion] move_unique "std::move"(unique_ptr[cSimpleUnion])
-    cdef shared_ptr[cComplexUnion] move(unique_ptr[cComplexUnion])
-    cdef shared_ptr[cComplexUnion] move_shared "std::move"(shared_ptr[cComplexUnion])
-    cdef unique_ptr[cComplexUnion] move_unique "std::move"(unique_ptr[cComplexUnion])
-    cdef shared_ptr[cAnException] move(unique_ptr[cAnException])
-    cdef shared_ptr[cAnException] move_shared "std::move"(shared_ptr[cAnException])
-    cdef unique_ptr[cAnException] move_unique "std::move"(unique_ptr[cAnException])
-    cdef shared_ptr[cAnotherException] move(unique_ptr[cAnotherException])
-    cdef shared_ptr[cAnotherException] move_shared "std::move"(shared_ptr[cAnotherException])
-    cdef unique_ptr[cAnotherException] move_unique "std::move"(unique_ptr[cAnotherException])
-    cdef shared_ptr[ccontainerStruct] move(unique_ptr[ccontainerStruct])
-    cdef shared_ptr[ccontainerStruct] move_shared "std::move"(shared_ptr[ccontainerStruct])
-    cdef unique_ptr[ccontainerStruct] move_unique "std::move"(unique_ptr[ccontainerStruct])
-    cdef shared_ptr[cMyIncludedStruct] move(unique_ptr[cMyIncludedStruct])
-    cdef shared_ptr[cMyIncludedStruct] move_shared "std::move"(shared_ptr[cMyIncludedStruct])
-    cdef unique_ptr[cMyIncludedStruct] move_unique "std::move"(unique_ptr[cMyIncludedStruct])
-    cdef shared_ptr[cAnnotatedStruct] move(unique_ptr[cAnnotatedStruct])
-    cdef shared_ptr[cAnnotatedStruct] move_shared "std::move"(shared_ptr[cAnnotatedStruct])
-    cdef unique_ptr[cAnnotatedStruct] move_unique "std::move"(unique_ptr[cAnnotatedStruct])
-    cdef shared_ptr[cFloatStruct] move(unique_ptr[cFloatStruct])
-    cdef shared_ptr[cFloatStruct] move_shared "std::move"(shared_ptr[cFloatStruct])
-    cdef unique_ptr[cFloatStruct] move_unique "std::move"(unique_ptr[cFloatStruct])
-    cdef shared_ptr[cFloatUnion] move(unique_ptr[cFloatUnion])
-    cdef shared_ptr[cFloatUnion] move_shared "std::move"(shared_ptr[cFloatUnion])
-    cdef unique_ptr[cFloatUnion] move_unique "std::move"(unique_ptr[cFloatUnion])
-    cdef shared_ptr[cAllRequiredNoExceptMoveCtrStruct] move(unique_ptr[cAllRequiredNoExceptMoveCtrStruct])
-    cdef shared_ptr[cAllRequiredNoExceptMoveCtrStruct] move_shared "std::move"(shared_ptr[cAllRequiredNoExceptMoveCtrStruct])
-    cdef unique_ptr[cAllRequiredNoExceptMoveCtrStruct] move_unique "std::move"(unique_ptr[cAllRequiredNoExceptMoveCtrStruct])
+    cdef shared_ptr[cEmpty] __fbthrift_move "std::move"(unique_ptr[cEmpty])
+    cdef shared_ptr[cEmpty] __fbthrift_move_shared "std::move"(shared_ptr[cEmpty])
+    cdef unique_ptr[cEmpty] __fbthrift_move_unique "std::move"(unique_ptr[cEmpty])
+    cdef shared_ptr[cASimpleStruct] __fbthrift_move "std::move"(unique_ptr[cASimpleStruct])
+    cdef shared_ptr[cASimpleStruct] __fbthrift_move_shared "std::move"(shared_ptr[cASimpleStruct])
+    cdef unique_ptr[cASimpleStruct] __fbthrift_move_unique "std::move"(unique_ptr[cASimpleStruct])
+    cdef shared_ptr[cASimpleStructNoexcept] __fbthrift_move "std::move"(unique_ptr[cASimpleStructNoexcept])
+    cdef shared_ptr[cASimpleStructNoexcept] __fbthrift_move_shared "std::move"(shared_ptr[cASimpleStructNoexcept])
+    cdef unique_ptr[cASimpleStructNoexcept] __fbthrift_move_unique "std::move"(unique_ptr[cASimpleStructNoexcept])
+    cdef shared_ptr[cMyStruct] __fbthrift_move "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cMyStruct] __fbthrift_move_shared "std::move"(shared_ptr[cMyStruct])
+    cdef unique_ptr[cMyStruct] __fbthrift_move_unique "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cSimpleUnion] __fbthrift_move "std::move"(unique_ptr[cSimpleUnion])
+    cdef shared_ptr[cSimpleUnion] __fbthrift_move_shared "std::move"(shared_ptr[cSimpleUnion])
+    cdef unique_ptr[cSimpleUnion] __fbthrift_move_unique "std::move"(unique_ptr[cSimpleUnion])
+    cdef shared_ptr[cComplexUnion] __fbthrift_move "std::move"(unique_ptr[cComplexUnion])
+    cdef shared_ptr[cComplexUnion] __fbthrift_move_shared "std::move"(shared_ptr[cComplexUnion])
+    cdef unique_ptr[cComplexUnion] __fbthrift_move_unique "std::move"(unique_ptr[cComplexUnion])
+    cdef shared_ptr[cAnException] __fbthrift_move "std::move"(unique_ptr[cAnException])
+    cdef shared_ptr[cAnException] __fbthrift_move_shared "std::move"(shared_ptr[cAnException])
+    cdef unique_ptr[cAnException] __fbthrift_move_unique "std::move"(unique_ptr[cAnException])
+    cdef shared_ptr[cAnotherException] __fbthrift_move "std::move"(unique_ptr[cAnotherException])
+    cdef shared_ptr[cAnotherException] __fbthrift_move_shared "std::move"(shared_ptr[cAnotherException])
+    cdef unique_ptr[cAnotherException] __fbthrift_move_unique "std::move"(unique_ptr[cAnotherException])
+    cdef shared_ptr[ccontainerStruct] __fbthrift_move "std::move"(unique_ptr[ccontainerStruct])
+    cdef shared_ptr[ccontainerStruct] __fbthrift_move_shared "std::move"(shared_ptr[ccontainerStruct])
+    cdef unique_ptr[ccontainerStruct] __fbthrift_move_unique "std::move"(unique_ptr[ccontainerStruct])
+    cdef shared_ptr[cMyIncludedStruct] __fbthrift_move "std::move"(unique_ptr[cMyIncludedStruct])
+    cdef shared_ptr[cMyIncludedStruct] __fbthrift_move_shared "std::move"(shared_ptr[cMyIncludedStruct])
+    cdef unique_ptr[cMyIncludedStruct] __fbthrift_move_unique "std::move"(unique_ptr[cMyIncludedStruct])
+    cdef shared_ptr[cAnnotatedStruct] __fbthrift_move "std::move"(unique_ptr[cAnnotatedStruct])
+    cdef shared_ptr[cAnnotatedStruct] __fbthrift_move_shared "std::move"(shared_ptr[cAnnotatedStruct])
+    cdef unique_ptr[cAnnotatedStruct] __fbthrift_move_unique "std::move"(unique_ptr[cAnnotatedStruct])
+    cdef shared_ptr[cComplexContainerStruct] __fbthrift_move "std::move"(unique_ptr[cComplexContainerStruct])
+    cdef shared_ptr[cComplexContainerStruct] __fbthrift_move_shared "std::move"(shared_ptr[cComplexContainerStruct])
+    cdef unique_ptr[cComplexContainerStruct] __fbthrift_move_unique "std::move"(unique_ptr[cComplexContainerStruct])
+    cdef shared_ptr[cFloatStruct] __fbthrift_move "std::move"(unique_ptr[cFloatStruct])
+    cdef shared_ptr[cFloatStruct] __fbthrift_move_shared "std::move"(shared_ptr[cFloatStruct])
+    cdef unique_ptr[cFloatStruct] __fbthrift_move_unique "std::move"(unique_ptr[cFloatStruct])
+    cdef shared_ptr[cFloatUnion] __fbthrift_move "std::move"(unique_ptr[cFloatUnion])
+    cdef shared_ptr[cFloatUnion] __fbthrift_move_shared "std::move"(shared_ptr[cFloatUnion])
+    cdef unique_ptr[cFloatUnion] __fbthrift_move_unique "std::move"(unique_ptr[cFloatUnion])
+    cdef shared_ptr[cAllRequiredNoExceptMoveCtrStruct] __fbthrift_move "std::move"(unique_ptr[cAllRequiredNoExceptMoveCtrStruct])
+    cdef shared_ptr[cAllRequiredNoExceptMoveCtrStruct] __fbthrift_move_shared "std::move"(shared_ptr[cAllRequiredNoExceptMoveCtrStruct])
+    cdef unique_ptr[cAllRequiredNoExceptMoveCtrStruct] __fbthrift_move_unique "std::move"(unique_ptr[cAllRequiredNoExceptMoveCtrStruct])
 
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const cEmpty] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::Empty>"(shared_ptr[cEmpty])
-    cdef shared_ptr[const cASimpleStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::ASimpleStruct>"(shared_ptr[cASimpleStruct])
-    cdef shared_ptr[const cASimpleStructNoexcept] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::ASimpleStructNoexcept>"(shared_ptr[cASimpleStructNoexcept])
-    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::MyStruct>"(shared_ptr[cMyStruct])
-    cdef shared_ptr[const cSimpleUnion] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::SimpleUnion>"(shared_ptr[cSimpleUnion])
-    cdef shared_ptr[const cComplexUnion] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::ComplexUnion>"(shared_ptr[cComplexUnion])
-    cdef shared_ptr[const cAnException] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::AnException>"(shared_ptr[cAnException])
-    cdef shared_ptr[const cAnotherException] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::AnotherException>"(shared_ptr[cAnotherException])
-    cdef shared_ptr[const ccontainerStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::containerStruct>"(shared_ptr[ccontainerStruct])
-    cdef shared_ptr[const cMyIncludedStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::MyIncludedStruct>"(shared_ptr[cMyIncludedStruct])
-    cdef shared_ptr[const cAnnotatedStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::AnnotatedStruct>"(shared_ptr[cAnnotatedStruct])
-    cdef shared_ptr[const cFloatStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::FloatStruct>"(shared_ptr[cFloatStruct])
-    cdef shared_ptr[const cFloatUnion] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::FloatUnion>"(shared_ptr[cFloatUnion])
-    cdef shared_ptr[const cAllRequiredNoExceptMoveCtrStruct] const_pointer_cast "std::const_pointer_cast<const some::valid::ns::AllRequiredNoExceptMoveCtrStruct>"(shared_ptr[cAllRequiredNoExceptMoveCtrStruct])
+    cdef shared_ptr[const cEmpty] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::Empty>"(shared_ptr[cEmpty])
+    cdef shared_ptr[const cASimpleStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::ASimpleStruct>"(shared_ptr[cASimpleStruct])
+    cdef shared_ptr[const cASimpleStructNoexcept] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::ASimpleStructNoexcept>"(shared_ptr[cASimpleStructNoexcept])
+    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::MyStruct>"(shared_ptr[cMyStruct])
+    cdef shared_ptr[const cSimpleUnion] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::SimpleUnion>"(shared_ptr[cSimpleUnion])
+    cdef shared_ptr[const cComplexUnion] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::ComplexUnion>"(shared_ptr[cComplexUnion])
+    cdef shared_ptr[const cAnException] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::AnException>"(shared_ptr[cAnException])
+    cdef shared_ptr[const cAnotherException] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::AnotherException>"(shared_ptr[cAnotherException])
+    cdef shared_ptr[const ccontainerStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::containerStruct>"(shared_ptr[ccontainerStruct])
+    cdef shared_ptr[const cMyIncludedStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::MyIncludedStruct>"(shared_ptr[cMyIncludedStruct])
+    cdef shared_ptr[const cAnnotatedStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::AnnotatedStruct>"(shared_ptr[cAnnotatedStruct])
+    cdef shared_ptr[const cComplexContainerStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::ComplexContainerStruct>"(shared_ptr[cComplexContainerStruct])
+    cdef shared_ptr[const cFloatStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::FloatStruct>"(shared_ptr[cFloatStruct])
+    cdef shared_ptr[const cFloatUnion] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::FloatUnion>"(shared_ptr[cFloatUnion])
+    cdef shared_ptr[const cAllRequiredNoExceptMoveCtrStruct] const_pointer_cast "std::const_pointer_cast<const ::some::valid::ns::AllRequiredNoExceptMoveCtrStruct>"(shared_ptr[cAllRequiredNoExceptMoveCtrStruct])
 
-# Forward Definition of the cython struct
-cdef class Empty(thrift.py3.types.Struct)
 
 
 cdef class Empty(thrift.py3.types.Struct):
@@ -1045,14 +1107,13 @@ cdef class Empty(thrift.py3.types.Struct):
 
     @staticmethod
     cdef unique_ptr[cEmpty] _make_instance(
-        cEmpty* base_instance
+        cEmpty* base_instance,
+        bint* __isNOTSET
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cEmpty])
 
-# Forward Definition of the cython struct
-cdef class ASimpleStruct(thrift.py3.types.Struct)
 
 
 cdef class ASimpleStruct(thrift.py3.types.Struct):
@@ -1063,14 +1124,13 @@ cdef class ASimpleStruct(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cASimpleStruct] _make_instance(
         cASimpleStruct* base_instance,
+        bint* __isNOTSET,
         object boolField
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cASimpleStruct])
 
-# Forward Definition of the cython struct
-cdef class ASimpleStructNoexcept(thrift.py3.types.Struct)
 
 
 cdef class ASimpleStructNoexcept(thrift.py3.types.Struct):
@@ -1081,33 +1141,33 @@ cdef class ASimpleStructNoexcept(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cASimpleStructNoexcept] _make_instance(
         cASimpleStructNoexcept* base_instance,
+        bint* __isNOTSET,
         object boolField
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cASimpleStructNoexcept])
 
-# Forward Definition of the cython struct
-cdef class MyStruct(thrift.py3.types.Struct)
 
 
 cdef class MyStruct(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cMyStruct] _cpp_obj
-    cdef List__binary __MyBinaryListField4
-    cdef Map__MyEnumA_string __MyMapEnumAndInt
+    cdef List__binary __field_MyBinaryListField4
+    cdef Map__MyEnumA_string __field_MyMapEnumAndInt
 
     @staticmethod
     cdef unique_ptr[cMyStruct] _make_instance(
         cMyStruct* base_instance,
-        object MyBoolField,
+        bint* __isNOTSET,
+        pbool MyBoolField,
         object MyIntField,
-        object MyStringField,
-        object MyStringField2,
-        object MyBinaryField,
-        object MyBinaryField2,
-        object MyBinaryField3,
+        str MyStringField,
+        str MyStringField2,
+        bytes MyBinaryField,
+        bytes MyBinaryField2,
+        bytes MyBinaryField3,
         object MyBinaryListField4,
         object MyMapEnumAndInt
     ) except *
@@ -1119,8 +1179,6 @@ cdef class __SimpleUnionType(thrift.py3.types.CompiledEnum):
     pass
 
 
-# Forward Definition of the cython struct
-cdef class SimpleUnion(thrift.py3.types.Union)
 
 
 cdef class SimpleUnion(thrift.py3.types.Union):
@@ -1135,7 +1193,7 @@ cdef class SimpleUnion(thrift.py3.types.Union):
     cdef unique_ptr[cSimpleUnion] _make_instance(
         cSimpleUnion* base_instance,
         object intValue,
-        object stringValue
+        str stringValue
     ) except *
 
     @staticmethod
@@ -1145,8 +1203,6 @@ cdef class __ComplexUnionType(thrift.py3.types.CompiledEnum):
     pass
 
 
-# Forward Definition of the cython struct
-cdef class ComplexUnion(thrift.py3.types.Union)
 
 
 cdef class ComplexUnion(thrift.py3.types.Union):
@@ -1161,75 +1217,69 @@ cdef class ComplexUnion(thrift.py3.types.Union):
     cdef unique_ptr[cComplexUnion] _make_instance(
         cComplexUnion* base_instance,
         object intValue,
-        object req_intValue,
         object opt_intValue,
-        object stringValue,
-        object req_stringValue,
-        object opt_stringValue,
+        str stringValue,
+        str opt_stringValue,
         object intValue2,
         object intValue3,
         object doubelValue,
-        object boolValue,
+        pbool boolValue,
         object union_list,
         object union_set,
         object union_map,
-        object req_union_map,
         object opt_union_map,
-        object enum_field,
+        MyEnumA enum_field,
         object enum_container,
-        object a_struct,
+        MyStruct a_struct,
         object a_set_struct,
-        object a_union,
-        object req_a_union,
-        object opt_a_union,
+        SimpleUnion a_union,
+        SimpleUnion opt_a_union,
         object a_union_list,
         object a_union_typedef,
         object a_union_typedef_list,
-        object MyBinaryField,
-        object MyBinaryField2,
-        object MyBinaryField3,
+        bytes MyBinaryField,
+        bytes MyBinaryField2,
         object MyBinaryListField4,
-        object ref_field,
-        object ref_field2,
-        object excp_field
+        MyStruct ref_field,
+        MyStruct ref_field2,
+        AnException excp_field
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cComplexUnion])
 
-# Forward Definition of the cython struct
-cdef class AnException(thrift.py3.exceptions.Error)
 
 
-cdef class AnException(thrift.py3.exceptions.Error):
+cdef class AnException(thrift.py3.exceptions.GeneratedError):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cAnException] _cpp_obj
-    cdef List__i32 __exception_list
-    cdef Set__i64 __exception_set
-    cdef Map__string_i32 __exception_map
-    cdef Map__string_i32 __req_exception_map
-    cdef List__MyEnumA __enum_container
-    cdef MyStruct __a_struct
-    cdef Set__MyStruct __a_set_struct
-    cdef List__SimpleUnion __a_union_list
-    cdef Set__SimpleUnion __union_typedef
-    cdef List__Set__SimpleUnion __a_union_typedef_list
+    cdef List__i32 __field_exception_list
+    cdef Set__i64 __field_exception_set
+    cdef Map__string_i32 __field_exception_map
+    cdef Map__string_i32 __field_req_exception_map
+    cdef List__MyEnumA __field_enum_container
+    cdef MyStruct __field_a_struct
+    cdef Set__MyStruct __field_a_set_struct
+    cdef List__SimpleUnion __field_a_union_list
+    cdef Set__SimpleUnion __field_union_typedef
+    cdef List__Set__SimpleUnion __field_a_union_typedef_list
 
     @staticmethod
     cdef unique_ptr[cAnException] _make_instance(
         cAnException* base_instance,
+        bint* __isNOTSET,
         object code,
         object req_code,
-        object message2,
-        object req_message,
+        str message2,
+        str req_message,
         object exception_list,
         object exception_set,
         object exception_map,
         object req_exception_map,
-        object enum_field,
+        MyEnumA enum_field,
         object enum_container,
-        object a_struct,
+        MyStruct a_struct,
         object a_set_struct,
         object a_union_list,
         object union_typedef,
@@ -1239,11 +1289,9 @@ cdef class AnException(thrift.py3.exceptions.Error):
     @staticmethod
     cdef create(shared_ptr[cAnException])
 
-# Forward Definition of the cython struct
-cdef class AnotherException(thrift.py3.exceptions.Error)
 
 
-cdef class AnotherException(thrift.py3.exceptions.Error):
+cdef class AnotherException(thrift.py3.exceptions.GeneratedError):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cAnotherException] _cpp_obj
@@ -1251,72 +1299,72 @@ cdef class AnotherException(thrift.py3.exceptions.Error):
     @staticmethod
     cdef unique_ptr[cAnotherException] _make_instance(
         cAnotherException* base_instance,
+        bint* __isNOTSET,
         object code,
         object req_code,
-        object message
+        str message
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cAnotherException])
 
-# Forward Definition of the cython struct
-cdef class containerStruct(thrift.py3.types.Struct)
 
 
 cdef class containerStruct(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[ccontainerStruct] _cpp_obj
-    cdef Map__string_bool __fieldB
-    cdef Map__string_bool __req_fieldB
-    cdef Map__string_bool __opt_fieldB
-    cdef Set__i32 __fieldC
-    cdef Set__i32 __req_fieldC
-    cdef Set__i32 __opt_fieldC
-    cdef List__List__i32 __fieldF
-    cdef Map__string_Map__string_Map__string_i32 __fieldG
-    cdef List__Set__i32 __fieldH
-    cdef Map__string_List__i32 __fieldJ
-    cdef List__List__List__List__i32 __fieldK
-    cdef Set__Set__Set__bool __fieldL
-    cdef Map__Set__List__i32_Map__List__Set__string_string __fieldM
-    cdef List__Map__Empty_MyStruct __fieldO
-    cdef List__List__List__Map__Empty_MyStruct __fieldP
-    cdef List__MyEnumA __fieldT
-    cdef List__MyEnumA __fieldU
-    cdef MyStruct __fieldV
-    cdef MyStruct __req_fieldV
-    cdef MyStruct __opt_fieldV
-    cdef Set__MyStruct __fieldW
-    cdef ComplexUnion __fieldX
-    cdef ComplexUnion __req_fieldX
-    cdef ComplexUnion __opt_fieldX
-    cdef List__ComplexUnion __fieldY
-    cdef Set__SimpleUnion __fieldZ
-    cdef List__Set__SimpleUnion __fieldAA
-    cdef Map__Bar__double_Baz__i32 __fieldAB
-    cdef Map__string_i32 __fieldAE
+    cdef Map__string_bool __field_fieldB
+    cdef Map__string_bool __field_req_fieldB
+    cdef Map__string_bool __field_opt_fieldB
+    cdef Set__i32 __field_fieldC
+    cdef Set__i32 __field_req_fieldC
+    cdef Set__i32 __field_opt_fieldC
+    cdef List__List__i32 __field_fieldF
+    cdef Map__string_Map__string_Map__string_i32 __field_fieldG
+    cdef List__Set__i32 __field_fieldH
+    cdef Map__string_List__i32 __field_fieldJ
+    cdef List__List__List__List__i32 __field_fieldK
+    cdef Set__Set__Set__bool __field_fieldL
+    cdef Map__Set__List__i32_Map__List__Set__string_string __field_fieldM
+    cdef List__Map__Empty_MyStruct __field_fieldO
+    cdef List__List__List__Map__Empty_MyStruct __field_fieldP
+    cdef List__MyEnumA __field_fieldT
+    cdef List__MyEnumA __field_fieldU
+    cdef MyStruct __field_fieldV
+    cdef MyStruct __field_req_fieldV
+    cdef MyStruct __field_opt_fieldV
+    cdef Set__MyStruct __field_fieldW
+    cdef ComplexUnion __field_fieldX
+    cdef ComplexUnion __field_req_fieldX
+    cdef ComplexUnion __field_opt_fieldX
+    cdef List__ComplexUnion __field_fieldY
+    cdef Set__SimpleUnion __field_fieldZ
+    cdef List__Set__SimpleUnion __field_fieldAA
+    cdef Map__Bar__double_Baz__i32 __field_fieldAB
+    cdef Map__string_i32 __field_fieldAE
 
     @staticmethod
     cdef unique_ptr[ccontainerStruct] _make_instance(
         ccontainerStruct* base_instance,
-        object fieldA,
-        object req_fieldA,
-        object opt_fieldA,
+        bint* __isNOTSET,
+        pbool fieldA,
+        pbool req_fieldA,
+        pbool opt_fieldA,
         object fieldB,
         object req_fieldB,
         object opt_fieldB,
         object fieldC,
         object req_fieldC,
         object opt_fieldC,
-        object fieldD,
-        object fieldE,
-        object req_fieldE,
-        object opt_fieldE,
+        str fieldD,
+        str fieldE,
+        str req_fieldE,
+        str opt_fieldE,
         object fieldF,
         object fieldG,
         object fieldH,
-        object fieldI,
+        pbool fieldI,
         object fieldJ,
         object fieldK,
         object fieldL,
@@ -1324,133 +1372,131 @@ cdef class containerStruct(thrift.py3.types.Struct):
         object fieldN,
         object fieldO,
         object fieldP,
-        object fieldQ,
-        object fieldR,
-        object req_fieldR,
-        object opt_fieldR,
-        object fieldS,
+        MyEnumA fieldQ,
+        MyEnumA fieldR,
+        MyEnumA req_fieldR,
+        MyEnumA opt_fieldR,
+        MyEnumA fieldS,
         object fieldT,
         object fieldU,
-        object fieldV,
-        object req_fieldV,
-        object opt_fieldV,
+        MyStruct fieldV,
+        MyStruct req_fieldV,
+        MyStruct opt_fieldV,
         object fieldW,
-        object fieldX,
-        object req_fieldX,
-        object opt_fieldX,
+        ComplexUnion fieldX,
+        ComplexUnion req_fieldX,
+        ComplexUnion opt_fieldX,
         object fieldY,
         object fieldZ,
         object fieldAA,
         object fieldAB,
-        object fieldAC,
-        object fieldAD,
+        MyEnumB fieldAC,
+        _includes_types.AnEnum fieldAD,
         object fieldAE,
-        object fieldSD
+        str fieldSD
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[ccontainerStruct])
 
-# Forward Definition of the cython struct
-cdef class MyIncludedStruct(thrift.py3.types.Struct)
 
 
 cdef class MyIncludedStruct(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cMyIncludedStruct] _cpp_obj
-    cdef _includes_types.AStruct __MyIncludedStruct
-    cdef _includes_types.AStruct __ARefField
-    cdef _includes_types.AStruct __ARequiredField
+    cdef _includes_types.AStruct __field_MyIncludedStruct
+    cdef _includes_types.AStruct __field_ARefField
+    cdef _includes_types.AStruct __field_ARequiredField
 
     @staticmethod
     cdef unique_ptr[cMyIncludedStruct] _make_instance(
         cMyIncludedStruct* base_instance,
+        bint* __isNOTSET,
         object MyIncludedInt,
-        object MyIncludedStruct,
-        object ARefField,
-        object ARequiredField
+        _includes_types.AStruct MyIncludedStruct,
+        _includes_types.AStruct ARefField,
+        _includes_types.AStruct ARequiredField
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cMyIncludedStruct])
 
-# Forward Definition of the cython struct
-cdef class AnnotatedStruct(thrift.py3.types.Struct)
 
 
 cdef class AnnotatedStruct(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cAnnotatedStruct] _cpp_obj
-    cdef containerStruct __no_annotation
-    cdef containerStruct __cpp_unique_ref
-    cdef containerStruct __cpp2_unique_ref
-    cdef Map__i32_List__string __container_with_ref
-    cdef containerStruct __req_cpp_unique_ref
-    cdef containerStruct __req_cpp2_unique_ref
-    cdef List__string __req_container_with_ref
-    cdef containerStruct __opt_cpp_unique_ref
-    cdef containerStruct __opt_cpp2_unique_ref
-    cdef Set__i32 __opt_container_with_ref
-    cdef containerStruct __ref_type_unique
-    cdef containerStruct __ref_type_shared
-    cdef Map__i32_List__string __ref_type_const
-    cdef containerStruct __req_ref_type_shared
-    cdef containerStruct __req_ref_type_const
-    cdef List__string __req_ref_type_unique
-    cdef containerStruct __opt_ref_type_const
-    cdef containerStruct __opt_ref_type_unique
-    cdef Set__i32 __opt_ref_type_shared
-    cdef folly_small_vector_int64_t_8__List__i64 __list_type
-    cdef folly_sorted_vector_set_std_string__Set__string __set_type
-    cdef FakeMap__Map__i64_double __map_type
-    cdef std_unordered_map_std_string_containerStruct__Map__string_containerStruct __map_struct_type
-    cdef __iobuf.IOBuf __iobuf_type
-    cdef __iobuf.IOBuf __iobuf_ptr
-    cdef std_list__List__i32 __list_i32_template
-    cdef std_deque__List__string __list_string_template
-    cdef folly_sorted_vector_set__Set__string __set_template
-    cdef folly_sorted_vector_map__Map__i64_string __map_template
-    cdef std_list__List__i32 __typedef_list_template
-    cdef std_deque__List__string __typedef_deque_template
-    cdef folly_sorted_vector_set__Set__string __typedef_set_template
-    cdef folly_sorted_vector_map__Map__i64_string __typedef_map_template
-    cdef List__Bar__double __indirection_b
-    cdef Set__Baz__i32 __indirection_c
-    cdef __iobuf.IOBuf __iobuf_type_val
-    cdef __iobuf.IOBuf __iobuf_ptr_val
-    cdef containerStruct __struct_struct
+    cdef containerStruct __field_no_annotation
+    cdef containerStruct __field_cpp_unique_ref
+    cdef containerStruct __field_cpp2_unique_ref
+    cdef Map__i32_List__string __field_container_with_ref
+    cdef containerStruct __field_req_cpp_unique_ref
+    cdef containerStruct __field_req_cpp2_unique_ref
+    cdef List__string __field_req_container_with_ref
+    cdef containerStruct __field_opt_cpp_unique_ref
+    cdef containerStruct __field_opt_cpp2_unique_ref
+    cdef Set__i32 __field_opt_container_with_ref
+    cdef containerStruct __field_ref_type_unique
+    cdef containerStruct __field_ref_type_shared
+    cdef Map__i32_List__string __field_ref_type_const
+    cdef containerStruct __field_req_ref_type_shared
+    cdef containerStruct __field_req_ref_type_const
+    cdef List__string __field_req_ref_type_unique
+    cdef containerStruct __field_opt_ref_type_const
+    cdef containerStruct __field_opt_ref_type_unique
+    cdef Set__i32 __field_opt_ref_type_shared
+    cdef folly_small_vector_int64_t_8__List__i64 __field_list_type
+    cdef folly_sorted_vector_set_std_string__Set__string __field_set_type
+    cdef FakeMap__Map__i64_double __field_map_type
+    cdef std_unordered_map_std_string_containerStruct__Map__string_containerStruct __field_map_struct_type
+    cdef __iobuf.IOBuf __field_iobuf_type
+    cdef __iobuf.IOBuf __field_iobuf_ptr
+    cdef std_list__List__i32 __field_list_i32_template
+    cdef std_deque__List__string __field_list_string_template
+    cdef folly_sorted_vector_set__Set__string __field_set_template
+    cdef folly_sorted_vector_map__Map__i64_string __field_map_template
+    cdef std_list__List__i32 __field_typedef_list_template
+    cdef std_deque__List__string __field_typedef_deque_template
+    cdef folly_sorted_vector_set__Set__string __field_typedef_set_template
+    cdef folly_sorted_vector_map__Map__i64_string __field_typedef_map_template
+    cdef List__Bar__double __field_indirection_b
+    cdef Set__Baz__i32 __field_indirection_c
+    cdef __iobuf.IOBuf __field_iobuf_type_val
+    cdef __iobuf.IOBuf __field_iobuf_ptr_val
+    cdef containerStruct __field_struct_struct
 
     @staticmethod
     cdef unique_ptr[cAnnotatedStruct] _make_instance(
         cAnnotatedStruct* base_instance,
-        object no_annotation,
-        object cpp_unique_ref,
-        object cpp2_unique_ref,
+        bint* __isNOTSET,
+        containerStruct no_annotation,
+        containerStruct cpp_unique_ref,
+        containerStruct cpp2_unique_ref,
         object container_with_ref,
-        object req_cpp_unique_ref,
-        object req_cpp2_unique_ref,
+        containerStruct req_cpp_unique_ref,
+        containerStruct req_cpp2_unique_ref,
         object req_container_with_ref,
-        object opt_cpp_unique_ref,
-        object opt_cpp2_unique_ref,
+        containerStruct opt_cpp_unique_ref,
+        containerStruct opt_cpp2_unique_ref,
         object opt_container_with_ref,
-        object ref_type_unique,
-        object ref_type_shared,
+        containerStruct ref_type_unique,
+        containerStruct ref_type_shared,
         object ref_type_const,
-        object req_ref_type_shared,
-        object req_ref_type_const,
+        containerStruct req_ref_type_shared,
+        containerStruct req_ref_type_const,
         object req_ref_type_unique,
-        object opt_ref_type_const,
-        object opt_ref_type_unique,
+        containerStruct opt_ref_type_const,
+        containerStruct opt_ref_type_unique,
         object opt_ref_type_shared,
         object base_type,
         object list_type,
         object set_type,
         object map_type,
         object map_struct_type,
-        object iobuf_type,
-        object iobuf_ptr,
+        __iobuf.IOBuf iobuf_type,
+        __iobuf.IOBuf iobuf_ptr,
         object list_i32_template,
         object list_string_template,
         object set_template,
@@ -1462,16 +1508,34 @@ cdef class AnnotatedStruct(thrift.py3.types.Struct):
         object indirection_a,
         object indirection_b,
         object indirection_c,
-        object iobuf_type_val,
-        object iobuf_ptr_val,
-        object struct_struct
+        __iobuf.IOBuf iobuf_type_val,
+        __iobuf.IOBuf iobuf_ptr_val,
+        containerStruct struct_struct
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cAnnotatedStruct])
 
-# Forward Definition of the cython struct
-cdef class FloatStruct(thrift.py3.types.Struct)
+
+
+cdef class ComplexContainerStruct(thrift.py3.types.Struct):
+    cdef object __hash
+    cdef object __weakref__
+    cdef shared_ptr[cComplexContainerStruct] _cpp_obj
+    cdef Map__string_folly_IOBuf__binary __field_map_of_iobufs
+    cdef Map__string_std_unique_ptr_folly_IOBuf__binary __field_map_of_iobuf_ptrs
+
+    @staticmethod
+    cdef unique_ptr[cComplexContainerStruct] _make_instance(
+        cComplexContainerStruct* base_instance,
+        bint* __isNOTSET,
+        object map_of_iobufs,
+        object map_of_iobuf_ptrs
+    ) except *
+
+    @staticmethod
+    cdef create(shared_ptr[cComplexContainerStruct])
+
 
 
 cdef class FloatStruct(thrift.py3.types.Struct):
@@ -1482,6 +1546,7 @@ cdef class FloatStruct(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cFloatStruct] _make_instance(
         cFloatStruct* base_instance,
+        bint* __isNOTSET,
         object floatField,
         object doubleField
     ) except *
@@ -1493,8 +1558,6 @@ cdef class __FloatUnionType(thrift.py3.types.CompiledEnum):
     pass
 
 
-# Forward Definition of the cython struct
-cdef class FloatUnion(thrift.py3.types.Union)
 
 
 cdef class FloatUnion(thrift.py3.types.Union):
@@ -1515,8 +1578,6 @@ cdef class FloatUnion(thrift.py3.types.Union):
     @staticmethod
     cdef create(shared_ptr[cFloatUnion])
 
-# Forward Definition of the cython struct
-cdef class AllRequiredNoExceptMoveCtrStruct(thrift.py3.types.Struct)
 
 
 cdef class AllRequiredNoExceptMoveCtrStruct(thrift.py3.types.Struct):
@@ -1527,6 +1588,7 @@ cdef class AllRequiredNoExceptMoveCtrStruct(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cAllRequiredNoExceptMoveCtrStruct] _make_instance(
         cAllRequiredNoExceptMoveCtrStruct* base_instance,
+        bint* __isNOTSET,
         object intField
     ) except *
 
@@ -1534,486 +1596,392 @@ cdef class AllRequiredNoExceptMoveCtrStruct(thrift.py3.types.Struct):
     cdef create(shared_ptr[cAllRequiredNoExceptMoveCtrStruct])
 
 
-cdef class Map__string_i64:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[string,int64_t]] _cpp_obj
+cdef class Map__string_i64(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,cint64_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[string,int64_t]])
+    cdef create(shared_ptr[cmap[string,cint64_t]])
     @staticmethod
-    cdef shared_ptr[cmap[string,int64_t]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,cint64_t]] _make_instance(object items) except *
 
-cdef class Map__Empty_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__Empty_MyStruct(thrift.py3.types.Map):
     cdef shared_ptr[cmap[cEmpty,cMyStruct]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cmap[cEmpty,cMyStruct]])
     @staticmethod
     cdef shared_ptr[cmap[cEmpty,cMyStruct]] _make_instance(object items) except *
 
-cdef class List__Map__Empty_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__Map__Empty_MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cmap[cEmpty,cMyStruct]]])
     @staticmethod
     cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] _make_instance(object items) except *
 
-cdef class List__List__Map__Empty_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__List__Map__Empty_MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
     @staticmethod
     cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] _make_instance(object items) except *
 
-cdef class List__List__List__Map__Empty_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__List__List__Map__Empty_MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
     @staticmethod
     cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] _make_instance(object items) except *
 
-cdef class List__MyEnumA:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__MyEnumA(thrift.py3.types.List):
     cdef shared_ptr[vector[cMyEnumA]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cMyEnumA]])
     @staticmethod
     cdef shared_ptr[vector[cMyEnumA]] _make_instance(object items) except *
 
-cdef class Set__MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__MyStruct(thrift.py3.types.Set):
     cdef shared_ptr[cset[cMyStruct]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[cMyStruct]])
     @staticmethod
     cdef shared_ptr[cset[cMyStruct]] _make_instance(object items) except *
 
-cdef class List__ComplexUnion:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__ComplexUnion(thrift.py3.types.List):
     cdef shared_ptr[vector[cComplexUnion]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cComplexUnion]])
     @staticmethod
     cdef shared_ptr[vector[cComplexUnion]] _make_instance(object items) except *
 
-cdef class List__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__string(thrift.py3.types.List):
     cdef shared_ptr[vector[string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[string]])
     @staticmethod
     cdef shared_ptr[vector[string]] _make_instance(object items) except *
 
-cdef class Set__List__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__List__string(thrift.py3.types.Set):
     cdef shared_ptr[cset[vector[string]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[vector[string]]])
     @staticmethod
     cdef shared_ptr[cset[vector[string]]] _make_instance(object items) except *
 
-cdef class Set__List__List__Map__Empty_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__List__List__Map__Empty_MyStruct(thrift.py3.types.Set):
     cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
     @staticmethod
     cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] _make_instance(object items) except *
 
-cdef class Map__i32_List__string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[int32_t,vector[string]]] _cpp_obj
+cdef class Map__i32_List__string(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[int32_t,vector[string]]])
+    cdef create(shared_ptr[cmap[cint32_t,vector[string]]])
     @staticmethod
-    cdef shared_ptr[cmap[int32_t,vector[string]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] _make_instance(object items) except *
 
-cdef class List__bool:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__bool(thrift.py3.types.List):
     cdef shared_ptr[vector[cbool]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cbool]])
     @staticmethod
     cdef shared_ptr[vector[cbool]] _make_instance(object items) except *
 
-cdef class List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[int32_t]] _cpp_obj
+cdef class List__i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[cint32_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[int32_t]])
+    cdef create(shared_ptr[vector[cint32_t]])
     @staticmethod
-    cdef shared_ptr[vector[int32_t]] _make_instance(object items) except *
+    cdef shared_ptr[vector[cint32_t]] _make_instance(object items) except *
 
-cdef class List__List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[vector[int32_t]]] _cpp_obj
+cdef class List__List__i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[vector[cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[vector[int32_t]]])
+    cdef create(shared_ptr[vector[vector[cint32_t]]])
     @staticmethod
-    cdef shared_ptr[vector[vector[int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[vector[vector[cint32_t]]] _make_instance(object items) except *
 
-cdef class List__List__List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[vector[vector[int32_t]]]] _cpp_obj
+cdef class List__List__List__i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[vector[vector[cint32_t]]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[vector[vector[int32_t]]]])
+    cdef create(shared_ptr[vector[vector[vector[cint32_t]]]])
     @staticmethod
-    cdef shared_ptr[vector[vector[vector[int32_t]]]] _make_instance(object items) except *
+    cdef shared_ptr[vector[vector[vector[cint32_t]]]] _make_instance(object items) except *
 
-cdef class List__List__List__List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[vector[vector[vector[int32_t]]]]] _cpp_obj
+cdef class List__List__List__List__i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[vector[vector[vector[cint32_t]]]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[vector[vector[vector[int32_t]]]]])
+    cdef create(shared_ptr[vector[vector[vector[vector[cint32_t]]]]])
     @staticmethod
-    cdef shared_ptr[vector[vector[vector[vector[int32_t]]]]] _make_instance(object items) except *
+    cdef shared_ptr[vector[vector[vector[vector[cint32_t]]]]] _make_instance(object items) except *
 
-cdef class Set__List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cset[vector[int32_t]]] _cpp_obj
+cdef class Set__List__i32(thrift.py3.types.Set):
+    cdef shared_ptr[cset[vector[cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cset[vector[int32_t]]])
+    cdef create(shared_ptr[cset[vector[cint32_t]]])
     @staticmethod
-    cdef shared_ptr[cset[vector[int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[cset[vector[cint32_t]]] _make_instance(object items) except *
 
-cdef class Set__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__string(thrift.py3.types.Set):
     cdef shared_ptr[cset[string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[string]])
     @staticmethod
     cdef shared_ptr[cset[string]] _make_instance(object items) except *
 
-cdef class List__Set__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__Set__string(thrift.py3.types.List):
     cdef shared_ptr[vector[cset[string]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cset[string]]])
     @staticmethod
     cdef shared_ptr[vector[cset[string]]] _make_instance(object items) except *
 
-cdef class Map__List__Set__string_string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__List__Set__string_string(thrift.py3.types.Map):
     cdef shared_ptr[cmap[vector[cset[string]],string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cmap[vector[cset[string]],string]])
     @staticmethod
     cdef shared_ptr[cmap[vector[cset[string]],string]] _make_instance(object items) except *
 
-cdef class Map__Set__List__i32_Map__List__Set__string_string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] _cpp_obj
+cdef class Map__Set__List__i32_Map__List__Set__string_string(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]])
+    cdef create(shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]])
     @staticmethod
-    cdef shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] _make_instance(object items) except *
 
-cdef class List__binary:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__binary(thrift.py3.types.List):
     cdef shared_ptr[vector[string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[string]])
     @staticmethod
     cdef shared_ptr[vector[string]] _make_instance(object items) except *
 
-cdef class Map__MyEnumA_string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__MyEnumA_string(thrift.py3.types.Map):
     cdef shared_ptr[cmap[cMyEnumA,string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cmap[cMyEnumA,string]])
     @staticmethod
     cdef shared_ptr[cmap[cMyEnumA,string]] _make_instance(object items) except *
 
-cdef class Set__i64:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cset[int64_t]] _cpp_obj
+cdef class Set__i64(thrift.py3.types.Set):
+    cdef shared_ptr[cset[cint64_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cset[int64_t]])
+    cdef create(shared_ptr[cset[cint64_t]])
     @staticmethod
-    cdef shared_ptr[cset[int64_t]] _make_instance(object items) except *
+    cdef shared_ptr[cset[cint64_t]] _make_instance(object items) except *
 
-cdef class Map__string_i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[string,int32_t]] _cpp_obj
+cdef class Map__string_i32(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,cint32_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[string,int32_t]])
+    cdef create(shared_ptr[cmap[string,cint32_t]])
     @staticmethod
-    cdef shared_ptr[cmap[string,int32_t]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,cint32_t]] _make_instance(object items) except *
 
-cdef class List__SimpleUnion:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__SimpleUnion(thrift.py3.types.List):
     cdef shared_ptr[vector[cSimpleUnion]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cSimpleUnion]])
     @staticmethod
     cdef shared_ptr[vector[cSimpleUnion]] _make_instance(object items) except *
 
-cdef class Set__SimpleUnion:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__SimpleUnion(thrift.py3.types.Set):
     cdef shared_ptr[cset[cSimpleUnion]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[cSimpleUnion]])
     @staticmethod
     cdef shared_ptr[cset[cSimpleUnion]] _make_instance(object items) except *
 
-cdef class List__Set__SimpleUnion:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__Set__SimpleUnion(thrift.py3.types.List):
     cdef shared_ptr[vector[cset[cSimpleUnion]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cset[cSimpleUnion]]])
     @staticmethod
     cdef shared_ptr[vector[cset[cSimpleUnion]]] _make_instance(object items) except *
 
-cdef class Map__string_bool:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__string_bool(thrift.py3.types.Map):
     cdef shared_ptr[cmap[string,cbool]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cmap[string,cbool]])
     @staticmethod
     cdef shared_ptr[cmap[string,cbool]] _make_instance(object items) except *
 
-cdef class Set__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cset[int32_t]] _cpp_obj
+cdef class Set__i32(thrift.py3.types.Set):
+    cdef shared_ptr[cset[cint32_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cset[int32_t]])
+    cdef create(shared_ptr[cset[cint32_t]])
     @staticmethod
-    cdef shared_ptr[cset[int32_t]] _make_instance(object items) except *
+    cdef shared_ptr[cset[cint32_t]] _make_instance(object items) except *
 
-cdef class Map__string_Map__string_i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[string,cmap[string,int32_t]]] _cpp_obj
+cdef class Map__string_Map__string_i32(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,cmap[string,cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[string,cmap[string,int32_t]]])
+    cdef create(shared_ptr[cmap[string,cmap[string,cint32_t]]])
     @staticmethod
-    cdef shared_ptr[cmap[string,cmap[string,int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,cmap[string,cint32_t]]] _make_instance(object items) except *
 
-cdef class Map__string_Map__string_Map__string_i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]] _cpp_obj
+cdef class Map__string_Map__string_Map__string_i32(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]])
+    cdef create(shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]])
     @staticmethod
-    cdef shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]] _make_instance(object items) except *
 
-cdef class List__Set__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[cset[int32_t]]] _cpp_obj
+cdef class List__Set__i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[cset[cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[cset[int32_t]]])
+    cdef create(shared_ptr[vector[cset[cint32_t]]])
     @staticmethod
-    cdef shared_ptr[vector[cset[int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[vector[cset[cint32_t]]] _make_instance(object items) except *
 
-cdef class Map__string_List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[string,vector[int32_t]]] _cpp_obj
+cdef class Map__string_List__i32(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,vector[cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[string,vector[int32_t]]])
+    cdef create(shared_ptr[cmap[string,vector[cint32_t]]])
     @staticmethod
-    cdef shared_ptr[cmap[string,vector[int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,vector[cint32_t]]] _make_instance(object items) except *
 
-cdef class Set__bool:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__bool(thrift.py3.types.Set):
     cdef shared_ptr[cset[cbool]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[cbool]])
     @staticmethod
     cdef shared_ptr[cset[cbool]] _make_instance(object items) except *
 
-cdef class Set__Set__bool:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__Set__bool(thrift.py3.types.Set):
     cdef shared_ptr[cset[cset[cbool]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[cset[cbool]]])
     @staticmethod
     cdef shared_ptr[cset[cset[cbool]]] _make_instance(object items) except *
 
-cdef class Set__Set__Set__bool:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__Set__Set__bool(thrift.py3.types.Set):
     cdef shared_ptr[cset[cset[cset[cbool]]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[cset[cset[cbool]]]])
     @staticmethod
     cdef shared_ptr[cset[cset[cset[cbool]]]] _make_instance(object items) except *
 
-cdef class Map__Bar__double_Baz__i32:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__Bar__double_Baz__i32(thrift.py3.types.Map):
     cdef shared_ptr[cmap[Bar,Baz]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cmap[Bar,Baz]])
     @staticmethod
     cdef shared_ptr[cmap[Bar,Baz]] _make_instance(object items) except *
 
-cdef class folly_small_vector_int64_t_8__List__i64:
-    cdef object __hash
-    cdef object __weakref__
+cdef class folly_small_vector_int64_t_8__List__i64(thrift.py3.types.List):
     cdef shared_ptr[folly_small_vector_int64_t_8] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[folly_small_vector_int64_t_8])
     @staticmethod
     cdef shared_ptr[folly_small_vector_int64_t_8] _make_instance(object items) except *
 
-cdef class folly_sorted_vector_set_std_string__Set__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class folly_sorted_vector_set_std_string__Set__string(thrift.py3.types.Set):
     cdef shared_ptr[folly_sorted_vector_set_std_string] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[folly_sorted_vector_set_std_string])
     @staticmethod
     cdef shared_ptr[folly_sorted_vector_set_std_string] _make_instance(object items) except *
 
-cdef class FakeMap__Map__i64_double:
-    cdef object __hash
-    cdef object __weakref__
+cdef class FakeMap__Map__i64_double(thrift.py3.types.Map):
     cdef shared_ptr[FakeMap] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[FakeMap])
     @staticmethod
     cdef shared_ptr[FakeMap] _make_instance(object items) except *
 
-cdef class std_unordered_map_std_string_containerStruct__Map__string_containerStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class std_unordered_map_std_string_containerStruct__Map__string_containerStruct(thrift.py3.types.Map):
     cdef shared_ptr[std_unordered_map_std_string_containerStruct] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[std_unordered_map_std_string_containerStruct])
     @staticmethod
     cdef shared_ptr[std_unordered_map_std_string_containerStruct] _make_instance(object items) except *
 
-cdef class std_list__List__i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[std_list[int32_t]] _cpp_obj
+cdef class std_list__List__i32(thrift.py3.types.List):
+    cdef shared_ptr[std_list[cint32_t]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[std_list[int32_t]])
+    cdef create(shared_ptr[std_list[cint32_t]])
     @staticmethod
-    cdef shared_ptr[std_list[int32_t]] _make_instance(object items) except *
+    cdef shared_ptr[std_list[cint32_t]] _make_instance(object items) except *
 
-cdef class std_deque__List__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class std_deque__List__string(thrift.py3.types.List):
     cdef shared_ptr[std_deque[string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[std_deque[string]])
     @staticmethod
     cdef shared_ptr[std_deque[string]] _make_instance(object items) except *
 
-cdef class folly_sorted_vector_set__Set__string:
-    cdef object __hash
-    cdef object __weakref__
+cdef class folly_sorted_vector_set__Set__string(thrift.py3.types.Set):
     cdef shared_ptr[folly_sorted_vector_set[string]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[folly_sorted_vector_set[string]])
     @staticmethod
     cdef shared_ptr[folly_sorted_vector_set[string]] _make_instance(object items) except *
 
-cdef class folly_sorted_vector_map__Map__i64_string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] _cpp_obj
+cdef class folly_sorted_vector_map__Map__i64_string(thrift.py3.types.Map):
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[folly_sorted_vector_map[int64_t,string]])
+    cdef create(shared_ptr[folly_sorted_vector_map[cint64_t,string]])
     @staticmethod
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] _make_instance(object items) except *
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] _make_instance(object items) except *
 
-cdef class List__Bar__double:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__Bar__double(thrift.py3.types.List):
     cdef shared_ptr[vector[Bar]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[Bar]])
     @staticmethod
     cdef shared_ptr[vector[Bar]] _make_instance(object items) except *
 
-cdef class Set__Baz__i32:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Set__Baz__i32(thrift.py3.types.Set):
     cdef shared_ptr[cset[Baz]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[cset[Baz]])
     @staticmethod
     cdef shared_ptr[cset[Baz]] _make_instance(object items) except *
 
-cdef class Map__i32_string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[int32_t,string]] _cpp_obj
+cdef class Map__string_folly_IOBuf__binary(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,__iobuf.cIOBuf]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[int32_t,string]])
+    cdef create(shared_ptr[cmap[string,__iobuf.cIOBuf]])
     @staticmethod
-    cdef shared_ptr[cmap[int32_t,string]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,__iobuf.cIOBuf]] _make_instance(object items) except *
 
-cdef class List__Map__string_i32:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[cmap[string,int32_t]]] _cpp_obj
+cdef class Map__string_std_unique_ptr_folly_IOBuf__binary(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[cmap[string,int32_t]]])
+    cdef create(shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]])
     @staticmethod
-    cdef shared_ptr[vector[cmap[string,int32_t]]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]] _make_instance(object items) except *
 
-cdef class Map__i16_string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[cmap[int16_t,string]] _cpp_obj
+cdef class Map__i32_string(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[cint32_t,string]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[cmap[int16_t,string]])
+    cdef create(shared_ptr[cmap[cint32_t,string]])
     @staticmethod
-    cdef shared_ptr[cmap[int16_t,string]] _make_instance(object items) except *
+    cdef shared_ptr[cmap[cint32_t,string]] _make_instance(object items) except *
 
-cdef class List__Map__i16_string:
-    cdef object __hash
-    cdef object __weakref__
-    cdef shared_ptr[vector[cmap[int16_t,string]]] _cpp_obj
+cdef class List__Map__string_i32(thrift.py3.types.List):
+    cdef shared_ptr[vector[cmap[string,cint32_t]]] _cpp_obj
     @staticmethod
-    cdef create(shared_ptr[vector[cmap[int16_t,string]]])
+    cdef create(shared_ptr[vector[cmap[string,cint32_t]]])
     @staticmethod
-    cdef shared_ptr[vector[cmap[int16_t,string]]] _make_instance(object items) except *
+    cdef shared_ptr[vector[cmap[string,cint32_t]]] _make_instance(object items) except *
 
-cdef class List__MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class Map__i16_string(thrift.py3.types.Map):
+    cdef shared_ptr[cmap[cint16_t,string]] _cpp_obj
+    @staticmethod
+    cdef create(shared_ptr[cmap[cint16_t,string]])
+    @staticmethod
+    cdef shared_ptr[cmap[cint16_t,string]] _make_instance(object items) except *
+
+cdef class List__Map__i16_string(thrift.py3.types.List):
+    cdef shared_ptr[vector[cmap[cint16_t,string]]] _cpp_obj
+    @staticmethod
+    cdef create(shared_ptr[vector[cmap[cint16_t,string]]])
+    @staticmethod
+    cdef shared_ptr[vector[cmap[cint16_t,string]]] _make_instance(object items) except *
+
+cdef class List__MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[cMyStruct]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cMyStruct]])
@@ -2021,217 +1989,225 @@ cdef class List__MyStruct:
     cdef shared_ptr[vector[cMyStruct]] _make_instance(object items) except *
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[cmap[string,int64_t]] move "std::move"(unique_ptr[cmap[string,int64_t]])
-    cdef shared_ptr[cmap[string,int64_t]] move_shared "std::move"(shared_ptr[cmap[string,int64_t]])
-    cdef shared_ptr[cmap[cEmpty,cMyStruct]] move "std::move"(unique_ptr[cmap[cEmpty,cMyStruct]])
-    cdef shared_ptr[cmap[cEmpty,cMyStruct]] move_shared "std::move"(shared_ptr[cmap[cEmpty,cMyStruct]])
-    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] move "std::move"(unique_ptr[vector[cmap[cEmpty,cMyStruct]]])
-    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] move_shared "std::move"(shared_ptr[vector[cmap[cEmpty,cMyStruct]]])
-    cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] move "std::move"(unique_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
-    cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] move_shared "std::move"(shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
-    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] move "std::move"(unique_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] move_shared "std::move"(shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[vector[cMyEnumA]] move "std::move"(unique_ptr[vector[cMyEnumA]])
-    cdef shared_ptr[vector[cMyEnumA]] move_shared "std::move"(shared_ptr[vector[cMyEnumA]])
-    cdef shared_ptr[cset[cMyStruct]] move "std::move"(unique_ptr[cset[cMyStruct]])
-    cdef shared_ptr[cset[cMyStruct]] move_shared "std::move"(shared_ptr[cset[cMyStruct]])
-    cdef shared_ptr[vector[cComplexUnion]] move "std::move"(unique_ptr[vector[cComplexUnion]])
-    cdef shared_ptr[vector[cComplexUnion]] move_shared "std::move"(shared_ptr[vector[cComplexUnion]])
-    cdef shared_ptr[vector[string]] move "std::move"(unique_ptr[vector[string]])
-    cdef shared_ptr[vector[string]] move_shared "std::move"(shared_ptr[vector[string]])
-    cdef shared_ptr[cset[vector[string]]] move "std::move"(unique_ptr[cset[vector[string]]])
-    cdef shared_ptr[cset[vector[string]]] move_shared "std::move"(shared_ptr[cset[vector[string]]])
-    cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] move "std::move"(unique_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] move_shared "std::move"(shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[cmap[int32_t,vector[string]]] move "std::move"(unique_ptr[cmap[int32_t,vector[string]]])
-    cdef shared_ptr[cmap[int32_t,vector[string]]] move_shared "std::move"(shared_ptr[cmap[int32_t,vector[string]]])
-    cdef shared_ptr[vector[cbool]] move "std::move"(unique_ptr[vector[cbool]])
-    cdef shared_ptr[vector[cbool]] move_shared "std::move"(shared_ptr[vector[cbool]])
-    cdef shared_ptr[vector[int32_t]] move "std::move"(unique_ptr[vector[int32_t]])
-    cdef shared_ptr[vector[int32_t]] move_shared "std::move"(shared_ptr[vector[int32_t]])
-    cdef shared_ptr[vector[vector[int32_t]]] move "std::move"(unique_ptr[vector[vector[int32_t]]])
-    cdef shared_ptr[vector[vector[int32_t]]] move_shared "std::move"(shared_ptr[vector[vector[int32_t]]])
-    cdef shared_ptr[vector[vector[vector[int32_t]]]] move "std::move"(unique_ptr[vector[vector[vector[int32_t]]]])
-    cdef shared_ptr[vector[vector[vector[int32_t]]]] move_shared "std::move"(shared_ptr[vector[vector[vector[int32_t]]]])
-    cdef shared_ptr[vector[vector[vector[vector[int32_t]]]]] move "std::move"(unique_ptr[vector[vector[vector[vector[int32_t]]]]])
-    cdef shared_ptr[vector[vector[vector[vector[int32_t]]]]] move_shared "std::move"(shared_ptr[vector[vector[vector[vector[int32_t]]]]])
-    cdef shared_ptr[cset[vector[int32_t]]] move "std::move"(unique_ptr[cset[vector[int32_t]]])
-    cdef shared_ptr[cset[vector[int32_t]]] move_shared "std::move"(shared_ptr[cset[vector[int32_t]]])
-    cdef shared_ptr[cset[string]] move "std::move"(unique_ptr[cset[string]])
-    cdef shared_ptr[cset[string]] move_shared "std::move"(shared_ptr[cset[string]])
-    cdef shared_ptr[vector[cset[string]]] move "std::move"(unique_ptr[vector[cset[string]]])
-    cdef shared_ptr[vector[cset[string]]] move_shared "std::move"(shared_ptr[vector[cset[string]]])
-    cdef shared_ptr[cmap[vector[cset[string]],string]] move "std::move"(unique_ptr[cmap[vector[cset[string]],string]])
-    cdef shared_ptr[cmap[vector[cset[string]],string]] move_shared "std::move"(shared_ptr[cmap[vector[cset[string]],string]])
-    cdef shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] move "std::move"(unique_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]])
-    cdef shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] move_shared "std::move"(shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]])
-    cdef shared_ptr[cmap[cMyEnumA,string]] move "std::move"(unique_ptr[cmap[cMyEnumA,string]])
-    cdef shared_ptr[cmap[cMyEnumA,string]] move_shared "std::move"(shared_ptr[cmap[cMyEnumA,string]])
-    cdef shared_ptr[cset[int64_t]] move "std::move"(unique_ptr[cset[int64_t]])
-    cdef shared_ptr[cset[int64_t]] move_shared "std::move"(shared_ptr[cset[int64_t]])
-    cdef shared_ptr[cmap[string,int32_t]] move "std::move"(unique_ptr[cmap[string,int32_t]])
-    cdef shared_ptr[cmap[string,int32_t]] move_shared "std::move"(shared_ptr[cmap[string,int32_t]])
-    cdef shared_ptr[vector[cSimpleUnion]] move "std::move"(unique_ptr[vector[cSimpleUnion]])
-    cdef shared_ptr[vector[cSimpleUnion]] move_shared "std::move"(shared_ptr[vector[cSimpleUnion]])
-    cdef shared_ptr[cset[cSimpleUnion]] move "std::move"(unique_ptr[cset[cSimpleUnion]])
-    cdef shared_ptr[cset[cSimpleUnion]] move_shared "std::move"(shared_ptr[cset[cSimpleUnion]])
-    cdef shared_ptr[vector[cset[cSimpleUnion]]] move "std::move"(unique_ptr[vector[cset[cSimpleUnion]]])
-    cdef shared_ptr[vector[cset[cSimpleUnion]]] move_shared "std::move"(shared_ptr[vector[cset[cSimpleUnion]]])
-    cdef shared_ptr[cmap[string,cbool]] move "std::move"(unique_ptr[cmap[string,cbool]])
-    cdef shared_ptr[cmap[string,cbool]] move_shared "std::move"(shared_ptr[cmap[string,cbool]])
-    cdef shared_ptr[cset[int32_t]] move "std::move"(unique_ptr[cset[int32_t]])
-    cdef shared_ptr[cset[int32_t]] move_shared "std::move"(shared_ptr[cset[int32_t]])
-    cdef shared_ptr[cmap[string,cmap[string,int32_t]]] move "std::move"(unique_ptr[cmap[string,cmap[string,int32_t]]])
-    cdef shared_ptr[cmap[string,cmap[string,int32_t]]] move_shared "std::move"(shared_ptr[cmap[string,cmap[string,int32_t]]])
-    cdef shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]] move "std::move"(unique_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]])
-    cdef shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]] move_shared "std::move"(shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]])
-    cdef shared_ptr[vector[cset[int32_t]]] move "std::move"(unique_ptr[vector[cset[int32_t]]])
-    cdef shared_ptr[vector[cset[int32_t]]] move_shared "std::move"(shared_ptr[vector[cset[int32_t]]])
-    cdef shared_ptr[cmap[string,vector[int32_t]]] move "std::move"(unique_ptr[cmap[string,vector[int32_t]]])
-    cdef shared_ptr[cmap[string,vector[int32_t]]] move_shared "std::move"(shared_ptr[cmap[string,vector[int32_t]]])
-    cdef shared_ptr[cset[cbool]] move "std::move"(unique_ptr[cset[cbool]])
-    cdef shared_ptr[cset[cbool]] move_shared "std::move"(shared_ptr[cset[cbool]])
-    cdef shared_ptr[cset[cset[cbool]]] move "std::move"(unique_ptr[cset[cset[cbool]]])
-    cdef shared_ptr[cset[cset[cbool]]] move_shared "std::move"(shared_ptr[cset[cset[cbool]]])
-    cdef shared_ptr[cset[cset[cset[cbool]]]] move "std::move"(unique_ptr[cset[cset[cset[cbool]]]])
-    cdef shared_ptr[cset[cset[cset[cbool]]]] move_shared "std::move"(shared_ptr[cset[cset[cset[cbool]]]])
-    cdef shared_ptr[cmap[Bar,Baz]] move "std::move"(unique_ptr[cmap[Bar,Baz]])
-    cdef shared_ptr[cmap[Bar,Baz]] move_shared "std::move"(shared_ptr[cmap[Bar,Baz]])
-    cdef shared_ptr[folly_small_vector_int64_t_8] move "std::move"(unique_ptr[folly_small_vector_int64_t_8])
-    cdef shared_ptr[folly_small_vector_int64_t_8] move_shared "std::move"(shared_ptr[folly_small_vector_int64_t_8])
-    cdef shared_ptr[folly_sorted_vector_set_std_string] move "std::move"(unique_ptr[folly_sorted_vector_set_std_string])
-    cdef shared_ptr[folly_sorted_vector_set_std_string] move_shared "std::move"(shared_ptr[folly_sorted_vector_set_std_string])
-    cdef shared_ptr[FakeMap] move "std::move"(unique_ptr[FakeMap])
-    cdef shared_ptr[FakeMap] move_shared "std::move"(shared_ptr[FakeMap])
-    cdef shared_ptr[std_unordered_map_std_string_containerStruct] move "std::move"(unique_ptr[std_unordered_map_std_string_containerStruct])
-    cdef shared_ptr[std_unordered_map_std_string_containerStruct] move_shared "std::move"(shared_ptr[std_unordered_map_std_string_containerStruct])
-    cdef shared_ptr[std_list[int32_t]] move "std::move"(unique_ptr[std_list[int32_t]])
-    cdef shared_ptr[std_list[int32_t]] move_shared "std::move"(shared_ptr[std_list[int32_t]])
-    cdef shared_ptr[std_deque[string]] move "std::move"(unique_ptr[std_deque[string]])
-    cdef shared_ptr[std_deque[string]] move_shared "std::move"(shared_ptr[std_deque[string]])
-    cdef shared_ptr[folly_sorted_vector_set[string]] move "std::move"(unique_ptr[folly_sorted_vector_set[string]])
-    cdef shared_ptr[folly_sorted_vector_set[string]] move_shared "std::move"(shared_ptr[folly_sorted_vector_set[string]])
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] move "std::move"(unique_ptr[folly_sorted_vector_map[int64_t,string]])
-    cdef shared_ptr[folly_sorted_vector_map[int64_t,string]] move_shared "std::move"(shared_ptr[folly_sorted_vector_map[int64_t,string]])
-    cdef shared_ptr[vector[Bar]] move "std::move"(unique_ptr[vector[Bar]])
-    cdef shared_ptr[vector[Bar]] move_shared "std::move"(shared_ptr[vector[Bar]])
-    cdef shared_ptr[cset[Baz]] move "std::move"(unique_ptr[cset[Baz]])
-    cdef shared_ptr[cset[Baz]] move_shared "std::move"(shared_ptr[cset[Baz]])
-    cdef shared_ptr[cmap[int32_t,string]] move "std::move"(unique_ptr[cmap[int32_t,string]])
-    cdef shared_ptr[cmap[int32_t,string]] move_shared "std::move"(shared_ptr[cmap[int32_t,string]])
-    cdef shared_ptr[vector[cmap[string,int32_t]]] move "std::move"(unique_ptr[vector[cmap[string,int32_t]]])
-    cdef shared_ptr[vector[cmap[string,int32_t]]] move_shared "std::move"(shared_ptr[vector[cmap[string,int32_t]]])
-    cdef shared_ptr[cmap[int16_t,string]] move "std::move"(unique_ptr[cmap[int16_t,string]])
-    cdef shared_ptr[cmap[int16_t,string]] move_shared "std::move"(shared_ptr[cmap[int16_t,string]])
-    cdef shared_ptr[vector[cmap[int16_t,string]]] move "std::move"(unique_ptr[vector[cmap[int16_t,string]]])
-    cdef shared_ptr[vector[cmap[int16_t,string]]] move_shared "std::move"(shared_ptr[vector[cmap[int16_t,string]]])
-    cdef shared_ptr[vector[cMyStruct]] move "std::move"(unique_ptr[vector[cMyStruct]])
-    cdef shared_ptr[vector[cMyStruct]] move_shared "std::move"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[FakeMap] __fbthrift_move "std::move"(unique_ptr[FakeMap])
+    cdef shared_ptr[FakeMap] __fbthrift_move_shared "std::move"(shared_ptr[FakeMap])
+    cdef shared_ptr[vector[Bar]] __fbthrift_move "std::move"(unique_ptr[vector[Bar]])
+    cdef shared_ptr[vector[Bar]] __fbthrift_move_shared "std::move"(shared_ptr[vector[Bar]])
+    cdef shared_ptr[vector[cComplexUnion]] __fbthrift_move "std::move"(unique_ptr[vector[cComplexUnion]])
+    cdef shared_ptr[vector[cComplexUnion]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cComplexUnion]])
+    cdef shared_ptr[vector[vector[vector[vector[cint32_t]]]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[vector[vector[cint32_t]]]]])
+    cdef shared_ptr[vector[vector[vector[vector[cint32_t]]]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[vector[vector[cint32_t]]]]])
+    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[vector[vector[vector[cint32_t]]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[vector[cint32_t]]]])
+    cdef shared_ptr[vector[vector[vector[cint32_t]]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[vector[cint32_t]]]])
+    cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
+    cdef shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
+    cdef shared_ptr[vector[vector[cint32_t]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[cint32_t]]])
+    cdef shared_ptr[vector[vector[cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[cint32_t]]])
+    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] __fbthrift_move "std::move"(unique_ptr[vector[cmap[cEmpty,cMyStruct]]])
+    cdef shared_ptr[vector[cmap[cEmpty,cMyStruct]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cmap[cEmpty,cMyStruct]]])
+    cdef shared_ptr[vector[cmap[cint16_t,string]]] __fbthrift_move "std::move"(unique_ptr[vector[cmap[cint16_t,string]]])
+    cdef shared_ptr[vector[cmap[cint16_t,string]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cmap[cint16_t,string]]])
+    cdef shared_ptr[vector[cmap[string,cint32_t]]] __fbthrift_move "std::move"(unique_ptr[vector[cmap[string,cint32_t]]])
+    cdef shared_ptr[vector[cmap[string,cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cmap[string,cint32_t]]])
+    cdef shared_ptr[vector[cMyEnumA]] __fbthrift_move "std::move"(unique_ptr[vector[cMyEnumA]])
+    cdef shared_ptr[vector[cMyEnumA]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cMyEnumA]])
+    cdef shared_ptr[vector[cMyStruct]] __fbthrift_move "std::move"(unique_ptr[vector[cMyStruct]])
+    cdef shared_ptr[vector[cMyStruct]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[vector[cset[cSimpleUnion]]] __fbthrift_move "std::move"(unique_ptr[vector[cset[cSimpleUnion]]])
+    cdef shared_ptr[vector[cset[cSimpleUnion]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cset[cSimpleUnion]]])
+    cdef shared_ptr[vector[cset[cint32_t]]] __fbthrift_move "std::move"(unique_ptr[vector[cset[cint32_t]]])
+    cdef shared_ptr[vector[cset[cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cset[cint32_t]]])
+    cdef shared_ptr[vector[cset[string]]] __fbthrift_move "std::move"(unique_ptr[vector[cset[string]]])
+    cdef shared_ptr[vector[cset[string]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cset[string]]])
+    cdef shared_ptr[vector[cSimpleUnion]] __fbthrift_move "std::move"(unique_ptr[vector[cSimpleUnion]])
+    cdef shared_ptr[vector[cSimpleUnion]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cSimpleUnion]])
+    cdef shared_ptr[vector[cbool]] __fbthrift_move "std::move"(unique_ptr[vector[cbool]])
+    cdef shared_ptr[vector[cbool]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cbool]])
+    cdef shared_ptr[vector[cint32_t]] __fbthrift_move "std::move"(unique_ptr[vector[cint32_t]])
+    cdef shared_ptr[vector[cint32_t]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cint32_t]])
+    cdef shared_ptr[vector[string]] __fbthrift_move "std::move"(unique_ptr[vector[string]])
+    cdef shared_ptr[vector[string]] __fbthrift_move_shared "std::move"(shared_ptr[vector[string]])
+    cdef shared_ptr[cmap[Bar,Baz]] __fbthrift_move "std::move"(unique_ptr[cmap[Bar,Baz]])
+    cdef shared_ptr[cmap[Bar,Baz]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[Bar,Baz]])
+    cdef shared_ptr[cmap[cEmpty,cMyStruct]] __fbthrift_move "std::move"(unique_ptr[cmap[cEmpty,cMyStruct]])
+    cdef shared_ptr[cmap[cEmpty,cMyStruct]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cEmpty,cMyStruct]])
+    cdef shared_ptr[cmap[vector[cset[string]],string]] __fbthrift_move "std::move"(unique_ptr[cmap[vector[cset[string]],string]])
+    cdef shared_ptr[cmap[vector[cset[string]],string]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[vector[cset[string]],string]])
+    cdef shared_ptr[cmap[cMyEnumA,string]] __fbthrift_move "std::move"(unique_ptr[cmap[cMyEnumA,string]])
+    cdef shared_ptr[cmap[cMyEnumA,string]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cMyEnumA,string]])
+    cdef shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] __fbthrift_move "std::move"(unique_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]])
+    cdef shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]])
+    cdef shared_ptr[cmap[cint16_t,string]] __fbthrift_move "std::move"(unique_ptr[cmap[cint16_t,string]])
+    cdef shared_ptr[cmap[cint16_t,string]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cint16_t,string]])
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] __fbthrift_move "std::move"(unique_ptr[cmap[cint32_t,vector[string]]])
+    cdef shared_ptr[cmap[cint32_t,vector[string]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cint32_t,vector[string]]])
+    cdef shared_ptr[cmap[cint32_t,string]] __fbthrift_move "std::move"(unique_ptr[cmap[cint32_t,string]])
+    cdef shared_ptr[cmap[cint32_t,string]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[cint32_t,string]])
+    cdef shared_ptr[cmap[string,vector[cint32_t]]] __fbthrift_move "std::move"(unique_ptr[cmap[string,vector[cint32_t]]])
+    cdef shared_ptr[cmap[string,vector[cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,vector[cint32_t]]])
+    cdef shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]] __fbthrift_move "std::move"(unique_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]])
+    cdef shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]])
+    cdef shared_ptr[cmap[string,cmap[string,cint32_t]]] __fbthrift_move "std::move"(unique_ptr[cmap[string,cmap[string,cint32_t]]])
+    cdef shared_ptr[cmap[string,cmap[string,cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,cmap[string,cint32_t]]])
+    cdef shared_ptr[cmap[string,cbool]] __fbthrift_move "std::move"(unique_ptr[cmap[string,cbool]])
+    cdef shared_ptr[cmap[string,cbool]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,cbool]])
+    cdef shared_ptr[cmap[string,__iobuf.cIOBuf]] __fbthrift_move "std::move"(unique_ptr[cmap[string,__iobuf.cIOBuf]])
+    cdef shared_ptr[cmap[string,__iobuf.cIOBuf]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,__iobuf.cIOBuf]])
+    cdef shared_ptr[cmap[string,cint32_t]] __fbthrift_move "std::move"(unique_ptr[cmap[string,cint32_t]])
+    cdef shared_ptr[cmap[string,cint32_t]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,cint32_t]])
+    cdef shared_ptr[cmap[string,cint64_t]] __fbthrift_move "std::move"(unique_ptr[cmap[string,cint64_t]])
+    cdef shared_ptr[cmap[string,cint64_t]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,cint64_t]])
+    cdef shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]] __fbthrift_move "std::move"(unique_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]])
+    cdef shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]] __fbthrift_move_shared "std::move"(shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]])
+    cdef shared_ptr[cset[Baz]] __fbthrift_move "std::move"(unique_ptr[cset[Baz]])
+    cdef shared_ptr[cset[Baz]] __fbthrift_move_shared "std::move"(shared_ptr[cset[Baz]])
+    cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] __fbthrift_move "std::move"(unique_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] __fbthrift_move_shared "std::move"(shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[cset[vector[cint32_t]]] __fbthrift_move "std::move"(unique_ptr[cset[vector[cint32_t]]])
+    cdef shared_ptr[cset[vector[cint32_t]]] __fbthrift_move_shared "std::move"(shared_ptr[cset[vector[cint32_t]]])
+    cdef shared_ptr[cset[vector[string]]] __fbthrift_move "std::move"(unique_ptr[cset[vector[string]]])
+    cdef shared_ptr[cset[vector[string]]] __fbthrift_move_shared "std::move"(shared_ptr[cset[vector[string]]])
+    cdef shared_ptr[cset[cMyStruct]] __fbthrift_move "std::move"(unique_ptr[cset[cMyStruct]])
+    cdef shared_ptr[cset[cMyStruct]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cMyStruct]])
+    cdef shared_ptr[cset[cset[cset[cbool]]]] __fbthrift_move "std::move"(unique_ptr[cset[cset[cset[cbool]]]])
+    cdef shared_ptr[cset[cset[cset[cbool]]]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cset[cset[cbool]]]])
+    cdef shared_ptr[cset[cset[cbool]]] __fbthrift_move "std::move"(unique_ptr[cset[cset[cbool]]])
+    cdef shared_ptr[cset[cset[cbool]]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cset[cbool]]])
+    cdef shared_ptr[cset[cSimpleUnion]] __fbthrift_move "std::move"(unique_ptr[cset[cSimpleUnion]])
+    cdef shared_ptr[cset[cSimpleUnion]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cSimpleUnion]])
+    cdef shared_ptr[cset[cbool]] __fbthrift_move "std::move"(unique_ptr[cset[cbool]])
+    cdef shared_ptr[cset[cbool]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cbool]])
+    cdef shared_ptr[cset[cint32_t]] __fbthrift_move "std::move"(unique_ptr[cset[cint32_t]])
+    cdef shared_ptr[cset[cint32_t]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cint32_t]])
+    cdef shared_ptr[cset[cint64_t]] __fbthrift_move "std::move"(unique_ptr[cset[cint64_t]])
+    cdef shared_ptr[cset[cint64_t]] __fbthrift_move_shared "std::move"(shared_ptr[cset[cint64_t]])
+    cdef shared_ptr[cset[string]] __fbthrift_move "std::move"(unique_ptr[cset[string]])
+    cdef shared_ptr[cset[string]] __fbthrift_move_shared "std::move"(shared_ptr[cset[string]])
+    cdef shared_ptr[folly_small_vector_int64_t_8] __fbthrift_move "std::move"(unique_ptr[folly_small_vector_int64_t_8])
+    cdef shared_ptr[folly_small_vector_int64_t_8] __fbthrift_move_shared "std::move"(shared_ptr[folly_small_vector_int64_t_8])
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] __fbthrift_move "std::move"(unique_ptr[folly_sorted_vector_map[cint64_t,string]])
+    cdef shared_ptr[folly_sorted_vector_map[cint64_t,string]] __fbthrift_move_shared "std::move"(shared_ptr[folly_sorted_vector_map[cint64_t,string]])
+    cdef shared_ptr[folly_sorted_vector_set[string]] __fbthrift_move "std::move"(unique_ptr[folly_sorted_vector_set[string]])
+    cdef shared_ptr[folly_sorted_vector_set[string]] __fbthrift_move_shared "std::move"(shared_ptr[folly_sorted_vector_set[string]])
+    cdef shared_ptr[folly_sorted_vector_set_std_string] __fbthrift_move "std::move"(unique_ptr[folly_sorted_vector_set_std_string])
+    cdef shared_ptr[folly_sorted_vector_set_std_string] __fbthrift_move_shared "std::move"(shared_ptr[folly_sorted_vector_set_std_string])
+    cdef shared_ptr[std_deque[string]] __fbthrift_move "std::move"(unique_ptr[std_deque[string]])
+    cdef shared_ptr[std_deque[string]] __fbthrift_move_shared "std::move"(shared_ptr[std_deque[string]])
+    cdef shared_ptr[std_list[cint32_t]] __fbthrift_move "std::move"(unique_ptr[std_list[cint32_t]])
+    cdef shared_ptr[std_list[cint32_t]] __fbthrift_move_shared "std::move"(shared_ptr[std_list[cint32_t]])
+    cdef shared_ptr[std_unordered_map_std_string_containerStruct] __fbthrift_move "std::move"(unique_ptr[std_unordered_map_std_string_containerStruct])
+    cdef shared_ptr[std_unordered_map_std_string_containerStruct] __fbthrift_move_shared "std::move"(shared_ptr[std_unordered_map_std_string_containerStruct])
 cdef extern from "<utility>" nogil:
     pass  
-    shared_ptr[cEmpty] reference_shared_ptr_Map__Empty_MyStruct_key "thrift::py3::reference_shared_ptr<some::valid::ns::Empty>"(...)
-    shared_ptr[cMyStruct] reference_shared_ptr_Map__Empty_MyStruct "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(...)
-    shared_ptr[cmap[cEmpty,cMyStruct]] reference_shared_ptr_List__Map__Empty_MyStruct "thrift::py3::reference_shared_ptr<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>"(...)
-    shared_ptr[vector[cmap[cEmpty,cMyStruct]]] reference_shared_ptr_List__List__Map__Empty_MyStruct "thrift::py3::reference_shared_ptr<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>"(...)
-    shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] reference_shared_ptr_List__List__List__Map__Empty_MyStruct "thrift::py3::reference_shared_ptr<std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>"(...)
-    shared_ptr[cMyStruct] reference_shared_ptr_Set__MyStruct "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(...)
-    shared_ptr[cComplexUnion] reference_shared_ptr_List__ComplexUnion "thrift::py3::reference_shared_ptr<some::valid::ns::ComplexUnion>"(...)
-    shared_ptr[vector[string]] reference_shared_ptr_Set__List__string "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(...)
-    shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] reference_shared_ptr_Set__List__List__Map__Empty_MyStruct "thrift::py3::reference_shared_ptr<std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>"(...)
-    shared_ptr[vector[string]] reference_shared_ptr_Map__i32_List__string "thrift::py3::reference_shared_ptr<std::vector<std::string>>"(...)
-    shared_ptr[vector[int32_t]] reference_shared_ptr_List__List__i32 "thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
-    shared_ptr[vector[vector[int32_t]]] reference_shared_ptr_List__List__List__i32 "thrift::py3::reference_shared_ptr<std::vector<std::vector<int32_t>>>"(...)
-    shared_ptr[vector[vector[vector[int32_t]]]] reference_shared_ptr_List__List__List__List__i32 "thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<int32_t>>>>"(...)
-    shared_ptr[vector[int32_t]] reference_shared_ptr_Set__List__i32 "thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
-    shared_ptr[cset[string]] reference_shared_ptr_List__Set__string "thrift::py3::reference_shared_ptr<std::set<std::string>>"(...)
-    shared_ptr[vector[cset[string]]] reference_shared_ptr_Map__List__Set__string_string_key "thrift::py3::reference_shared_ptr<std::vector<std::set<std::string>>>"(...)
-    shared_ptr[cset[vector[int32_t]]] reference_shared_ptr_Map__Set__List__i32_Map__List__Set__string_string_key "thrift::py3::reference_shared_ptr<std::set<std::vector<int32_t>>>"(...)
-    shared_ptr[cmap[vector[cset[string]],string]] reference_shared_ptr_Map__Set__List__i32_Map__List__Set__string_string "thrift::py3::reference_shared_ptr<std::map<std::vector<std::set<std::string>>,std::string>>"(...)
-    shared_ptr[cSimpleUnion] reference_shared_ptr_List__SimpleUnion "thrift::py3::reference_shared_ptr<some::valid::ns::SimpleUnion>"(...)
-    shared_ptr[cSimpleUnion] reference_shared_ptr_Set__SimpleUnion "thrift::py3::reference_shared_ptr<some::valid::ns::SimpleUnion>"(...)
-    shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_List__Set__SimpleUnion "thrift::py3::reference_shared_ptr<std::set<some::valid::ns::SimpleUnion>>"(...)
-    shared_ptr[cmap[string,int32_t]] reference_shared_ptr_Map__string_Map__string_i32 "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(...)
-    shared_ptr[cmap[string,cmap[string,int32_t]]] reference_shared_ptr_Map__string_Map__string_Map__string_i32 "thrift::py3::reference_shared_ptr<std::map<std::string,std::map<std::string,int32_t>>>"(...)
-    shared_ptr[cset[int32_t]] reference_shared_ptr_List__Set__i32 "thrift::py3::reference_shared_ptr<std::set<int32_t>>"(...)
-    shared_ptr[vector[int32_t]] reference_shared_ptr_Map__string_List__i32 "thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
-    shared_ptr[cset[cbool]] reference_shared_ptr_Set__Set__bool "thrift::py3::reference_shared_ptr<std::set<bool>>"(...)
-    shared_ptr[cset[cset[cbool]]] reference_shared_ptr_Set__Set__Set__bool "thrift::py3::reference_shared_ptr<std::set<std::set<bool>>>"(...)
-    shared_ptr[ccontainerStruct] reference_shared_ptr_std_unordered_map_std_string_containerStruct__Map__string_containerStruct "thrift::py3::reference_shared_ptr<some::valid::ns::containerStruct>"(...)
-    shared_ptr[cmap[string,int32_t]] reference_shared_ptr_List__Map__string_i32 "thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(...)
-    shared_ptr[cmap[int16_t,string]] reference_shared_ptr_List__Map__i16_string "thrift::py3::reference_shared_ptr<std::map<int16_t,std::string>>"(...)
-    shared_ptr[cMyStruct] reference_shared_ptr_List__MyStruct "thrift::py3::reference_shared_ptr<some::valid::ns::MyStruct>"(...)
+    shared_ptr[cEmpty] reference_shared_ptr_Map__Empty_MyStruct_key "::thrift::py3::reference_shared_ptr<::some::valid::ns::Empty>"(...)
+    shared_ptr[cMyStruct] reference_shared_ptr_Map__Empty_MyStruct "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(...)
+    shared_ptr[cmap[cEmpty,cMyStruct]] reference_shared_ptr_List__Map__Empty_MyStruct "::thrift::py3::reference_shared_ptr<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>"(...)
+    shared_ptr[vector[cmap[cEmpty,cMyStruct]]] reference_shared_ptr_List__List__Map__Empty_MyStruct "::thrift::py3::reference_shared_ptr<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>"(...)
+    shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] reference_shared_ptr_List__List__List__Map__Empty_MyStruct "::thrift::py3::reference_shared_ptr<std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>"(...)
+    shared_ptr[cMyStruct] reference_shared_ptr_Set__MyStruct "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(...)
+    shared_ptr[cComplexUnion] reference_shared_ptr_List__ComplexUnion "::thrift::py3::reference_shared_ptr<::some::valid::ns::ComplexUnion>"(...)
+    shared_ptr[vector[string]] reference_shared_ptr_Set__List__string "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(...)
+    shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]] reference_shared_ptr_Set__List__List__Map__Empty_MyStruct "::thrift::py3::reference_shared_ptr<std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>"(...)
+    shared_ptr[vector[string]] reference_shared_ptr_Map__i32_List__string "::thrift::py3::reference_shared_ptr<std::vector<std::string>>"(...)
+    shared_ptr[vector[cint32_t]] reference_shared_ptr_List__List__i32 "::thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
+    shared_ptr[vector[vector[cint32_t]]] reference_shared_ptr_List__List__List__i32 "::thrift::py3::reference_shared_ptr<std::vector<std::vector<int32_t>>>"(...)
+    shared_ptr[vector[vector[vector[cint32_t]]]] reference_shared_ptr_List__List__List__List__i32 "::thrift::py3::reference_shared_ptr<std::vector<std::vector<std::vector<int32_t>>>>"(...)
+    shared_ptr[vector[cint32_t]] reference_shared_ptr_Set__List__i32 "::thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
+    shared_ptr[cset[string]] reference_shared_ptr_List__Set__string "::thrift::py3::reference_shared_ptr<std::set<std::string>>"(...)
+    shared_ptr[vector[cset[string]]] reference_shared_ptr_Map__List__Set__string_string_key "::thrift::py3::reference_shared_ptr<std::vector<std::set<std::string>>>"(...)
+    shared_ptr[cset[vector[cint32_t]]] reference_shared_ptr_Map__Set__List__i32_Map__List__Set__string_string_key "::thrift::py3::reference_shared_ptr<std::set<std::vector<int32_t>>>"(...)
+    shared_ptr[cmap[vector[cset[string]],string]] reference_shared_ptr_Map__Set__List__i32_Map__List__Set__string_string "::thrift::py3::reference_shared_ptr<std::map<std::vector<std::set<std::string>>,std::string>>"(...)
+    shared_ptr[cSimpleUnion] reference_shared_ptr_List__SimpleUnion "::thrift::py3::reference_shared_ptr<::some::valid::ns::SimpleUnion>"(...)
+    shared_ptr[cSimpleUnion] reference_shared_ptr_Set__SimpleUnion "::thrift::py3::reference_shared_ptr<::some::valid::ns::SimpleUnion>"(...)
+    shared_ptr[cset[cSimpleUnion]] reference_shared_ptr_List__Set__SimpleUnion "::thrift::py3::reference_shared_ptr<std::set<::some::valid::ns::SimpleUnion>>"(...)
+    shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_Map__string_Map__string_i32 "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(...)
+    shared_ptr[cmap[string,cmap[string,cint32_t]]] reference_shared_ptr_Map__string_Map__string_Map__string_i32 "::thrift::py3::reference_shared_ptr<std::map<std::string,std::map<std::string,int32_t>>>"(...)
+    shared_ptr[cset[cint32_t]] reference_shared_ptr_List__Set__i32 "::thrift::py3::reference_shared_ptr<std::set<int32_t>>"(...)
+    shared_ptr[vector[cint32_t]] reference_shared_ptr_Map__string_List__i32 "::thrift::py3::reference_shared_ptr<std::vector<int32_t>>"(...)
+    shared_ptr[cset[cbool]] reference_shared_ptr_Set__Set__bool "::thrift::py3::reference_shared_ptr<std::set<bool>>"(...)
+    shared_ptr[cset[cset[cbool]]] reference_shared_ptr_Set__Set__Set__bool "::thrift::py3::reference_shared_ptr<std::set<std::set<bool>>>"(...)
+    shared_ptr[ccontainerStruct] reference_shared_ptr_std_unordered_map_std_string_containerStruct__Map__string_containerStruct "::thrift::py3::reference_shared_ptr<::some::valid::ns::containerStruct>"(...)
+    shared_ptr[__iobuf.cIOBuf] reference_shared_ptr_Map__string_folly_IOBuf__binary "::thrift::py3::reference_shared_ptr<folly::IOBuf>"(...)
+    shared_ptr[unique_ptr[__iobuf.cIOBuf]] reference_shared_ptr_Map__string_std_unique_ptr_folly_IOBuf__binary "::thrift::py3::reference_shared_ptr<std::unique_ptr<folly::IOBuf>>"(...)
+    shared_ptr[cmap[string,cint32_t]] reference_shared_ptr_List__Map__string_i32 "::thrift::py3::reference_shared_ptr<std::map<std::string,int32_t>>"(...)
+    shared_ptr[cmap[cint16_t,string]] reference_shared_ptr_List__Map__i16_string "::thrift::py3::reference_shared_ptr<std::map<int16_t,std::string>>"(...)
+    shared_ptr[cMyStruct] reference_shared_ptr_List__MyStruct "::thrift::py3::reference_shared_ptr<::some::valid::ns::MyStruct>"(...)
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const cmap[string,int64_t]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,int64_t>>"(shared_ptr[cmap[string,int64_t]])
-    cdef shared_ptr[const cmap[cEmpty,cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>"(shared_ptr[cmap[cEmpty,cMyStruct]])
-    cdef shared_ptr[const vector[cmap[cEmpty,cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>"(shared_ptr[vector[cmap[cEmpty,cMyStruct]]])
-    cdef shared_ptr[const vector[vector[cmap[cEmpty,cMyStruct]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>"(shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
-    cdef shared_ptr[const vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>>"(shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[const vector[cMyEnumA]] const_pointer_cast "std::const_pointer_cast<const std::vector<some::valid::ns::MyEnumA>>"(shared_ptr[vector[cMyEnumA]])
-    cdef shared_ptr[const cset[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::set<some::valid::ns::MyStruct>>"(shared_ptr[cset[cMyStruct]])
-    cdef shared_ptr[const vector[cComplexUnion]] const_pointer_cast "std::const_pointer_cast<const std::vector<some::valid::ns::ComplexUnion>>"(shared_ptr[vector[cComplexUnion]])
-    cdef shared_ptr[const vector[string]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::string>>"(shared_ptr[vector[string]])
-    cdef shared_ptr[const cset[vector[string]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<std::string>>>"(shared_ptr[cset[vector[string]]])
-    cdef shared_ptr[const cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<std::vector<std::map<some::valid::ns::Empty,some::valid::ns::MyStruct>>>>>"(shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
-    cdef shared_ptr[const cmap[int32_t,vector[string]]] const_pointer_cast "std::const_pointer_cast<const std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cmap[int32_t,vector[string]]])
-    cdef shared_ptr[const vector[cbool]] const_pointer_cast "std::const_pointer_cast<const std::vector<bool>>"(shared_ptr[vector[cbool]])
-    cdef shared_ptr[const vector[int32_t]] const_pointer_cast "std::const_pointer_cast<const std::vector<int32_t>>"(shared_ptr[vector[int32_t]])
-    cdef shared_ptr[const vector[vector[int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<int32_t>>>"(shared_ptr[vector[vector[int32_t]]])
-    cdef shared_ptr[const vector[vector[vector[int32_t]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<int32_t>>>>"(shared_ptr[vector[vector[vector[int32_t]]]])
-    cdef shared_ptr[const vector[vector[vector[vector[int32_t]]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<std::vector<int32_t>>>>>"(shared_ptr[vector[vector[vector[vector[int32_t]]]]])
-    cdef shared_ptr[const cset[vector[int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<int32_t>>>"(shared_ptr[cset[vector[int32_t]]])
-    cdef shared_ptr[const cset[string]] const_pointer_cast "std::const_pointer_cast<const std::set<std::string>>"(shared_ptr[cset[string]])
-    cdef shared_ptr[const vector[cset[string]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<std::string>>>"(shared_ptr[vector[cset[string]]])
-    cdef shared_ptr[const cmap[vector[cset[string]],string]] const_pointer_cast "std::const_pointer_cast<const std::map<std::vector<std::set<std::string>>,std::string>>"(shared_ptr[cmap[vector[cset[string]],string]])
-    cdef shared_ptr[const cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::set<std::vector<int32_t>>,std::map<std::vector<std::set<std::string>>,std::string>>>"(shared_ptr[cmap[cset[vector[int32_t]],cmap[vector[cset[string]],string]]])
-    cdef shared_ptr[const cmap[cMyEnumA,string]] const_pointer_cast "std::const_pointer_cast<const std::map<some::valid::ns::MyEnumA,std::string>>"(shared_ptr[cmap[cMyEnumA,string]])
-    cdef shared_ptr[const cset[int64_t]] const_pointer_cast "std::const_pointer_cast<const std::set<int64_t>>"(shared_ptr[cset[int64_t]])
-    cdef shared_ptr[const cmap[string,int32_t]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,int32_t>>"(shared_ptr[cmap[string,int32_t]])
-    cdef shared_ptr[const vector[cSimpleUnion]] const_pointer_cast "std::const_pointer_cast<const std::vector<some::valid::ns::SimpleUnion>>"(shared_ptr[vector[cSimpleUnion]])
-    cdef shared_ptr[const cset[cSimpleUnion]] const_pointer_cast "std::const_pointer_cast<const std::set<some::valid::ns::SimpleUnion>>"(shared_ptr[cset[cSimpleUnion]])
-    cdef shared_ptr[const vector[cset[cSimpleUnion]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<some::valid::ns::SimpleUnion>>>"(shared_ptr[vector[cset[cSimpleUnion]]])
-    cdef shared_ptr[const cmap[string,cbool]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,bool>>"(shared_ptr[cmap[string,cbool]])
-    cdef shared_ptr[const cset[int32_t]] const_pointer_cast "std::const_pointer_cast<const std::set<int32_t>>"(shared_ptr[cset[int32_t]])
-    cdef shared_ptr[const cmap[string,cmap[string,int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::map<std::string,int32_t>>>"(shared_ptr[cmap[string,cmap[string,int32_t]]])
-    cdef shared_ptr[const cmap[string,cmap[string,cmap[string,int32_t]]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::map<std::string,std::map<std::string,int32_t>>>>"(shared_ptr[cmap[string,cmap[string,cmap[string,int32_t]]]])
-    cdef shared_ptr[const vector[cset[int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<int32_t>>>"(shared_ptr[vector[cset[int32_t]]])
-    cdef shared_ptr[const cmap[string,vector[int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::vector<int32_t>>>"(shared_ptr[cmap[string,vector[int32_t]]])
-    cdef shared_ptr[const cset[cbool]] const_pointer_cast "std::const_pointer_cast<const std::set<bool>>"(shared_ptr[cset[cbool]])
-    cdef shared_ptr[const cset[cset[cbool]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::set<bool>>>"(shared_ptr[cset[cset[cbool]]])
-    cdef shared_ptr[const cset[cset[cset[cbool]]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::set<std::set<bool>>>>"(shared_ptr[cset[cset[cset[cbool]]]])
-    cdef shared_ptr[const cmap[Bar,Baz]] const_pointer_cast "std::const_pointer_cast<const std::map<Bar,Baz>>"(shared_ptr[cmap[Bar,Baz]])
-    cdef shared_ptr[const folly_small_vector_int64_t_8] const_pointer_cast "std::const_pointer_cast<const folly::small_vector<int64_t, 8 /* maxInline */>>"(shared_ptr[folly_small_vector_int64_t_8])
-    cdef shared_ptr[const folly_sorted_vector_set_std_string] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_set<std::string>>"(shared_ptr[folly_sorted_vector_set_std_string])
     cdef shared_ptr[const FakeMap] const_pointer_cast "std::const_pointer_cast<const FakeMap>"(shared_ptr[FakeMap])
-    cdef shared_ptr[const std_unordered_map_std_string_containerStruct] const_pointer_cast "std::const_pointer_cast<const std::unordered_map<std::string, containerStruct>>"(shared_ptr[std_unordered_map_std_string_containerStruct])
-    cdef shared_ptr[const std_list[int32_t]] const_pointer_cast "std::const_pointer_cast<const std::list<int32_t>>"(shared_ptr[std_list[int32_t]])
-    cdef shared_ptr[const std_deque[string]] const_pointer_cast "std::const_pointer_cast<const std::deque<std::string>>"(shared_ptr[std_deque[string]])
-    cdef shared_ptr[const folly_sorted_vector_set[string]] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_set<std::string>>"(shared_ptr[folly_sorted_vector_set[string]])
-    cdef shared_ptr[const folly_sorted_vector_map[int64_t,string]] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[folly_sorted_vector_map[int64_t,string]])
     cdef shared_ptr[const vector[Bar]] const_pointer_cast "std::const_pointer_cast<const std::vector<Bar>>"(shared_ptr[vector[Bar]])
+    cdef shared_ptr[const vector[cComplexUnion]] const_pointer_cast "std::const_pointer_cast<const std::vector<::some::valid::ns::ComplexUnion>>"(shared_ptr[vector[cComplexUnion]])
+    cdef shared_ptr[const vector[vector[vector[vector[cint32_t]]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<std::vector<int32_t>>>>>"(shared_ptr[vector[vector[vector[vector[cint32_t]]]]])
+    cdef shared_ptr[const vector[vector[vector[cmap[cEmpty,cMyStruct]]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>>"(shared_ptr[vector[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[const vector[vector[vector[cint32_t]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::vector<int32_t>>>>"(shared_ptr[vector[vector[vector[cint32_t]]]])
+    cdef shared_ptr[const vector[vector[cmap[cEmpty,cMyStruct]]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>"(shared_ptr[vector[vector[cmap[cEmpty,cMyStruct]]]])
+    cdef shared_ptr[const vector[vector[cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<int32_t>>>"(shared_ptr[vector[vector[cint32_t]]])
+    cdef shared_ptr[const vector[cmap[cEmpty,cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>"(shared_ptr[vector[cmap[cEmpty,cMyStruct]]])
+    cdef shared_ptr[const vector[cmap[cint16_t,string]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<int16_t,std::string>>>"(shared_ptr[vector[cmap[cint16_t,string]]])
+    cdef shared_ptr[const vector[cmap[string,cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<std::string,int32_t>>>"(shared_ptr[vector[cmap[string,cint32_t]]])
+    cdef shared_ptr[const vector[cMyEnumA]] const_pointer_cast "std::const_pointer_cast<const std::vector<::some::valid::ns::MyEnumA>>"(shared_ptr[vector[cMyEnumA]])
+    cdef shared_ptr[const vector[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<::some::valid::ns::MyStruct>>"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[const vector[cset[cSimpleUnion]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<::some::valid::ns::SimpleUnion>>>"(shared_ptr[vector[cset[cSimpleUnion]]])
+    cdef shared_ptr[const vector[cset[cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<int32_t>>>"(shared_ptr[vector[cset[cint32_t]]])
+    cdef shared_ptr[const vector[cset[string]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::set<std::string>>>"(shared_ptr[vector[cset[string]]])
+    cdef shared_ptr[const vector[cSimpleUnion]] const_pointer_cast "std::const_pointer_cast<const std::vector<::some::valid::ns::SimpleUnion>>"(shared_ptr[vector[cSimpleUnion]])
+    cdef shared_ptr[const vector[cbool]] const_pointer_cast "std::const_pointer_cast<const std::vector<bool>>"(shared_ptr[vector[cbool]])
+    cdef shared_ptr[const vector[cint32_t]] const_pointer_cast "std::const_pointer_cast<const std::vector<int32_t>>"(shared_ptr[vector[cint32_t]])
+    cdef shared_ptr[const vector[string]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::string>>"(shared_ptr[vector[string]])
+    cdef shared_ptr[const cmap[Bar,Baz]] const_pointer_cast "std::const_pointer_cast<const std::map<Bar,Baz>>"(shared_ptr[cmap[Bar,Baz]])
+    cdef shared_ptr[const cmap[cEmpty,cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>"(shared_ptr[cmap[cEmpty,cMyStruct]])
+    cdef shared_ptr[const cmap[vector[cset[string]],string]] const_pointer_cast "std::const_pointer_cast<const std::map<std::vector<std::set<std::string>>,std::string>>"(shared_ptr[cmap[vector[cset[string]],string]])
+    cdef shared_ptr[const cmap[cMyEnumA,string]] const_pointer_cast "std::const_pointer_cast<const std::map<::some::valid::ns::MyEnumA,std::string>>"(shared_ptr[cmap[cMyEnumA,string]])
+    cdef shared_ptr[const cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::set<std::vector<int32_t>>,std::map<std::vector<std::set<std::string>>,std::string>>>"(shared_ptr[cmap[cset[vector[cint32_t]],cmap[vector[cset[string]],string]]])
+    cdef shared_ptr[const cmap[cint16_t,string]] const_pointer_cast "std::const_pointer_cast<const std::map<int16_t,std::string>>"(shared_ptr[cmap[cint16_t,string]])
+    cdef shared_ptr[const cmap[cint32_t,vector[string]]] const_pointer_cast "std::const_pointer_cast<const std::map<int32_t,std::vector<std::string>>>"(shared_ptr[cmap[cint32_t,vector[string]]])
+    cdef shared_ptr[const cmap[cint32_t,string]] const_pointer_cast "std::const_pointer_cast<const std::map<int32_t,std::string>>"(shared_ptr[cmap[cint32_t,string]])
+    cdef shared_ptr[const cmap[string,vector[cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::vector<int32_t>>>"(shared_ptr[cmap[string,vector[cint32_t]]])
+    cdef shared_ptr[const cmap[string,cmap[string,cmap[string,cint32_t]]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::map<std::string,std::map<std::string,int32_t>>>>"(shared_ptr[cmap[string,cmap[string,cmap[string,cint32_t]]]])
+    cdef shared_ptr[const cmap[string,cmap[string,cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::map<std::string,int32_t>>>"(shared_ptr[cmap[string,cmap[string,cint32_t]]])
+    cdef shared_ptr[const cmap[string,cbool]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,bool>>"(shared_ptr[cmap[string,cbool]])
+    cdef shared_ptr[const cmap[string,__iobuf.cIOBuf]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,folly::IOBuf>>"(shared_ptr[cmap[string,__iobuf.cIOBuf]])
+    cdef shared_ptr[const cmap[string,cint32_t]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,int32_t>>"(shared_ptr[cmap[string,cint32_t]])
+    cdef shared_ptr[const cmap[string,cint64_t]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,int64_t>>"(shared_ptr[cmap[string,cint64_t]])
+    cdef shared_ptr[const cmap[string,unique_ptr[__iobuf.cIOBuf]]] const_pointer_cast "std::const_pointer_cast<const std::map<std::string,std::unique_ptr<folly::IOBuf>>>"(shared_ptr[cmap[string,unique_ptr[__iobuf.cIOBuf]]])
     cdef shared_ptr[const cset[Baz]] const_pointer_cast "std::const_pointer_cast<const std::set<Baz>>"(shared_ptr[cset[Baz]])
-    cdef shared_ptr[const cmap[int32_t,string]] const_pointer_cast "std::const_pointer_cast<const std::map<int32_t,std::string>>"(shared_ptr[cmap[int32_t,string]])
-    cdef shared_ptr[const vector[cmap[string,int32_t]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<std::string,int32_t>>>"(shared_ptr[vector[cmap[string,int32_t]]])
-    cdef shared_ptr[const cmap[int16_t,string]] const_pointer_cast "std::const_pointer_cast<const std::map<int16_t,std::string>>"(shared_ptr[cmap[int16_t,string]])
-    cdef shared_ptr[const vector[cmap[int16_t,string]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::map<int16_t,std::string>>>"(shared_ptr[vector[cmap[int16_t,string]]])
-    cdef shared_ptr[const vector[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<some::valid::ns::MyStruct>>"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[const cset[vector[vector[cmap[cEmpty,cMyStruct]]]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<std::vector<std::map<::some::valid::ns::Empty,::some::valid::ns::MyStruct>>>>>"(shared_ptr[cset[vector[vector[cmap[cEmpty,cMyStruct]]]]])
+    cdef shared_ptr[const cset[vector[cint32_t]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<int32_t>>>"(shared_ptr[cset[vector[cint32_t]]])
+    cdef shared_ptr[const cset[vector[string]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::vector<std::string>>>"(shared_ptr[cset[vector[string]]])
+    cdef shared_ptr[const cset[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::set<::some::valid::ns::MyStruct>>"(shared_ptr[cset[cMyStruct]])
+    cdef shared_ptr[const cset[cset[cset[cbool]]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::set<std::set<bool>>>>"(shared_ptr[cset[cset[cset[cbool]]]])
+    cdef shared_ptr[const cset[cset[cbool]]] const_pointer_cast "std::const_pointer_cast<const std::set<std::set<bool>>>"(shared_ptr[cset[cset[cbool]]])
+    cdef shared_ptr[const cset[cSimpleUnion]] const_pointer_cast "std::const_pointer_cast<const std::set<::some::valid::ns::SimpleUnion>>"(shared_ptr[cset[cSimpleUnion]])
+    cdef shared_ptr[const cset[cbool]] const_pointer_cast "std::const_pointer_cast<const std::set<bool>>"(shared_ptr[cset[cbool]])
+    cdef shared_ptr[const cset[cint32_t]] const_pointer_cast "std::const_pointer_cast<const std::set<int32_t>>"(shared_ptr[cset[cint32_t]])
+    cdef shared_ptr[const cset[cint64_t]] const_pointer_cast "std::const_pointer_cast<const std::set<int64_t>>"(shared_ptr[cset[cint64_t]])
+    cdef shared_ptr[const cset[string]] const_pointer_cast "std::const_pointer_cast<const std::set<std::string>>"(shared_ptr[cset[string]])
+    cdef shared_ptr[const folly_small_vector_int64_t_8] const_pointer_cast "std::const_pointer_cast<const folly::small_vector<int64_t, 8 /* maxInline */>>"(shared_ptr[folly_small_vector_int64_t_8])
+    cdef shared_ptr[const folly_sorted_vector_map[cint64_t,string]] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_map<int64_t,std::string>>"(shared_ptr[folly_sorted_vector_map[cint64_t,string]])
+    cdef shared_ptr[const folly_sorted_vector_set[string]] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_set<std::string>>"(shared_ptr[folly_sorted_vector_set[string]])
+    cdef shared_ptr[const folly_sorted_vector_set_std_string] const_pointer_cast "std::const_pointer_cast<const folly::sorted_vector_set<std::string>>"(shared_ptr[folly_sorted_vector_set_std_string])
+    cdef shared_ptr[const std_deque[string]] const_pointer_cast "std::const_pointer_cast<const std::deque<std::string>>"(shared_ptr[std_deque[string]])
+    cdef shared_ptr[const std_list[cint32_t]] const_pointer_cast "std::const_pointer_cast<const std::list<int32_t>>"(shared_ptr[std_list[cint32_t]])
+    cdef shared_ptr[const std_unordered_map_std_string_containerStruct] const_pointer_cast "std::const_pointer_cast<const std::unordered_map<std::string, containerStruct>>"(shared_ptr[std_unordered_map_std_string_containerStruct])
 
-cdef extern from "src/gen-cpp2/module_constants.h" namespace "some::valid::ns":
-    cdef cbool caBool "some::valid::ns::module_constants::aBool"
-    cdef int8_t caByte "some::valid::ns::module_constants::aByte"
-    cdef int16_t ca16BitInt "some::valid::ns::module_constants::a16BitInt"
-    cdef int32_t ca32BitInt "some::valid::ns::module_constants::a32BitInt"
-    cdef int64_t ca64BitInt "some::valid::ns::module_constants::a64BitInt"
-    cdef float caFloat "some::valid::ns::module_constants::aFloat"
-    cdef double caDouble "some::valid::ns::module_constants::aDouble"
-    cdef const char* caString "some::valid::ns::module_constants::aString"()
-    cdef vector[cbool] caList "some::valid::ns::module_constants::aList"()
-    cdef cmap[string,int32_t] canEmptyMap "some::valid::ns::module_constants::anEmptyMap"()
-    cdef cmap[int32_t,string] caMap "some::valid::ns::module_constants::aMap"()
-    cdef cset[string] caSet "some::valid::ns::module_constants::aSet"()
-    cdef vector[vector[int32_t]] caListOfLists "some::valid::ns::module_constants::aListOfLists"()
-    cdef vector[cmap[string,int32_t]] cstates "some::valid::ns::module_constants::states"()
-    cdef vector[cMyEnumA] cAConstList "some::valid::ns::module_constants::AConstList"()
-    cdef int32_t cAnIntegerEnum2 "some::valid::ns::module_constants::AnIntegerEnum2"
-    cdef vector[int32_t] cAnIntegerEnum2 "some::valid::ns::module_constants::AnIntegerEnum2"()
-    cdef cMyEnumA cconstEnumA "some::valid::ns::module_constants::constEnumA"()
-    cdef cMyEnumA cconstEnumB "some::valid::ns::module_constants::constEnumB"()
+cdef extern from "src/gen-cpp2/module_constants.h" namespace "::some::valid::ns":
+    cdef cbool caBool "::some::valid::ns::module_constants::aBool"
+    cdef cint8_t caByte "::some::valid::ns::module_constants::aByte"
+    cdef cint16_t ca16BitInt "::some::valid::ns::module_constants::a16BitInt"
+    cdef cint32_t ca32BitInt "::some::valid::ns::module_constants::a32BitInt"
+    cdef cint64_t ca64BitInt "::some::valid::ns::module_constants::a64BitInt"
+    cdef float caFloat "::some::valid::ns::module_constants::aFloat"
+    cdef double caDouble "::some::valid::ns::module_constants::aDouble"
+    cdef const char* caString "::some::valid::ns::module_constants::aString"()
+    cdef vector[cbool] caList "::some::valid::ns::module_constants::aList"()
+    cdef cmap[string,cint32_t] canEmptyMap "::some::valid::ns::module_constants::anEmptyMap"()
+    cdef cmap[cint32_t,string] caMap "::some::valid::ns::module_constants::aMap"()
+    cdef cset[string] caSet "::some::valid::ns::module_constants::aSet"()
+    cdef vector[vector[cint32_t]] caListOfLists "::some::valid::ns::module_constants::aListOfLists"()
+    cdef vector[cmap[string,cint32_t]] cstates "::some::valid::ns::module_constants::states"()
+    cdef vector[cMyEnumA] cAConstList "::some::valid::ns::module_constants::AConstList"()
+    cdef cint32_t cAnIntegerEnum2 "::some::valid::ns::module_constants::AnIntegerEnum2"
+    cdef vector[cint32_t] cAnIntegerEnum2 "::some::valid::ns::module_constants::AnIntegerEnum2"()
+    cdef cMyEnumA cconstEnumA "::some::valid::ns::module_constants::constEnumA"()
+    cdef cMyEnumA cconstEnumB "::some::valid::ns::module_constants::constEnumB"()

@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 #include <thrift/lib/cpp2/transport/http2/client/H2ClientConnection.h>
 
-#include <gflags/gflags.h>
+#include <folly/portability/GFlags.h>
 #include <glog/logging.h>
 
 #include <folly/Likely.h>
@@ -36,7 +36,6 @@
 namespace apache {
 namespace thrift {
 
-using apache::thrift::async::TAsyncTransport;
 using apache::thrift::transport::TTransportException;
 using folly::EventBase;
 using proxygen::HTTPSessionBase;
@@ -47,17 +46,20 @@ using proxygen::WheelTimerInstance;
 using std::string;
 
 std::unique_ptr<ClientConnectionIf> H2ClientConnection::newHTTP2Connection(
-    TAsyncTransport::UniquePtr transport) {
+    folly::AsyncTransport::UniquePtr transport,
+    FlowControlSettings flowControlSettings) {
   std::unique_ptr<H2ClientConnection> connection(new H2ClientConnection(
       std::move(transport),
       std::make_unique<proxygen::HTTP2Codec>(
-          proxygen::TransportDirection::UPSTREAM)));
+          proxygen::TransportDirection::UPSTREAM),
+      flowControlSettings));
   return std::move(connection);
 }
 
 H2ClientConnection::H2ClientConnection(
-    TAsyncTransport::UniquePtr transport,
-    std::unique_ptr<proxygen::HTTPCodec> codec)
+    folly::AsyncTransport::UniquePtr transport,
+    std::unique_ptr<proxygen::HTTPCodec> codec,
+    FlowControlSettings flowControlSettings)
     : evb_(transport->getEventBase()) {
   DCHECK(evb_ && evb_->isInEventBaseThread());
   auto localAddress = transport->getLocalAddress();
@@ -70,6 +72,10 @@ H2ClientConnection::H2ClientConnection(
       std::move(codec),
       wangle::TransportInfo(),
       this);
+  httpSession_->setFlowControl(
+      flowControlSettings.initialReceiveWindow,
+      flowControlSettings.receiveStreamWindowSize,
+      flowControlSettings.receiveSessionWindowSize);
   // TODO: Improve the way max outging streams is set
   setMaxPendingRequests(100000);
   httpSession_->startNow();
@@ -81,7 +87,8 @@ H2ClientConnection::~H2ClientConnection() {
 
 std::shared_ptr<ThriftChannelIf> H2ClientConnection::getChannel() {
   DCHECK(evb_ && evb_->isInEventBaseThread());
-  return std::make_shared<SingleRpcChannel>(this);
+  return std::make_shared<SingleRpcChannel>(
+      *evb_, [this](auto* self) { return this->newTransaction(self); });
 }
 
 void H2ClientConnection::setMaxPendingRequests(uint32_t num) {
@@ -113,25 +120,23 @@ HTTPTransaction* H2ClientConnection::newTransaction(H2Channel* channel) {
   }
   // These objects destroy themselves when done.
   auto handler = new ThriftTransactionHandler();
-  auto txn = httpSession_->newTransaction(handler);
-  if (!txn) {
+  auto txn = httpSession_->newTransactionWithError(handler);
+  if (txn.hasError()) {
     delete handler;
-    TTransportException ex(
-        TTransportException::NETWORK_ERROR,
-        "Too many active requests on connection");
+    TTransportException ex(TTransportException::NETWORK_ERROR, txn.error());
     // Might be able to create another transaction soon
     ex.setOptions(TTransportException::CHANNEL_IS_VALID);
     throw ex;
   }
   handler->setChannel(
       std::dynamic_pointer_cast<H2Channel>(channel->shared_from_this()));
-  return txn;
+  return txn.value();
 }
 
-TAsyncTransport* H2ClientConnection::getTransport() {
+folly::AsyncTransport* H2ClientConnection::getTransport() {
   DCHECK(!evb_ || evb_->isInEventBaseThread());
   if (httpSession_) {
-    return dynamic_cast<TAsyncTransport*>(httpSession_->getTransport());
+    return httpSession_->getTransport();
   } else {
     return nullptr;
   }
@@ -191,10 +196,6 @@ bool H2ClientConnection::isDetachable() {
   auto transport = getTransport();
   auto transport_isDetachable = !transport || transport->isDetachable();
   return transport_isDetachable && session_isDetachable;
-}
-
-bool H2ClientConnection::isSecurityActive() {
-  return false;
 }
 
 uint32_t H2ClientConnection::getTimeout() {

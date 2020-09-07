@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,6 @@
 #include <folly/io/Cursor.h>
 #include <thrift/lib/cpp/EventHandlerBase.h>
 #include <thrift/lib/cpp/transport/TTransportException.h>
-#include <thrift/lib/cpp2/async/GssSaslClient.h>
 #include <thrift/lib/cpp2/async/ResponseChannel.h>
 
 using folly::IOBuf;
@@ -30,7 +29,6 @@ using std::make_unique;
 using std::pair;
 using std::unique_ptr;
 using namespace apache::thrift::transport;
-using apache::thrift::async::TAsyncTransport;
 using folly::EventBase;
 using folly::RequestContext;
 using HResClock = std::chrono::high_resolution_clock;
@@ -42,7 +40,7 @@ namespace thrift {
 template class ChannelCallbacks::TwowayCallback<HeaderClientChannel>;
 
 HeaderClientChannel::HeaderClientChannel(
-    const std::shared_ptr<TAsyncTransport>& transport)
+    const std::shared_ptr<folly::AsyncTransport>& transport)
     : HeaderClientChannel(std::shared_ptr<Cpp2Channel>(Cpp2Channel::newChannel(
           transport,
           make_unique<ClientFramingHandler>(*this)))) {}
@@ -50,13 +48,9 @@ HeaderClientChannel::HeaderClientChannel(
 HeaderClientChannel::HeaderClientChannel(
     const std::shared_ptr<Cpp2Channel>& cpp2Channel)
     : sendSeqId_(0),
-      sendSecurityPendingSeqId_(0),
       closeCallback_(nullptr),
       timeout_(0),
-      timeoutSASL_(500),
-      handshakeMessagesSent_(0),
       keepRegisteredForClose_(true),
-      saslClientCallback_(*this),
       cpp2Channel_(cpp2Channel),
       protocolId_(apache::thrift::protocol::T_COMPACT_PROTOCOL) {}
 
@@ -65,20 +59,12 @@ void HeaderClientChannel::setTimeout(uint32_t ms) {
   timeout_ = ms;
 }
 
-void HeaderClientChannel::setSaslTimeout(uint32_t ms) {
-  timeoutSASL_ = ms;
-}
-
 void HeaderClientChannel::closeNow() {
   cpp2Channel_->closeNow();
 }
 
 void HeaderClientChannel::destroy() {
   closeNow();
-  saslClientCallback_.cancelTimeout();
-  if (saslClient_) {
-    saslClient_->detachEventBase();
-  }
   folly::DelayedDestruction::destroy();
 }
 
@@ -96,22 +82,9 @@ bool HeaderClientChannel::good() {
 
 void HeaderClientChannel::attachEventBase(EventBase* eventBase) {
   cpp2Channel_->attachEventBase(eventBase);
-  if (saslClient_ && getProtectionState() == ProtectionState::UNKNOWN) {
-    // Note that we only want to attach the event base here if
-    // the handshake never started. If it started then reattaching the
-    // event base would cause a lot of problems.
-    // It could cause the SASL threads to invoke callbacks on the
-    // channel that are unexpected.
-    saslClient_->attachEventBase(eventBase);
-  }
 }
 
 void HeaderClientChannel::detachEventBase() {
-  saslClientCallback_.cancelTimeout();
-  if (saslClient_) {
-    saslClient_->detachEventBase();
-  }
-
   cpp2Channel_->detachEventBase();
 }
 
@@ -119,251 +92,22 @@ bool HeaderClientChannel::isDetachable() {
   return getTransport()->isDetachable() && recvCallbacks_.empty();
 }
 
-void HeaderClientChannel::startSecurity() {
-  if (getProtectionState() != ProtectionState::UNKNOWN) {
-    return;
-  }
-
-  // It might be possible to short-circuit this to happen earlier,
-  // but since it's internal state, it's not clear there's any
-  // value.
-  if (getClientType() != THRIFT_HEADER_SASL_CLIENT_TYPE) {
-    setProtectionState(ProtectionState::NONE);
-    return;
-  }
-
-  if (!saslClient_) {
-    throw TTransportException("Security requested, but SASL client not set");
-  }
-
-  // Save the protocol (binary/compact) for later and set it to compact for
-  // compatibility with old servers that only accept compact security messages.
-  // We'll restore it in setSecurityComplete().
-  // TODO(alandau): Remove this code once all servers are upgraded to be able
-  // to handle both compact and binary.
-  userProtocolId_ = getProtocolId();
-
-  // Let's get this party started.
-  setProtectionState(ProtectionState::INPROGRESS);
-  setBaseReceivedCallback();
-  saslClient_->setProtocolId(T_COMPACT_PROTOCOL);
-  saslClient_->start(&saslClientCallback_);
-}
-
-unique_ptr<IOBuf> HeaderClientChannel::handleSecurityMessage(
-    unique_ptr<IOBuf>&& buf,
-    unique_ptr<THeader>&& header) {
-  if (header->getClientType() == THRIFT_HEADER_SASL_CLIENT_TYPE) {
-    if (getProtectionState() == ProtectionState::INPROGRESS ||
-        getProtectionState() == ProtectionState::WAITING) {
-      setProtectionState(ProtectionState::INPROGRESS);
-      saslClientCallback_.setHeader(std::move(header));
-      saslClient_->consumeFromServer(&saslClientCallback_, std::move(buf));
-      return nullptr;
-    }
-    // else, fall through to application message processing
-  } else if (
-      getProtectionState() == ProtectionState::INPROGRESS ||
-      getProtectionState() == ProtectionState::WAITING ||
-      getProtectionState() == ProtectionState::VALID) {
-    setProtectionState(ProtectionState::INVALID);
-    // If the security negotiation has completed successfully, or is
-    // in progress, we expect SASL to continue to be used.  If
-    // something else happens, it's either an attack or something is
-    // very broken.  Fail hard.
-    LOG(WARNING) << "non-SASL message received on SASL channel";
-    saslClientCallback_.saslError(
-        folly::make_exception_wrapper<TTransportException>(
-            "non-SASL message received on SASL channel"));
-    return nullptr;
-  }
-
-  return std::move(buf);
-}
-
-void HeaderClientChannel::SaslClientCallback::saslStarted() {
-  if (channel_.timeoutSASL_ > 0) {
-    channel_.getEventBase()->timer().scheduleTimeout(
-        this, std::chrono::milliseconds(channel_.timeoutSASL_));
-  }
-}
-
-void HeaderClientChannel::SaslClientCallback::saslSendServer(
-    std::unique_ptr<folly::IOBuf>&& message) {
-  if (channel_.timeoutSASL_ > 0) {
-    channel_.getEventBase()->timer().scheduleTimeout(
-        this, std::chrono::milliseconds(channel_.timeoutSASL_));
-  }
-  if (sendServerHook_) {
-    sendServerHook_();
-  }
-  channel_.handshakeMessagesSent_++;
-
-  header_->setFlags(HEADER_FLAG_SUPPORT_OUT_OF_ORDER);
-  header_->setProtocolId(T_COMPACT_PROTOCOL);
-  header_->setClientType(THRIFT_HEADER_SASL_CLIENT_TYPE);
-  channel_.setProtectionState(ProtectionState::WAITING);
-  channel_.sendMessage(nullptr, std::move(message), header_.get());
-  channel_.setProtocolId(channel_.userProtocolId_);
-}
-
-void HeaderClientChannel::SaslClientCallback::saslError(
-    folly::exception_wrapper&& ex) {
-  DestructorGuard g(&channel_);
-
-  folly::HHWheelTimer::Callback::cancelTimeout();
-  channel_.saslClient_->detachEventBase();
-
-  auto logger = channel_.saslClient_->getSaslLogger();
-
-  bool ex_eof = false;
-  ex.with_exception([&](TTransportException& tex) {
-    if (tex.getType() == TTransportException::END_OF_FILE) {
-      ex_eof = true;
-    }
-  });
-  if (ex_eof) {
-    ex = folly::make_exception_wrapper<TTransportException>(
-        folly::to<std::string>(
-            ex.what(),
-            " during SASL handshake (likely keytab entry error on server)"));
-  }
-
-  // Record error string
-  std::string errorMessage =
-      "MsgNum: " + std::to_string(channel_.handshakeMessagesSent_);
-  channel_.saslClient_->setErrorString(
-      folly::to<std::string>(errorMessage, " ", ex.what()));
-
-  if (logger) {
-    logger->log("sasl_error", ex.what().toStdString());
-  }
-
-  auto ew = folly::try_and_catch<std::exception>([&]() {
-    // Fall back to insecure.  This will throw an exception if the
-    // insecure client type is not supported.
-    channel_.setClientType(THRIFT_HEADER_CLIENT_TYPE);
-  });
-  if (ew) {
-    LOG(ERROR) << "SASL required by client but failed or rejected by server: "
-               << ex.what();
-    if (logger) {
-      logger->log("sasl_failed_hard");
-    }
-    channel_.messageReceiveErrorWrapped(std::move(ex));
-    channel_.cpp2Channel_->closeNow();
-    return;
-  }
-
-  VLOG(5) << "SASL client falling back to insecure: " << ex.what();
-  if (logger) {
-    logger->log("sasl_fell_back_to_insecure");
-  }
-  // We need to tell saslClient that the security channel is no longer
-  // available, so that it does not attempt to send messages to the server.
-  channel_.setSecurityComplete(ProtectionState::NONE);
-}
-
-void HeaderClientChannel::SaslClientCallback::saslComplete() {
-  folly::HHWheelTimer::Callback::cancelTimeout();
-  channel_.saslClient_->detachEventBase();
-
-  VLOG(5) << "SASL client negotiation complete: "
-          << channel_.saslClient_->getClientIdentity() << " => "
-          << channel_.saslClient_->getServerIdentity();
-  auto logger = channel_.saslClient_->getSaslLogger();
-  if (logger) {
-    logger->log(
-        "sasl_complete",
-        {channel_.saslClient_->getClientIdentity(),
-         channel_.saslClient_->getServerIdentity()});
-  }
-
-  channel_.setSecurityComplete(ProtectionState::VALID);
-}
-
-bool HeaderClientChannel::isSecurityPending() {
-  startSecurity();
-
-  switch (getProtectionState()) {
-    case ProtectionState::UNKNOWN: {
-      return true;
-    }
-    case ProtectionState::NONE: {
-      return false;
-    }
-    case ProtectionState::INPROGRESS: {
-      return true;
-    }
-    case ProtectionState::VALID: {
-      return false;
-    }
-    case ProtectionState::INVALID: {
-      return false;
-    }
-    case ProtectionState::WAITING: {
-      return true;
-    }
-  }
-
-  throw std::runtime_error("bad ProtectionState");
-}
-
-void HeaderClientChannel::setSecurityComplete(ProtectionState state) {
-  assert(state == ProtectionState::NONE || state == ProtectionState::VALID);
-
-  setProtectionState(state);
-  setBaseReceivedCallback();
-
-  // restore protocol to the one the user selected
-  setProtocolId(userProtocolId_);
-
-  // Replay any pending requests
-  for (auto&& funcarg : afterSecurity_) {
-    auto& cb = std::get<2>(funcarg);
-    folly::RequestContextScopeGuard rctx(cb->context_);
-
-    cb->securityEnd_ =
-        std::chrono::duration_cast<Us>(HResClock::now().time_since_epoch())
-            .count();
-    (this->*(std::get<0>(funcarg)))(
-        std::get<1>(funcarg),
-        std::move(std::get<2>(funcarg)),
-        std::move(std::get<3>(funcarg)),
-        std::move(std::get<4>(funcarg)),
-        std::move(std::get<5>(funcarg)));
-  }
-  afterSecurity_.clear();
-}
-
 bool HeaderClientChannel::clientSupportHeader() {
   return getClientType() == THRIFT_HEADER_CLIENT_TYPE ||
-      getClientType() == THRIFT_HEADER_SASL_CLIENT_TYPE;
+      getClientType() == THRIFT_HTTP_CLIENT_TYPE;
 }
 
 // Client Interface
-uint32_t HeaderClientChannel::sendOnewayRequest(
-    RpcOptions& rpcOptions,
-    std::unique_ptr<RequestCallback> cb,
-    std::unique_ptr<apache::thrift::ContextStack> ctx,
-    std::unique_ptr<IOBuf> buf,
-    std::shared_ptr<THeader> header) {
-  cb->context_ = RequestContext::saveContext();
-
-  if (isSecurityPending()) {
-    cb->securityStart_ =
-        std::chrono::duration_cast<Us>(HResClock::now().time_since_epoch())
-            .count();
-    afterSecurity_.push_back(std::make_tuple(
-        static_cast<AfterSecurityMethod>(
-            &HeaderClientChannel::sendOnewayRequest),
-        RpcOptions(rpcOptions),
-        std::move(cb),
-        std::move(ctx),
-        std::move(buf),
-        std::move(header)));
-    return ResponseChannel::ONEWAY_REQUEST_ID;
-  }
+void HeaderClientChannel::sendRequestNoResponse(
+    const RpcOptions& rpcOptions,
+    folly::StringPiece methodName,
+    SerializedRequest&& serializedRequest,
+    std::shared_ptr<THeader> header,
+    RequestClientCallback::Ptr cb) {
+  auto buf =
+      LegacySerializedRequest(
+          header->getProtocolId(), methodName, std::move(serializedRequest))
+          .buffer;
 
   setRequestHeaderOptions(header.get());
   addRpcOptionHeaders(header.get(), rpcOptions);
@@ -374,14 +118,11 @@ uint32_t HeaderClientChannel::sendOnewayRequest(
 
   if (cb) {
     sendMessage(
-        new OnewayCallback(std::move(cb), std::move(ctx), isSecurityActive()),
-        std::move(buf),
-        header.get());
+        new OnewayCallback(std::move(cb)), std::move(buf), header.get());
   } else {
     sendMessage(nullptr, std::move(buf), header.get());
   }
   sendSeqId_ = oldSeqId;
-  return ResponseChannel::ONEWAY_REQUEST_ID;
 }
 
 void HeaderClientChannel::setCloseCallback(CloseCallback* cb) {
@@ -401,7 +142,6 @@ void HeaderClientChannel::setRequestHeaderOptions(THeader* header) {
 
 uint16_t HeaderClientChannel::getProtocolId() {
   if (getClientType() == THRIFT_HEADER_CLIENT_TYPE ||
-      getClientType() == THRIFT_HEADER_SASL_CLIENT_TYPE ||
       getClientType() == THRIFT_HTTP_CLIENT_TYPE) {
     return protocolId_;
   } else if (getClientType() == THRIFT_FRAMED_COMPACT) {
@@ -411,36 +151,19 @@ uint16_t HeaderClientChannel::getProtocolId() {
   }
 }
 
-uint32_t HeaderClientChannel::sendRequest(
-    RpcOptions& rpcOptions,
-    std::unique_ptr<RequestCallback> cb,
-    std::unique_ptr<apache::thrift::ContextStack> ctx,
-    std::unique_ptr<IOBuf> buf,
-    std::shared_ptr<THeader> header) {
+void HeaderClientChannel::sendRequestResponse(
+    const RpcOptions& rpcOptions,
+    folly::StringPiece methodName,
+    SerializedRequest&& serializedRequest,
+    std::shared_ptr<THeader> header,
+    RequestClientCallback::Ptr cb) {
+  auto buf =
+      LegacySerializedRequest(
+          header->getProtocolId(), methodName, std::move(serializedRequest))
+          .buffer;
+
   // cb is not allowed to be null.
   DCHECK(cb);
-
-  cb->context_ = RequestContext::saveContext();
-
-  if (isSecurityPending()) {
-    cb->securityStart_ =
-        std::chrono::duration_cast<Us>(HResClock::now().time_since_epoch())
-            .count();
-    afterSecurity_.push_back(std::make_tuple(
-        static_cast<AfterSecurityMethod>(&HeaderClientChannel::sendRequest),
-        RpcOptions(rpcOptions),
-        std::move(cb),
-        std::move(ctx),
-        std::move(buf),
-        std::move(header)));
-
-    // Security always happens at the beginning of the channel, with seq id 0.
-    // Return sequence id expected to be generated when security is done.
-    if (++sendSecurityPendingSeqId_ == ResponseChannel::ONEWAY_REQUEST_ID) {
-      ++sendSecurityPendingSeqId_;
-    }
-    return sendSecurityPendingSeqId_;
-  }
 
   DestructorGuard dg(this);
 
@@ -457,27 +180,24 @@ uint32_t HeaderClientChannel::sendRequest(
   }
 
   auto twcb = new TwowayCallback<HeaderClientChannel>(
-      this,
-      sendSeqId_,
-      getProtocolId(),
-      std::move(cb),
-      std::move(ctx),
-      &getEventBase()->timer(),
-      timeout,
-      rpcOptions.getChunkTimeout());
+      this, sendSeqId_, std::move(cb), &getEventBase()->timer(), timeout);
 
   setRequestHeaderOptions(header.get());
   addRpcOptionHeaders(header.get(), rpcOptions);
 
-  if (getClientType() != THRIFT_HEADER_CLIENT_TYPE &&
-      getClientType() != THRIFT_HEADER_SASL_CLIENT_TYPE) {
+  if (getClientType() != THRIFT_HEADER_CLIENT_TYPE) {
     recvCallbackOrder_.push_back(sendSeqId_);
   }
   recvCallbacks_[sendSeqId_] = twcb;
-  setBaseReceivedCallback();
+  try {
+    setBaseReceivedCallback(); // Cpp2Channel->setReceiveCallback can throw
+  } catch (const TTransportException& ex) {
+    twcb->messageSendError(
+        folly::exception_wrapper(std::current_exception(), ex));
+    return;
+  }
 
   sendMessage(twcb, std::move(buf), header.get());
-  return sendSeqId_;
 }
 
 // Header framing
@@ -505,18 +225,14 @@ HeaderClientChannel::ClientFramingHandler::removeFrame(IOBufQueue* q) {
     return make_tuple(std::unique_ptr<folly::IOBuf>(), remaining, nullptr);
   }
   channel_.checkSupportedClient(header->getClientType());
-  header->setMinCompressBytes(channel_.getMinCompressBytes());
   return make_tuple(std::move(buf), 0, std::move(header));
 }
 
 // Interface from MessageChannel::RecvCallback
 void HeaderClientChannel::messageReceived(
     unique_ptr<IOBuf>&& buf,
-    unique_ptr<THeader>&& header,
-    unique_ptr<MessageChannel::RecvCallback::sample>) {
+    unique_ptr<THeader>&& header) {
   DestructorGuard dg(this);
-
-  buf = handleSecurityMessage(std::move(buf), std::move(header));
 
   if (!buf) {
     return;
@@ -524,8 +240,7 @@ void HeaderClientChannel::messageReceived(
 
   uint32_t recvSeqId;
 
-  if (header->getClientType() != THRIFT_HEADER_CLIENT_TYPE &&
-      header->getClientType() != THRIFT_HEADER_SASL_CLIENT_TYPE) {
+  if (header->getClientType() != THRIFT_HEADER_CLIENT_TYPE) {
     if (header->getClientType() == THRIFT_HTTP_CLIENT_TYPE &&
         buf->computeChainDataLength() == 0) {
       // HTTP/1.x Servers must send a response, even for oneway requests.
@@ -556,23 +271,14 @@ void HeaderClientChannel::messageReceived(
 
   auto f(cb->second);
 
-  auto it = header->getHeaders().find("thrift_stream");
-  bool isChunk = (it != header->getHeaders().end() && it->second == "chunk");
-
-  if (isChunk) {
-    f->partialReplyReceived(std::move(buf), std::move(header));
-  } else {
-    // non-stream message or end of stream
-    recvCallbacks_.erase(recvSeqId);
-    // we are the last callback?
-    setBaseReceivedCallback();
-    f->replyReceived(std::move(buf), std::move(header));
-  }
+  recvCallbacks_.erase(recvSeqId);
+  // we are the last callback?
+  setBaseReceivedCallback();
+  f->replyReceived(std::move(buf), std::move(header));
 }
 
 void HeaderClientChannel::messageChannelEOF() {
   DestructorGuard dg(this);
-  setProtectionState(ProtectionState::INVALID);
   messageReceiveErrorWrapped(folly::make_exception_wrapper<TTransportException>(
       TTransportException::TTransportExceptionType::END_OF_FILE,
       "Channel got EOF. Check for server hitting connection limit, "
@@ -593,21 +299,6 @@ void HeaderClientChannel::messageReceiveErrorWrapped(
     recvCallbacks_.erase(recvCallbacks_.begin());
     DestructorGuard dgcb(cb);
     cb->requestError(ex);
-  }
-
-  while (!afterSecurity_.empty()) {
-    auto& funcarg = afterSecurity_.front();
-    auto cb = std::move(std::get<2>(funcarg));
-    auto ctx = std::move(std::get<3>(funcarg));
-    afterSecurity_.pop_front();
-    if (cb) {
-      folly::RequestContextScopeGuard rctx(cb->context_);
-      cb->securityEnd_ =
-          std::chrono::duration_cast<Us>(HResClock::now().time_since_epoch())
-              .count();
-      cb->requestError(
-          ClientReceiveState(ex, std::move(ctx), isSecurityActive()));
-    }
   }
 
   setBaseReceivedCallback();
@@ -638,9 +329,7 @@ bool HeaderClientChannel::expireCallback(uint32_t seqId) {
 }
 
 void HeaderClientChannel::setBaseReceivedCallback() {
-  if (getProtectionState() == ProtectionState::INPROGRESS ||
-      getProtectionState() == ProtectionState::WAITING ||
-      recvCallbacks_.size() != 0 ||
+  if (recvCallbacks_.size() != 0 ||
       (closeCallback_ && keepRegisteredForClose_)) {
     cpp2Channel_->setReceiveCallback(this);
   } else {

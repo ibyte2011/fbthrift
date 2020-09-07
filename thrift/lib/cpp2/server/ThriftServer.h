@@ -1,11 +1,11 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@
 #include <folly/Singleton.h>
 #include <folly/SocketAddress.h>
 #include <folly/executors/IOThreadPoolExecutor.h>
+#include <folly/experimental/observer/Observer.h>
 #include <folly/io/ShutdownSocketSet.h>
 #include <folly/io/async/AsyncServerSocket.h>
 #include <folly/io/async/EventBase.h>
@@ -39,14 +40,18 @@
 #include <thrift/lib/cpp2/Thrift.h>
 #include <thrift/lib/cpp2/async/AsyncProcessor.h>
 #include <thrift/lib/cpp2/async/HeaderServerChannel.h>
-#include <thrift/lib/cpp2/async/SaslServer.h>
 #include <thrift/lib/cpp2/server/BaseThriftServer.h>
+#include <thrift/lib/cpp2/server/RequestDebugLog.h>
+#include <thrift/lib/cpp2/server/RequestsRegistry.h>
 #include <thrift/lib/cpp2/server/TransportRoutingHandler.h>
 #include <thrift/lib/cpp2/transport/core/ThriftProcessor.h>
 #include <wangle/acceptor/ServerSocketConfig.h>
+#include <wangle/acceptor/SharedSSLContextManager.h>
 #include <wangle/bootstrap/ServerBootstrap.h>
 #include <wangle/ssl/SSLContextConfig.h>
 #include <wangle/ssl/TLSCredProcessor.h>
+
+DECLARE_bool(thrift_abort_if_exceeds_shutdown_deadline);
 
 namespace apache {
 namespace thrift {
@@ -60,6 +65,11 @@ enum class SSLPolicy { DISABLED, PERMITTED, REQUIRED };
 typedef wangle::Pipeline<folly::IOBufQueue&, std::unique_ptr<folly::IOBuf>>
     Pipeline;
 
+class ThriftTlsConfig : public wangle::CustomConfig {
+ public:
+  bool enableThriftParamsNegotiation{false};
+};
+
 /**
  *   This is yet another thrift server.
  *   Uses cpp2 style generated code.
@@ -69,7 +79,9 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
                      public wangle::ServerBootstrap<Pipeline> {
  private:
   //! SSL context
-  std::shared_ptr<wangle::SSLContextConfig> sslContext_;
+  folly::Optional<folly::observer::Observer<wangle::SSLContextConfig>>
+      sslContextObserver_;
+  folly::observer::CallbackHandle sslCallbackHandle_;
   folly::Optional<wangle::TLSTicketKeySeeds> ticketSeeds_;
 
   folly::Optional<bool> reusePort_;
@@ -77,20 +89,14 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   uint32_t fastOpenQueueSize_{10000};
 
   folly::Optional<wangle::SSLCacheOptions> sslCacheOptions_;
+  wangle::FizzConfig fizzConfig_;
+  ThriftTlsConfig thriftConfig_;
 
   // Security negotiation settings
-  bool saslEnabled_ = false;
-  bool nonSaslEnabled_ = true;
-  const std::string saslPolicy_;
   SSLPolicy sslPolicy_ = SSLPolicy::PERMITTED;
   bool strictSSL_ = false;
-  const bool allowInsecureLoopback_;
-  std::function<std::unique_ptr<SaslServer>(folly::EventBase*)>
-      saslServerFactory_;
-  std::shared_ptr<apache::thrift::concurrency::ThreadManager>
-      saslThreadManager_;
-  size_t nSaslPoolThreads_ = 0;
-  std::string saslThreadsNamePrefix_ = "thrift-sasl";
+  // whether we allow plaintext connections from loopback in REQUIRED mode
+  bool allowPlaintextOnLoopback_ = false;
 
   std::weak_ptr<folly::ShutdownSocketSet> wShutdownSocketSet_;
 
@@ -120,9 +126,6 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   std::chrono::steady_clock::time_point lastRequestTime() const noexcept;
   void touchRequestTimestamp() noexcept;
 
-  //! Thread stack size in MB
-  int threadStackSizeMB_ = 1;
-
   //! Manager of per-thread EventBase objects.
   folly::EventBaseManager* eventBaseManager_ = folly::EventBaseManager::get();
 
@@ -149,37 +152,23 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
    * helps create acceptors.
    */
   std::shared_ptr<wangle::AcceptorFactory> acceptorFactory_;
-
-  /**
-   * ThreadFactory used to create worker threads
-   */
-  std::shared_ptr<apache::thrift::concurrency::ThreadFactory> threadFactory_;
-
-  void addWorker();
+  std::shared_ptr<wangle::SharedSSLContextManager> sharedSSLContextManager_;
 
   void handleSetupFailure(void);
 
   void updateCertsToWatch();
 
-  // Minimum size of response before it might be compressed
-  // Prevents small responses from being compressed,
-  // does not by itself turn on compression. Either client
-  // must request or a default transform must be set
-  uint32_t minCompressBytes_ = 0;
-
-  std::vector<uint16_t> writeTrans_;
-
   bool queueSends_ = true;
 
-  // Whether or not we should try to approximate pending IO events for
-  // load balancing and load shedding
-  bool trackPendingIO_ = false;
-
   bool stopWorkersOnStopListening_ = true;
+  bool joinRequestsWhenServerStops_{true};
   std::chrono::seconds workersJoinTimeout_{30};
+
+  folly::AsyncWriter::ZeroCopyEnableFunc zeroCopyEnableFunc_;
 
   std::shared_ptr<folly::IOThreadPoolExecutor> acceptPool_;
   int nAcceptors_ = 1;
+  uint16_t socketMaxReadsPerEvent_{16};
 
   // HeaderServerChannel and Cpp2Worker to use for a duplex server
   // (used by client). Both are nullptr for a regular server.
@@ -197,6 +186,10 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
 
   wangle::TLSCredProcessor& getCredProcessor();
 
+  void stopWorkers();
+  void stopCPUWorkers();
+  void stopAcceptingAndJoinOutstandingRequests();
+
   std::unique_ptr<wangle::TLSCredProcessor> tlsCredProcessor_;
 
   std::unique_ptr<ThriftProcessor> thriftProcessor_;
@@ -209,9 +202,6 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
 
  public:
   ThriftServer();
-
-  // If sasl_policy is set. FLAGS_sasl_policy will be ignored for this server
-  ThriftServer(const std::string& sasl_policy, bool allow_insecure_loopback);
 
   // NOTE: Don't use this constructor to create a regular Thrift server. This
   // constructor is used by the client to create a duplex server on an existing
@@ -264,8 +254,6 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
     ioThreadPool_->setThreadFactory(threadFactory);
   }
 
-  size_t getNumSaslThreadsToRun() const;
-
   /**
    * Set the thread pool used to handle TLS handshakes. Note that the pool's
    * thread factory will be overridden - if you'd like to use your own, set it
@@ -314,19 +302,31 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
     namedFactory->setNamePrefix(cpp2WorkerThreadName);
   }
 
-  /**
-   * Number of connections that epoll says need attention but ThriftServer
-   * didn't have a chance to "ack" yet. A rough proxy for a number of pending
-   * requests that are waiting to be processed (though it's an imperfect proxy
-   * as there may be more than one request sent through a single connection).
+  // if overloaded, returns applicable overloaded exception code.
+  folly::Optional<std::string> checkOverload(
+      const transport::THeader::StringToStringMap* readHeaders = nullptr,
+      const std::string* = nullptr) const final;
+
+  // returns descriptive error if application is unable to process request
+  PreprocessResult preprocess(
+      const transport::THeader::StringToStringMap* readHeaders,
+      const std::string* method) const final;
+
+  std::string getLoadInfo(int64_t load) const override;
+
+  /*
+   * Use a ZeroCopyEnableFunc to decide when to use zerocopy mode
+   * Ex: use zerocopy when the IOBuf chain exceeds a certain thresold
+   * setZeroCopyEnableFunc([threshold](const std::unique_ptr<folly::IOBuf>& buf)
+   * { return (buf->computeChainDataLength() > threshold);});
    */
-  int32_t getPendingCount() const;
+  void setZeroCopyEnableFunc(folly::AsyncWriter::ZeroCopyEnableFunc func) {
+    zeroCopyEnableFunc_ = std::move(func);
+  }
 
-  bool isOverloaded(
-      const apache::thrift::transport::THeader* header = nullptr) override;
-
-  int64_t getRequestLoad() override;
-  std::string getLoadInfo(int64_t load) override;
+  const folly::AsyncWriter::ZeroCopyEnableFunc& getZeroCopyEnableFunc() const {
+    return zeroCopyEnableFunc_;
+  }
 
   void setAcceptExecutor(std::shared_ptr<folly::IOThreadPoolExecutor> pool) {
     acceptPool_ = pool;
@@ -346,15 +346,55 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   }
 
   /**
-   *
+   * Set the SSLContextConfig on the thrift server.
    */
   void setSSLConfig(std::shared_ptr<wangle::SSLContextConfig> context) {
     CHECK(configMutable());
     if (context) {
-      context->isDefault = true;
+      setSSLConfig(folly::observer::makeObserver(
+          [context = std::move(context)]() { return *context; }));
     }
-    sslContext_ = context;
     updateCertsToWatch();
+  }
+
+  /**
+   * Set the SSLContextConfig on the thrift server. Note that the thrift server
+   * keeps an observer on the SSLContextConfig. Whenever the SSLContextConfig
+   * has an update, the observer callback would reset SSLContextConfig on all
+   * acceptors.
+   */
+  void setSSLConfig(
+      folly::observer::Observer<wangle::SSLContextConfig> contextObserver) {
+    sslContextObserver_ = folly::observer::makeObserver(
+        [observer = std::move(contextObserver)]() {
+          auto context = **observer;
+          context.isDefault = true;
+          return context;
+        });
+    sslCallbackHandle_.cancel();
+    sslCallbackHandle_ = sslContextObserver_->addCallback([&](auto ssl) {
+      if (sharedSSLContextManager_) {
+        sharedSSLContextManager_->reloadSSLContextConfigs();
+      } else {
+        // "this" needed due to
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67274
+        this->forEachWorker([&](wangle::Acceptor* acceptor) {
+          for (auto& sslContext : acceptor->getConfig().sslContextConfigs) {
+            sslContext = *ssl;
+          }
+          acceptor->resetSSLContextConfigs();
+        });
+      }
+      this->updateCertsToWatch();
+    });
+  }
+
+  void setFizzConfig(wangle::FizzConfig config) {
+    fizzConfig_ = config;
+  }
+
+  void setThriftConfig(ThriftTlsConfig thriftConfig) {
+    thriftConfig_ = thriftConfig;
   }
 
   void setSSLCacheOptions(wangle::SSLCacheOptions options) {
@@ -382,6 +422,14 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
    */
   void setIdleServerTimeout(std::chrono::milliseconds timeout) {
     idleServerTimeout_ = timeout;
+  }
+
+  /**
+   * Configures maxReadsPerEvent for accepted connections, see
+   * `folly::AsyncSocket::setMaxReadsPerEvent` for more details.
+   */
+  void setSocketMaxReadsPerEvent(uint16_t socketMaxReadsPerEvent) {
+    socketMaxReadsPerEvent_ = socketMaxReadsPerEvent;
   }
 
   void updateTicketSeeds(wangle::TLSTicketKeySeeds seeds);
@@ -415,8 +463,9 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
     return reusePort_;
   }
 
-  std::shared_ptr<wangle::SSLContextConfig> getSSLConfig() const {
-    return sslContext_;
+  folly::Optional<folly::observer::Observer<wangle::SSLContextConfig>>
+  getSSLConfig() const {
+    return sslContextObserver_;
   }
 
   folly::Optional<wangle::TLSTicketKeySeeds> getTicketSeeds() const {
@@ -429,8 +478,8 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
 
   wangle::ServerSocketConfig getServerSocketConfig() {
     wangle::ServerSocketConfig config;
-    if (getSSLConfig()) {
-      config.sslContextConfigs.push_back(*getSSLConfig());
+    if (sslContextObserver_.has_value()) {
+      config.sslContextConfigs.push_back(*sslContextObserver_->getSnapshot());
     }
     if (sslCacheOptions_) {
       config.sslCacheOptions = *sslCacheOptions_;
@@ -453,6 +502,12 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
     // By default, we set strictSSL to false. This means the server will start
     // even if cert/key is missing as it may become available later
     config.strictSSL = getStrictSSL();
+    config.fizzConfig = fizzConfig_;
+    config.customConfigMap["thrift_tls_config"] =
+        std::make_shared<ThriftTlsConfig>(thriftConfig_);
+    config.socketMaxReadsPerEvent = socketMaxReadsPerEvent_;
+
+    config.useZeroCopy = !!zeroCopyEnableFunc_;
     return config;
   }
 
@@ -506,85 +561,22 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   void setStrictSSL(bool strictSSL) {
     strictSSL_ = strictSSL;
   }
+
   bool getStrictSSL() {
     return strictSSL_;
   }
 
-  /**
-   * Enable negotiation of SASL on received connections.  This
-   * defaults to false.
-   */
-  void setSaslEnabled(bool enabled) {
-    saslEnabled_ = enabled;
-  }
-  bool getSaslEnabled() {
-    return saslEnabled_;
-  }
-  bool getAllowInsecureLoopback() const {
-    return allowInsecureLoopback_;
-  }
-  std::string getSaslPolicy() const {
-    return saslPolicy_;
+  void setAllowPlaintextOnLoopback(bool allow) {
+    allowPlaintextOnLoopback_ = allow;
   }
 
-  // The default SASL implementation can be overridden for testing or
-  // other purposes.  Most users will never need to call this.
-  void setSaslServerFactory(
-      std::function<std::unique_ptr<SaslServer>(folly::EventBase*)> func) {
-    saslServerFactory_ = func;
-  }
-
-  std::function<std::unique_ptr<SaslServer>(folly::EventBase*)>
-  getSaslServerFactory() {
-    return saslServerFactory_;
+  bool isPlaintextAllowedOnLoopback() const {
+    return allowPlaintextOnLoopback_;
   }
 
   void setAcceptorFactory(
       const std::shared_ptr<wangle::AcceptorFactory>& acceptorFactory) {
     acceptorFactory_ = acceptorFactory;
-  }
-
-  /**
-   * Enable negotiation of insecure (non-SASL) on received
-   * connections.  This defaults to true.
-   */
-  void setNonSaslEnabled(bool enabled) {
-    nonSaslEnabled_ = enabled;
-  }
-  bool getNonSaslEnabled() {
-    return nonSaslEnabled_;
-  }
-
-  /**
-   * Sets the number of threads to use for SASL negotiation if it has been
-   * enabled.
-   */
-  void setNSaslPoolThreads(size_t nSaslPoolThreads) {
-    CHECK(configMutable());
-    nSaslPoolThreads_ = nSaslPoolThreads;
-  }
-
-  /**
-   * Sets the number of threads to use for SASL negotiation if it has been
-   * enabled.
-   */
-  size_t getNSaslPoolThreads() {
-    return nSaslPoolThreads_;
-  }
-
-  /**
-   * Sets the prefix used for SASL threads.
-   */
-  void setSaslThreadsNamePrefix(std::string saslThreadsNamePrefix) {
-    CHECK(configMutable());
-    saslThreadsNamePrefix_ = std::move(saslThreadsNamePrefix);
-  }
-
-  /**
-   * Get the prefix used for SASL threads.
-   */
-  const std::string& getSaslThreadsNamePrefix() {
-    return saslThreadsNamePrefix_;
   }
 
   /**
@@ -629,35 +621,6 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   }
 
   /**
-   * Stops workers.  Call this method after calling stopListening() if you
-   * disabled the stopping of workers upon stopListening() via
-   * setStopWorkersOnStopListening() and need to stop the workers explicitly
-   * before server destruction.
-   */
-  void stopWorkers();
-
-  /**
-   * Set the thread stack size in MB
-   * Only valid if you do not also set a threadmanager.
-   *
-   * @param stack size in MB
-   */
-  void setThreadStackSizeMB(int stackSize) {
-    assert(!threadFactory_);
-
-    threadStackSizeMB_ = stackSize;
-  }
-
-  /**
-   * Get the thread stack size
-   *
-   * @return thread stack size
-   */
-  int getThreadStackSizeMB() {
-    return threadStackSizeMB_;
-  }
-
-  /**
    * Set whether to stop io workers when stopListening() is called (we do stop
    * them by default).
    */
@@ -674,6 +637,16 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   }
 
   /**
+   * If stopWorkersOnStopListening is disabled, then enabling
+   * leakOutstandingRequestsWhenServerStops permits thriftServer->serve() to
+   * return before all outstanding requests are joined.
+   */
+  void leakOutstandingRequestsWhenServerStops(bool leak) {
+    CHECK(configMutable());
+    joinRequestsWhenServerStops_ = !leak;
+  }
+
+  /**
    * Sets the timeout for joining workers
    */
   void setWorkersJoinTimeout(std::chrono::seconds timeout) {
@@ -681,58 +654,14 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   }
 
   /**
-   * Set the thread factory used to create new worker threads
-   */
-  void setThreadFactory(
-      std::shared_ptr<apache::thrift::concurrency::ThreadFactory> tf) {
-    CHECK(configMutable());
-    threadFactory_ = tf;
-  }
-
-  /**
-   * Get the minimum response compression size
-   *
-   * @return minimum response compression size
-   */
-  uint32_t getMinCompressBytes() const {
-    return minCompressBytes_;
-  }
-
-  /**
-   * Set the minimum compressioin size
-   *
-   */
-  void setMinCompressBytes(uint32_t bytes) {
-    minCompressBytes_ = bytes;
-  }
-
-  /**
-   * Set the default write transforms to be used on replies. If client
-   * sets transforms, server will reflect them. Otherwise, these will
-   * be used.
-   */
-  void setDefaultWriteTransforms(std::vector<uint16_t>& writeTrans) {
-    writeTrans_ = writeTrans;
-  }
-
-  /**
-   * Returns default write transforms to be used on replies.
-   */
-  std::vector<uint16_t>& getDefaultWriteTransforms() {
-    return writeTrans_;
-  }
-
-  /**
-   * Clears our default write transforms
-   */
-  void clearDefaultWriteTransforms() {
-    writeTrans_.clear();
-  }
-
-  /**
    * Call this to complete initialization
    */
   void setup();
+
+  /**
+   * Create and start the default thread manager unless it already exists.
+   */
+  void setupThreadManager();
 
   /**
    * Kill the workers and wait for listeners to quit
@@ -792,22 +721,6 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
     return queueSends_;
   }
 
-  /**
-   * Set whether or not we should try to approximate pending IO events for
-   * load balancing and load shedding.
-   */
-  void setTrackPendingIO(bool trackPendingIO) {
-    trackPendingIO_ = trackPendingIO;
-  }
-
-  /**
-   * Get whether or not we should try to approximate pending IO events for
-   * load balancing and load shedding.
-   */
-  bool getTrackPendingIO() const {
-    return trackPendingIO_;
-  }
-
   // client side duplex
   std::shared_ptr<HeaderServerChannel> getDuplexServerChannel() {
     return serverChannel_;
@@ -846,8 +759,7 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   const std::vector<std::shared_ptr<folly::AsyncServerSocket>> getSockets()
       const {
     std::vector<std::shared_ptr<folly::AsyncServerSocket>> serverSockets;
-    auto sockets = ServerBootstrap::getSockets();
-    for (auto& socket : sockets) {
+    for (auto& socket : ServerBootstrap::getSockets()) {
       serverSockets.push_back(
           std::dynamic_pointer_cast<folly::AsyncServerSocket>(socket));
     }
@@ -873,8 +785,116 @@ class ThriftServer : public apache::thrift::BaseThriftServer,
   // other.
   void replaceShutdownSocketSet(
       const std::shared_ptr<folly::ShutdownSocketSet>& newSSS);
+
+  /**
+   * For each request debug stub, a snapshot information can be constructed to
+   * persist some transitent states about the corresponding request.
+   */
+  class RequestSnapshot {
+   public:
+    explicit RequestSnapshot(const RequestsRegistry::DebugStub& stub)
+        : methodName_(stub.getMethodName()),
+          creationTimestamp_(stub.getTimestamp()),
+          finishedTimestamp_(stub.getFinished()),
+          protoId_(stub.getProtoId()),
+          payload_(std::move(*stub.clonePayload())),
+          peerAddress_(*stub.getPeerAddress()),
+          rootRequestContextId_(stub.getRootRequestContextId()),
+          reqId_(RequestsRegistry::getRequestId(rootRequestContextId_)),
+          reqDebugLog_(collectRequestDebugLog(stub)) {}
+
+    const std::string& getMethodName() const {
+      return methodName_;
+    }
+
+    std::chrono::steady_clock::time_point getCreationTimestamp() const {
+      return creationTimestamp_;
+    }
+
+    std::chrono::steady_clock::time_point getFinishedTimestamp() const {
+      return finishedTimestamp_;
+    }
+
+    intptr_t getRootRequestContextId() const {
+      return rootRequestContextId_;
+    }
+
+    const std::string& getRequestId() const {
+      return reqId_;
+    }
+
+    /**
+     * Returns empty IOBuff if payload is not present.
+     */
+    const folly::IOBuf& getPayload() const {
+      return payload_;
+    }
+
+    protocol::PROTOCOL_TYPES getProtoId() const {
+      return protoId_;
+    }
+
+    const folly::SocketAddress& getPeerAddress() const {
+      return peerAddress_;
+    }
+
+    const std::vector<std::string>& getDebugLog() const {
+      return reqDebugLog_;
+    }
+
+   private:
+    const std::string methodName_;
+    const std::chrono::steady_clock::time_point creationTimestamp_;
+    const std::chrono::steady_clock::time_point finishedTimestamp_;
+    const protocol::PROTOCOL_TYPES protoId_;
+    folly::IOBuf payload_;
+    folly::SocketAddress peerAddress_;
+    intptr_t rootRequestContextId_;
+    const std::string reqId_;
+    const std::vector<std::string> reqDebugLog_;
+  };
+  folly::SemiFuture<std::vector<RequestSnapshot>> snapshotActiveRequests();
 };
 
+template <typename AcceptorClass, typename SharedSSLContextManagerClass>
+class ThriftAcceptorFactory : public wangle::AcceptorFactorySharedSSLContext {
+ public:
+  ThriftAcceptorFactory<AcceptorClass, SharedSSLContextManagerClass>(
+      ThriftServer* server)
+      : server_(server) {}
+
+  std::shared_ptr<wangle::SharedSSLContextManager>
+  initSharedSSLContextManager() {
+    if constexpr (!std::is_same<SharedSSLContextManagerClass, void>::value) {
+      sharedSSLContextManager_ = std::make_shared<SharedSSLContextManagerClass>(
+          server_->getServerSocketConfig());
+    }
+    return sharedSSLContextManager_;
+  }
+
+  std::shared_ptr<wangle::Acceptor> newAcceptor(folly::EventBase* eventBase) {
+    if (!sharedSSLContextManager_) {
+      return AcceptorClass::create(server_, nullptr, eventBase);
+    }
+    auto acceptor = AcceptorClass::create(
+        server_,
+        nullptr,
+        eventBase,
+        sharedSSLContextManager_->getCertManager(),
+        sharedSSLContextManager_->getContextManager(),
+        sharedSSLContextManager_->getFizzContext());
+    sharedSSLContextManager_->addAcceptor(acceptor);
+    return acceptor;
+  }
+
+ protected:
+  ThriftServer* server_;
+};
+using DefaultThriftAcceptorFactory = ThriftAcceptorFactory<Cpp2Worker, void>;
+
+using DefaultThriftAcceptorFactorySharedSSLContext = ThriftAcceptorFactory<
+    Cpp2Worker,
+    wangle::SharedSSLContextManagerImpl<wangle::FizzConfigUtil>>;
 } // namespace thrift
 } // namespace apache
 

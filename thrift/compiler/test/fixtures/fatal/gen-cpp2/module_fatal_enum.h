@@ -210,7 +210,6 @@ struct enum3_enum_traits {
   struct enum3__struct_unique_strings_list {
     using field0_3 = thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::field0_3;
     using field1_3 = thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::field1_3;
-    using field2_3 = thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::field2_3;
   };
 
   struct enum3__struct_enum_members_field0_3 {
@@ -249,65 +248,19 @@ struct enum3_enum_traits {
         >
       >;
     };
-  };
 
-  struct enum3__struct_enum_members_field2_3 {
-    using name = enum3__struct_unique_strings_list::field2_3;
-    using value = std::integral_constant<type, type::field2_3>;
-
-    class annotations {
-      struct annotations__unique_annotations_keys {
-        using field_annotation = thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::field_annotation;
-        using field_structured_annotation = thrift_fatal_impl_detail::test_cpp2_cpp_reflection_module__unique_strings_list::field_structured_annotation;
-      };
-
-      struct annotations__unique_annotations_values {
-        using field_annotation = ::fatal::sequence<char, 's', 'o', 'm', 'e', ' ', 'o', 't', 'h', 'e', 'r', ' ', 't', 'e', 'x', 't'>;
-        using field_structured_annotation = ::fatal::sequence<char, '{', '"', 'a', '"', ':', ' ', '"', 'f', 'o', 'o', '"', ',', ' ', '"', 'b', '"', ':', ' ', '5', '6', '7', ',', ' ', '"', 'c', '"', ':', ' ', 't', 'r', 'u', 'e', '}'>;
-      };
-
-      public:
-      using keys = annotations__unique_annotations_keys;
-      using values = annotations__unique_annotations_values;
-      using map = ::fatal::list<
-        ::apache::thrift::annotation<
-          keys::field_annotation,
-          values::field_annotation
-        >,
-        ::apache::thrift::annotation<
-          keys::field_structured_annotation,
-          values::field_structured_annotation,
-          ::fatal::list<
-            ::fatal::pair<
-              ::fatal::sequence<char, 'a'>,
-              ::fatal::sequence<char, 'f', 'o', 'o'>
-            >,
-            ::fatal::pair<
-              ::fatal::sequence<char, 'b'>,
-              ::std::integral_constant< ::std::uintmax_t, 567>
-            >,
-            ::fatal::pair<
-              ::fatal::sequence<char, 'c'>,
-              ::std::true_type
-            >
-          >
-        >
-      >;
-    };
   };
 
   struct enum3__struct_enum_members {
     using field0_3 = enum3__struct_enum_members_field0_3;
     using field1_3 = enum3__struct_enum_members_field1_3;
-    using field2_3 = enum3__struct_enum_members_field2_3;
   };
 
   using member = enum3__struct_enum_members;
 
   using fields = ::fatal::list<
       member::field0_3,
-      member::field1_3,
-      member::field2_3
+      member::field1_3
   >;
 
   class annotations {
@@ -360,11 +313,11 @@ struct enum3_enum_traits {
     >;
   };
 
+
   static char const *to_string(type e, char const *fallback) {
     switch (e) {
       case type::field0_3: return "field0_3";
       case type::field1_3: return "field1_3";
-      case type::field2_3: return "field2_3";
       default: return fallback;
     }
   }
@@ -898,5 +851,4 @@ FATAL_REGISTER_ENUM_TRAITS(
     static_cast<::apache::thrift::legacy_type_id_t>(958943865626138984ull)
   >
 );
-
 }} // test_cpp2::cpp_reflection

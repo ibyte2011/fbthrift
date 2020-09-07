@@ -1,5 +1,19 @@
 <?hh
-// Copyright 2004-present Facebook. All Rights Reserved.
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  * Compact implementation of the Thrift protocol.
@@ -355,7 +369,11 @@ abstract class TCompactProtocolBase extends TProtocol {
   }
 
   <<__Override>>
-  public function readFieldBegin(&$name, &$field_type, &$field_id) {
+  public function readFieldBegin(
+    inout $name,
+    inout $field_type,
+    inout $field_id,
+  ) {
     $result = $this->readUByte(&$field_type);
     $delta = $field_type >> 4;
     $field_type = $field_type & 0x0f;
@@ -416,7 +434,7 @@ abstract class TCompactProtocolBase extends TProtocol {
   }
 
   <<__Override>>
-  public function readMessageBegin(&$name, &$type, &$seqid) {
+  public function readMessageBegin(inout $name, inout $type, inout $seqid) {
     $protoId = 0;
     $result = $this->readUByte(&$protoId);
     if ($protoId != self::PROTOCOL_ID) {
@@ -444,7 +462,7 @@ abstract class TCompactProtocolBase extends TProtocol {
   }
 
   <<__Override>>
-  public function readStructBegin(&$name) {
+  public function readStructBegin(inout $name) {
     $name = ''; // unused
     $this->structs[] = varray[$this->state, $this->lastFid];
     $this->state = self::STATE_FIELD_READ;
@@ -475,7 +493,7 @@ abstract class TCompactProtocolBase extends TProtocol {
   }
 
   <<__Override>>
-  public function readMapBegin(&$key_type, &$val_type, &$size) {
+  public function readMapBegin(inout $key_type, inout $val_type, inout $size) {
     $result = $this->readVarint(&$size);
     $types = 0;
     if ($size > 0) {

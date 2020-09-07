@@ -20,7 +20,7 @@ interface BarAsyncIf extends \IThriftAsyncIf {
    *       4: Foo d,
    *       5: i64 e);
    */
-  public function baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string>;
+  public function baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string>;
 }
 
 /**
@@ -37,7 +37,41 @@ interface BarIf extends \IThriftSyncIf {
    *       4: Foo d,
    *       5: i64 e);
    */
-  public function baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): string;
+  public function baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): string;
+}
+
+/**
+ * Original thrift service:-
+ * Bar
+ */
+interface BarClientIf extends \IThriftSyncIf {
+  /**
+   * Original thrift definition:-
+   * string
+   *   baz(1: set<i32> a,
+   *       2: list<map<i32, set<string>>> b,
+   *       3: i64 c,
+   *       4: Foo d,
+   *       5: i64 e);
+   */
+  public function baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string>;
+}
+
+/**
+ * Original thrift service:-
+ * Bar
+ */
+interface BarAsyncRpcOptionsIf extends \IThriftAsyncRpcOptionsIf {
+  /**
+   * Original thrift definition:-
+   * string
+   *   baz(1: set<i32> a,
+   *       2: list<map<i32, set<string>>> b,
+   *       3: i64 c,
+   *       4: Foo d,
+   *       5: i64 e);
+   */
+  public function baz(\RpcOptions $rpc_options, ?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string>;
 }
 
 /**
@@ -47,24 +81,24 @@ interface BarIf extends \IThriftSyncIf {
 trait BarClientBase {
   require extends \ThriftClientBase;
 
-  protected function sendImpl_baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): int {
+  protected function sendImpl_baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): int {
     $currentseqid = $this->getNextSequenceID();
-    $args = new Bar_baz_args(Map {
-      'a' => $a === null ? null : $a,
-      'b' => $b === null ? null : varray(Vec\map($b, 
+    $args = new Bar_baz_args(
+      $a === null ? null : $a,
+      $b === null ? null : varray(Vec\map($b, 
         $_val0 ==> darray($_val0)
       )),
-      'c' => $c === null ? null : $c,
-      'd' => $d === null ? null : $d,
-      'e' => $e === null ? null : $e,
-    });
+      $c === null ? null : $c,
+      $d === null ? null : $d,
+      $e === null ? null : $e,
+    );
     try {
       $this->eventHandler_->preSend('baz', $args, $currentseqid);
-      if ($this->output_ instanceof \TBinaryProtocolAccelerated)
+      if ($this->output_ is \TBinaryProtocolAccelerated)
       {
         \thrift_protocol_write_binary($this->output_, 'baz', \TMessageType::CALL, $args, $currentseqid, $this->output_->isStrictWrite(), false);
       }
-      else if ($this->output_ instanceof \TCompactProtocolAccelerated)
+      else if ($this->output_ is \TCompactProtocolAccelerated)
       {
         \thrift_protocol_write_compact($this->output_, 'baz', \TMessageType::CALL, $args, $currentseqid, false);
       }
@@ -97,9 +131,9 @@ trait BarClientBase {
   protected function recvImpl_baz(?int $expectedsequenceid = null): string {
     try {
       $this->eventHandler_->preRecv('baz', $expectedsequenceid);
-      if ($this->input_ instanceof \TBinaryProtocolAccelerated) {
+      if ($this->input_ is \TBinaryProtocolAccelerated) {
         $result = \thrift_protocol_read_binary($this->input_, 'Bar_baz_result', $this->input_->isStrictRead());
-      } else if ($this->input_ instanceof \TCompactProtocolAccelerated)
+      } else if ($this->input_ is \TCompactProtocolAccelerated)
       {
         $result = \thrift_protocol_read_compact($this->input_, 'Bar_baz_result');
       }
@@ -109,7 +143,11 @@ trait BarClientBase {
         $fname = '';
         $mtype = 0;
 
-        $this->input_->readMessageBegin(&$fname, &$mtype, &$rseqid);
+        $this->input_->readMessageBegin(
+          inout $fname,
+          inout $mtype,
+          inout $rseqid,
+        );
         if ($mtype == \TMessageType::EXCEPTION) {
           $x = new \TApplicationException();
           $x->read($this->input_);
@@ -164,22 +202,28 @@ class BarAsyncClient extends \ThriftClientBase implements BarAsyncIf {
    *       4: Foo d,
    *       5: i64 e);
    */
-  public async function baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string> {
+  public async function baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Bar", "baz");
     $currentseqid = $this->sendImpl_baz($a, $b, $c, $d, $e);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_baz($currentseqid);
   }
 
 }
 
-class BarClient extends \ThriftClientBase implements BarIf {
+class BarClient extends \ThriftClientBase implements BarClientIf {
   use BarClientBase;
-
-  <<__Deprecated('use gen_baz()')>>
-  public function baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): string {
-    $currentseqid = $this->sendImpl_baz($a, $b, $c, $d, $e);
-    return $this->recvImpl_baz($currentseqid);
-  }
 
   /**
    * Original thrift definition:-
@@ -190,14 +234,26 @@ class BarClient extends \ThriftClientBase implements BarIf {
    *       4: Foo d,
    *       5: i64 e);
    */
-  public async function gen_baz(?darray<int, bool> $a, ?\Indexish<int, \Indexish<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string> {
+  public async function baz(?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Bar", "baz");
     $currentseqid = $this->sendImpl_baz($a, $b, $c, $d, $e);
-    await $this->asyncHandler_->genWait($currentseqid);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse(new \RpcOptions(), $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
     return $this->recvImpl_baz($currentseqid);
   }
 
   /* send and recv functions */
-  public function send_baz(darray<int, bool> $a, \Indexish<int, \Indexish<int, darray<string, bool>>> $b, int $c, ?Foo $d, int $e): int {
+  public function send_baz(darray<int, bool> $a, KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, int $c, ?Foo $d, int $e): int {
     return $this->sendImpl_baz($a, $b, $c, $d, $e);
   }
   public function recv_baz(?int $expectedsequenceid = null): string {
@@ -205,7 +261,39 @@ class BarClient extends \ThriftClientBase implements BarIf {
   }
 }
 
-abstract class BarAsyncProcessorBase extends ThriftAsyncProcessor {
+class BarAsyncRpcOptionsClient extends \ThriftClientBase implements BarAsyncRpcOptionsIf {
+  use BarClientBase;
+
+  /**
+   * Original thrift definition:-
+   * string
+   *   baz(1: set<i32> a,
+   *       2: list<map<i32, set<string>>> b,
+   *       3: i64 c,
+   *       4: Foo d,
+   *       5: i64 e);
+   */
+  public async function baz(\RpcOptions $rpc_options, ?darray<int, bool> $a, ?KeyedContainer<int, KeyedContainer<int, darray<string, bool>>> $b, ?int $c, ?Foo $d, ?int $e): Awaitable<string> {
+    await $this->asyncHandler_->genBefore("Bar", "baz");
+    $currentseqid = $this->sendImpl_baz($a, $b, $c, $d, $e);
+    $channel = $this->channel_;
+    $out_transport = $this->output_->getTransport();
+    $in_transport = $this->input_->getTransport();
+    if ($channel !== null && $out_transport is \TMemoryBuffer && $in_transport is \TMemoryBuffer) {
+      $msg = $out_transport->getBuffer();
+      $out_transport->resetBuffer();
+      list($result_msg, $_read_headers) = await $channel->genSendRequestResponse($rpc_options, $msg);
+      $in_transport->resetBuffer();
+      $in_transport->write($result_msg);
+    } else {
+      await $this->asyncHandler_->genWait($currentseqid);
+    }
+    return $this->recvImpl_baz($currentseqid);
+  }
+
+}
+
+abstract class BarAsyncProcessorBase extends \ThriftAsyncProcessor {
   abstract const type TThriftIf as BarAsyncIf;
   protected async function process_baz(int $seqid, \TProtocol $input, \TProtocol $output): Awaitable<void> {
     $handler_ctx = $this->eventHandler_->getHandlerContext('baz');
@@ -213,9 +301,9 @@ abstract class BarAsyncProcessorBase extends ThriftAsyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'baz', darray[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'Bar_baz_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'Bar_baz_args');
     } else {
       $args = new Bar_baz_args();
@@ -234,11 +322,11 @@ abstract class BarAsyncProcessorBase extends ThriftAsyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'baz', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'baz', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'baz', $reply_type, $result, $seqid);
     }
@@ -256,7 +344,7 @@ class BarAsyncProcessor extends BarAsyncProcessorBase {
   const type TThriftIf = BarAsyncIf;
 }
 
-abstract class BarSyncProcessorBase extends ThriftSyncProcessor {
+abstract class BarSyncProcessorBase extends \ThriftSyncProcessor {
   abstract const type TThriftIf as BarIf;
   protected function process_baz(int $seqid, \TProtocol $input, \TProtocol $output): void {
     $handler_ctx = $this->eventHandler_->getHandlerContext('baz');
@@ -264,9 +352,9 @@ abstract class BarSyncProcessorBase extends ThriftSyncProcessor {
 
     $this->eventHandler_->preRead($handler_ctx, 'baz', darray[]);
 
-    if ($input instanceof \TBinaryProtocolAccelerated) {
+    if ($input is \TBinaryProtocolAccelerated) {
       $args = \thrift_protocol_read_binary_struct($input, 'Bar_baz_args');
-    } else if ($input instanceof \TCompactProtocolAccelerated) {
+    } else if ($input is \TCompactProtocolAccelerated) {
       $args = \thrift_protocol_read_compact_struct($input, 'Bar_baz_args');
     } else {
       $args = new Bar_baz_args();
@@ -285,11 +373,11 @@ abstract class BarSyncProcessorBase extends ThriftSyncProcessor {
       $result = new \TApplicationException($ex->getMessage()."\n".$ex->getTraceAsString());
     }
     $this->eventHandler_->preWrite($handler_ctx, 'baz', $result);
-    if ($output instanceof \TBinaryProtocolAccelerated)
+    if ($output is \TBinaryProtocolAccelerated)
     {
       \thrift_protocol_write_binary($output, 'baz', $reply_type, $result, $seqid, $output->isStrictWrite());
     }
-    else if ($output instanceof \TCompactProtocolAccelerated)
+    else if ($output is \TCompactProtocolAccelerated)
     {
       \thrift_protocol_write_compact($output, 'baz', $reply_type, $result, $seqid);
     }
@@ -314,60 +402,69 @@ class BarProcessor extends BarSyncProcessor {}
 class Bar_baz_args implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static darray<int, darray<string, mixed>> $_TSPEC = darray[
-    1 => darray[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    1 => shape(
       'var' => 'a',
       'type' => \TType::SET,
       'etype' => \TType::I32,
-      'elem' => darray[
+      'elem' => shape(
         'type' => \TType::I32,
-        ],
-        'format' => 'array',
-      ],
-    2 => darray[
+      ),
+      'format' => 'array',
+    ),
+    2 => shape(
       'var' => 'b',
       'type' => \TType::LST,
       'etype' => \TType::MAP,
-      'elem' => darray[
+      'elem' => shape(
         'type' => \TType::MAP,
         'ktype' => \TType::I32,
         'vtype' => \TType::SET,
-        'key' => darray[
+        'key' => shape(
           'type' => \TType::I32,
-        ],
-        'val' => darray[
+        ),
+        'val' => shape(
           'type' => \TType::SET,
           'etype' => \TType::STRING,
-          'elem' => darray[
+          'elem' => shape(
             'type' => \TType::STRING,
-            ],
-            'format' => 'array',
-          ],
+          ),
           'format' => 'array',
-        ],
+        ),
         'format' => 'array',
-      ],
-    3 => darray[
+      ),
+      'format' => 'array',
+    ),
+    3 => shape(
       'var' => 'c',
       'type' => \TType::I64,
-      ],
-    4 => darray[
+    ),
+    4 => shape(
       'var' => 'd',
       'type' => \TType::STRUCT,
-      'class' => 'Foo',
-      ],
-    5 => darray[
+      'class' => Foo::class,
+    ),
+    5 => shape(
       'var' => 'e',
       'type' => \TType::I64,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'a' => 1,
     'b' => 2,
     'c' => 3,
     'd' => 4,
     'e' => 5,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'a' => ?darray<int, bool>,
+    ?'b' => ?varray<darray<int, darray<string, bool>>>,
+    ?'c' => ?int,
+    ?'d' => ?Foo,
+    ?'e' => ?int,
+  );
+
   const int STRUCTURAL_ID = 7865027497865509792;
   public ?darray<int, bool> $a;
   public ?varray<darray<int, darray<string, bool>>> $b;
@@ -375,17 +472,76 @@ class Bar_baz_args implements \IThriftStruct {
   public ?Foo $d;
   public ?int $e;
 
-  public function __construct(@\Indexish<string, mixed> $vals = darray[]) {
-    // UNSAFE_BLOCK $vals is not type safe :(, and we don't cast structs (yet)
-    $this->a = idx($vals, 'a', null);
-    $this->b = idx($vals, 'b', null);
-    $this->c = idx($vals, 'c', null);
-    $this->d = idx($vals, 'd', null);
-    $this->e = idx($vals, 'e', 4);
+  <<__Rx>>
+  public function __construct(?darray<int, bool> $a = null, ?varray<darray<int, darray<string, bool>>> $b = null, ?int $c = null, ?Foo $d = null, ?int $e = null  ) {
+    $this->a = $a;
+    $this->b = $b;
+    $this->c = $c;
+    $this->d = $d;
+    $this->e = $e ?? 4;
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'a'),
+      Shapes::idx($shape, 'b'),
+      Shapes::idx($shape, 'c'),
+      Shapes::idx($shape, 'd'),
+      Shapes::idx($shape, 'e'),
+    );
+  }
+
+  public static function fromMap_DEPRECATED(@KeyedContainer<string, mixed> $map): this {
+    return new static(
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'a'),
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'b'),
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'c'),
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'd'),
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'e'),
+    );
   }
 
   public function getName(): string {
     return 'Bar_baz_args';
+  }
+
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'a' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'b' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'c' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'd' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+        'e' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
   }
 
 }
@@ -393,25 +549,72 @@ class Bar_baz_args implements \IThriftStruct {
 class Bar_baz_result implements \IThriftStruct {
   use \ThriftSerializationTrait;
 
-  public static darray<int, darray<string, mixed>> $_TSPEC = darray[
-    0 => darray[
+  const dict<int, this::TFieldSpec> SPEC = dict[
+    0 => shape(
       'var' => 'success',
       'type' => \TType::STRING,
-      ],
-    ];
-  public static Map<string, int> $_TFIELDMAP = Map {
+    ),
+  ];
+  const dict<string, int> FIELDMAP = dict[
     'success' => 0,
-  };
+  ];
+
+  const type TConstructorShape = shape(
+    ?'success' => ?string,
+  );
+
   const int STRUCTURAL_ID = 1365128170602685579;
   public ?string $success;
 
-  public function __construct(@\Indexish<string, mixed> $vals = darray[]) {
-    // UNSAFE_BLOCK $vals is not type safe :(, and we don't cast structs (yet)
+  <<__Rx>>
+  public function __construct(?string $success = null  ) {
+  }
+
+  <<__Rx>>
+  public static function fromShape(self::TConstructorShape $shape): this {
+    return new static(
+      Shapes::idx($shape, 'success'),
+    );
+  }
+
+  public static function fromMap_DEPRECATED(@KeyedContainer<string, mixed> $map): this {
+    return new static(
+      /* HH_FIXME[4110] previously hidden by unsafe */
+      idx($map, 'success'),
+    );
   }
 
   public function getName(): string {
     return 'Bar_baz_result';
   }
 
+  public static function getAllStructuredAnnotations(): \TStructAnnotations {
+    return shape(
+      'struct' => dict[],
+      'fields' => dict[
+        'success' => shape(
+          'field' => dict[],
+          'type' => dict[],
+        ),
+      ],
+    );
+  }
+
+  public static function getAnnotations(): darray<string, mixed> {
+    return darray[
+    ];
+  }
+
+}
+
+class BarStaticMetadata implements \IThriftServiceStaticMetadata {
+  public static function getAllStructuredAnnotations(): \TServiceAnnotations {
+    return shape(
+      'service' => dict[],
+      'functions' => dict[
+        'baz' => dict[],
+      ],
+    );
+  }
 }
 

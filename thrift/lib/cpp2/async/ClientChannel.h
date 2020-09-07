@@ -1,11 +1,11 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <folly/io/async/AsyncTransport.h>
 #include <thrift/lib/cpp2/async/HeaderChannel.h>
 
 namespace apache {
@@ -47,7 +48,7 @@ class ClientChannel : public RequestChannel, public HeaderChannel {
   typedef std::unique_ptr<ClientChannel, folly::DelayedDestruction::Destructor>
       Ptr;
 
-  virtual apache::thrift::async::TAsyncTransport* getTransport() = 0;
+  virtual folly::AsyncTransport* getTransport() = 0;
 
   virtual bool good() = 0;
 
@@ -57,18 +58,17 @@ class ClientChannel : public RequestChannel, public HeaderChannel {
   virtual void detachEventBase() = 0;
   virtual bool isDetachable() = 0;
 
-  virtual bool isSecurityActive() = 0;
   virtual uint32_t getTimeout() = 0;
   virtual void setTimeout(uint32_t ms) = 0;
 
   virtual void closeNow() = 0;
   virtual CLIENT_TYPE getClientType() = 0;
 
-  void setOnDetachable(folly::Function<void()> onDetachable) {
+  virtual void setOnDetachable(folly::Function<void()> onDetachable) {
     onDetachable_ = std::move(onDetachable);
   }
 
-  void unsetOnDetachable() {
+  virtual void unsetOnDetachable() {
     onDetachable_ = nullptr;
   }
 

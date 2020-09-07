@@ -9,7 +9,7 @@ import (
 	"context"
 	"sync"
 	"fmt"
-	thrift "github.com/facebook/fbthrift-go"
+	thrift "github.com/facebook/fbthrift/thrift/lib/go/thrift"
 	includes0 "includes"
 
 )
@@ -190,6 +190,20 @@ func (p *MyStruct) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("MyStruct(%+v)", *p)
+
+  var myIncludedFieldVal string
+  if p.MyIncludedField == nil {
+    myIncludedFieldVal = "<nil>"
+  } else {
+    myIncludedFieldVal = fmt.Sprintf("%v", p.MyIncludedField)
+  }
+  var myOtherIncludedFieldVal string
+  if p.MyOtherIncludedField == nil {
+    myOtherIncludedFieldVal = "<nil>"
+  } else {
+    myOtherIncludedFieldVal = fmt.Sprintf("%v", p.MyOtherIncludedField)
+  }
+  myIncludedIntVal := fmt.Sprintf("%v", p.MyIncludedInt)
+  return fmt.Sprintf("MyStruct({MyIncludedField:%s MyOtherIncludedField:%s MyIncludedInt:%s})", myIncludedFieldVal, myOtherIncludedFieldVal, myIncludedIntVal)
 }
 

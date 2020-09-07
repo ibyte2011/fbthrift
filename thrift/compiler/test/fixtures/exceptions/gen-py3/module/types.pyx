@@ -4,45 +4,53 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 
+cimport module.types_reflection as _types_reflection
 
-cdef class Banal(thrift.py3.exceptions.Error):
+
+
+@__cython.auto_pickle(False)
+cdef class Banal(thrift.py3.exceptions.GeneratedError):
 
     def __init__(
         Banal self
     ):
-        self._cpp_obj = move(Banal._make_instance(
+        self._cpp_obj = __fbthrift_move(Banal._make_instance(
+          NULL,
           NULL,
         ))
         _builtins.Exception.__init__(self, )
@@ -50,7 +58,8 @@ cdef class Banal(thrift.py3.exceptions.Error):
 
     @staticmethod
     cdef unique_ptr[cBanal] _make_instance(
-        cBanal* base_instance
+        cBanal* base_instance,
+        bint* __isNOTSET
     ) except *:
         cdef unique_ptr[cBanal] c_inst
         if base_instance:
@@ -60,7 +69,12 @@ cdef class Banal(thrift.py3.exceptions.Error):
 
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Banal", {
+        })
 
     def __iter__(self):
         return iter(())
@@ -70,10 +84,10 @@ cdef class Banal(thrift.py3.exceptions.Error):
 
     @staticmethod
     cdef create(shared_ptr[cBanal] cpp_obj):
-        inst = <Banal>Banal.__new__(Banal, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
-        inst._cpp_obj = move_shared(cpp_obj)
-        _builtins.Exception.__init__(inst, )
-        return inst
+        __fbthrift_inst = <Banal>Banal.__new__(Banal, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        _builtins.Exception.__init__(__fbthrift_inst, )
+        return __fbthrift_inst
 
 
     def __hash__(Banal self):
@@ -85,7 +99,7 @@ cdef class Banal(thrift.py3.exceptions.Error):
         cdef shared_ptr[cBanal] cpp_obj = make_shared[cBanal](
             deref(self._cpp_obj)
         )
-        return Banal.create(move_shared(cpp_obj))
+        return Banal.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -99,34 +113,38 @@ cdef class Banal(thrift.py3.exceptions.Error):
             else:
                 return NotImplemented
 
-        cdef cBanal cself = deref((<Banal>self)._cpp_obj)
-        cdef cBanal cother = deref((<Banal>other)._cpp_obj)
+        cdef cBanal* cself = (<Banal>self)._cpp_obj.get()
+        cdef cBanal* cother = (<Banal>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Banal()
 
 
-cdef class Fiery(thrift.py3.exceptions.Error):
+
+@__cython.auto_pickle(False)
+cdef class Fiery(thrift.py3.exceptions.GeneratedError):
 
     def __init__(
         Fiery self,
         str message=None
     ):
-        if message is None:
-            raise TypeError("__init__() needs required argument 'message'")
-        self._cpp_obj = move(Fiery._make_instance(
+        self._cpp_obj = __fbthrift_move(Fiery._make_instance(
+          NULL,
           NULL,
           message,
         ))
@@ -136,7 +154,8 @@ cdef class Fiery(thrift.py3.exceptions.Error):
     @staticmethod
     cdef unique_ptr[cFiery] _make_instance(
         cFiery* base_instance,
-        object message
+        bint* __isNOTSET,
+        str message 
     ) except *:
         cdef unique_ptr[cFiery] c_inst
         if base_instance:
@@ -145,10 +164,15 @@ cdef class Fiery(thrift.py3.exceptions.Error):
             c_inst = make_unique[cFiery]()
 
         if message is not None:
-            deref(c_inst).message = message.encode('UTF-8')
+            deref(c_inst).message = thrift.py3.types.move(thrift.py3.types.bytes_to_string(message.encode('utf-8')))
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Fiery", {
+        })
 
     def __iter__(self):
         yield 'message', self.message
@@ -158,10 +182,10 @@ cdef class Fiery(thrift.py3.exceptions.Error):
 
     @staticmethod
     cdef create(shared_ptr[cFiery] cpp_obj):
-        inst = <Fiery>Fiery.__new__(Fiery, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
-        inst._cpp_obj = move_shared(cpp_obj)
-        _builtins.Exception.__init__(inst, inst.message)
-        return inst
+        __fbthrift_inst = <Fiery>Fiery.__new__(Fiery, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        _builtins.Exception.__init__(__fbthrift_inst, __fbthrift_inst.message)
+        return __fbthrift_inst
 
     @property
     def message(self):
@@ -172,13 +196,19 @@ cdef class Fiery(thrift.py3.exceptions.Error):
     def __hash__(Fiery self):
         return super().__hash__()
 
+    def __str__(Fiery self):
+        field = self.message
+        if field is None:
+            return str(field)
+        return field
+
     def __repr__(Fiery self):
         return f'Fiery(message={repr(self.message)})'
     def __copy__(Fiery self):
         cdef shared_ptr[cFiery] cpp_obj = make_shared[cFiery](
             deref(self._cpp_obj)
         )
-        return Fiery.create(move_shared(cpp_obj))
+        return Fiery.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -192,32 +222,38 @@ cdef class Fiery(thrift.py3.exceptions.Error):
             else:
                 return NotImplemented
 
-        cdef cFiery cself = deref((<Fiery>self)._cpp_obj)
-        cdef cFiery cother = deref((<Fiery>other)._cpp_obj)
+        cdef cFiery* cself = (<Fiery>self)._cpp_obj.get()
+        cdef cFiery* cother = (<Fiery>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Fiery()
 
 
-cdef class Serious(thrift.py3.exceptions.Error):
+
+@__cython.auto_pickle(False)
+cdef class Serious(thrift.py3.exceptions.GeneratedError):
 
     def __init__(
         Serious self,
         str sonnet=None
     ):
-        self._cpp_obj = move(Serious._make_instance(
+        self._cpp_obj = __fbthrift_move(Serious._make_instance(
+          NULL,
           NULL,
           sonnet,
         ))
@@ -227,7 +263,8 @@ cdef class Serious(thrift.py3.exceptions.Error):
     @staticmethod
     cdef unique_ptr[cSerious] _make_instance(
         cSerious* base_instance,
-        object sonnet
+        bint* __isNOTSET,
+        str sonnet 
     ) except *:
         cdef unique_ptr[cSerious] c_inst
         if base_instance:
@@ -236,11 +273,17 @@ cdef class Serious(thrift.py3.exceptions.Error):
             c_inst = make_unique[cSerious]()
 
         if sonnet is not None:
-            deref(c_inst).sonnet = sonnet.encode('UTF-8')
+            deref(c_inst).sonnet_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(sonnet.encode('utf-8'))))
             deref(c_inst).__isset.sonnet = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("Serious", {
+          "sonnet": cpp_obj.sonnet_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'sonnet', self.sonnet
@@ -250,21 +293,27 @@ cdef class Serious(thrift.py3.exceptions.Error):
 
     @staticmethod
     cdef create(shared_ptr[cSerious] cpp_obj):
-        inst = <Serious>Serious.__new__(Serious, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
-        inst._cpp_obj = move_shared(cpp_obj)
-        _builtins.Exception.__init__(inst, inst.sonnet)
-        return inst
+        __fbthrift_inst = <Serious>Serious.__new__(Serious, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        _builtins.Exception.__init__(__fbthrift_inst, __fbthrift_inst.sonnet)
+        return __fbthrift_inst
 
     @property
     def sonnet(self):
         if not deref(self._cpp_obj).__isset.sonnet:
             return None
 
-        return (<bytes>deref(self._cpp_obj).sonnet).decode('UTF-8')
+        return (<bytes>deref(self._cpp_obj).sonnet_ref().value_unchecked()).decode('UTF-8')
 
 
     def __hash__(Serious self):
         return super().__hash__()
+
+    def __str__(Serious self):
+        field = self.sonnet
+        if field is None:
+            return str(field)
+        return field
 
     def __repr__(Serious self):
         return f'Serious(sonnet={repr(self.sonnet)})'
@@ -272,7 +321,7 @@ cdef class Serious(thrift.py3.exceptions.Error):
         cdef shared_ptr[cSerious] cpp_obj = make_shared[cSerious](
             deref(self._cpp_obj)
         )
-        return Serious.create(move_shared(cpp_obj))
+        return Serious.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -286,22 +335,274 @@ cdef class Serious(thrift.py3.exceptions.Error):
             else:
                 return NotImplemented
 
-        cdef cSerious cself = deref((<Serious>self)._cpp_obj)
-        cdef cSerious cother = deref((<Serious>other)._cpp_obj)
+        cdef cSerious* cself = (<Serious>self)._cpp_obj.get()
+        cdef cSerious* cother = (<Serious>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__Serious()
+
+
+
+@__cython.auto_pickle(False)
+cdef class ComplexFieldNames(thrift.py3.exceptions.GeneratedError):
+
+    def __init__(
+        ComplexFieldNames self,
+        str error_message=None,
+        str internal_error_message=None
+    ):
+        self._cpp_obj = __fbthrift_move(ComplexFieldNames._make_instance(
+          NULL,
+          NULL,
+          error_message,
+          internal_error_message,
+        ))
+        _builtins.Exception.__init__(self, self.error_message, self.internal_error_message)
+
+
+    @staticmethod
+    cdef unique_ptr[cComplexFieldNames] _make_instance(
+        cComplexFieldNames* base_instance,
+        bint* __isNOTSET,
+        str error_message ,
+        str internal_error_message 
+    ) except *:
+        cdef unique_ptr[cComplexFieldNames] c_inst
+        if base_instance:
+            c_inst = make_unique[cComplexFieldNames](deref(base_instance))
+        else:
+            c_inst = make_unique[cComplexFieldNames]()
+
+        if error_message is not None:
+            deref(c_inst).error_message_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(error_message.encode('utf-8'))))
+            deref(c_inst).__isset.error_message = True
+        if internal_error_message is not None:
+            deref(c_inst).internal_error_message_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(internal_error_message.encode('utf-8'))))
+            deref(c_inst).__isset.internal_error_message = True
+        # in C++ you don't have to call move(), but this doesn't translate
+        # into a C++ return statement, so you do here
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("ComplexFieldNames", {
+          "error_message": cpp_obj.error_message_ref().has_value(),
+          "internal_error_message": cpp_obj.internal_error_message_ref().has_value(),
+        })
+
+    def __iter__(self):
+        yield 'error_message', self.error_message
+        yield 'internal_error_message', self.internal_error_message
+
+    def __bool__(self):
+        return True
+
+    @staticmethod
+    cdef create(shared_ptr[cComplexFieldNames] cpp_obj):
+        __fbthrift_inst = <ComplexFieldNames>ComplexFieldNames.__new__(ComplexFieldNames, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        _builtins.Exception.__init__(__fbthrift_inst, __fbthrift_inst.error_message, __fbthrift_inst.internal_error_message)
+        return __fbthrift_inst
+
+    @property
+    def error_message(self):
+
+        return (<bytes>deref(self._cpp_obj).error_message_ref().value()).decode('UTF-8')
+
+    @property
+    def internal_error_message(self):
+
+        return (<bytes>deref(self._cpp_obj).internal_error_message_ref().value()).decode('UTF-8')
+
+
+    def __hash__(ComplexFieldNames self):
+        return super().__hash__()
+
+    def __str__(ComplexFieldNames self):
+        field = self.internal_error_message
+        if field is None:
+            return str(field)
+        return field
+
+    def __repr__(ComplexFieldNames self):
+        return f'ComplexFieldNames(error_message={repr(self.error_message)}, internal_error_message={repr(self.internal_error_message)})'
+    def __copy__(ComplexFieldNames self):
+        cdef shared_ptr[cComplexFieldNames] cpp_obj = make_shared[cComplexFieldNames](
+            deref(self._cpp_obj)
+        )
+        return ComplexFieldNames.create(__fbthrift_move_shared(cpp_obj))
+
+    def __richcmp__(self, other, op):
+        cdef int cop = op
+        if not (
+                isinstance(self, ComplexFieldNames) and
+                isinstance(other, ComplexFieldNames)):
+            if cop == Py_EQ:  # different types are never equal
+                return False
+            elif cop == Py_NE:  # different types are always notequal
+                return True
+            else:
+                return NotImplemented
+
+        cdef cComplexFieldNames* cself = (<ComplexFieldNames>self)._cpp_obj.get()
+        cdef cComplexFieldNames* cother = (<ComplexFieldNames>other)._cpp_obj.get()
+        if cop == Py_EQ:
+            return deref(cself) == deref(cother)
+        elif cop == Py_NE:
+            return deref(cself) != deref(cother)
+        elif cop == Py_LT:
+            return deref(cself) < deref(cother)
+        elif cop == Py_LE:
+            return deref(cself) <= deref(cother)
+        elif cop == Py_GT:
+            return deref(cself) > deref(cother)
+        elif cop == Py_GE:
+            return deref(cself) >= deref(cother)
+        else:
+            return NotImplemented
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__ComplexFieldNames()
+
+
+
+@__cython.auto_pickle(False)
+cdef class CustomFieldNames(thrift.py3.exceptions.GeneratedError):
+
+    def __init__(
+        CustomFieldNames self,
+        str error_message=None,
+        str internal_error_message=None
+    ):
+        self._cpp_obj = __fbthrift_move(CustomFieldNames._make_instance(
+          NULL,
+          NULL,
+          error_message,
+          internal_error_message,
+        ))
+        _builtins.Exception.__init__(self, self.error_message, self.internal_error_message)
+
+
+    @staticmethod
+    cdef unique_ptr[cCustomFieldNames] _make_instance(
+        cCustomFieldNames* base_instance,
+        bint* __isNOTSET,
+        str error_message ,
+        str internal_error_message 
+    ) except *:
+        cdef unique_ptr[cCustomFieldNames] c_inst
+        if base_instance:
+            c_inst = make_unique[cCustomFieldNames](deref(base_instance))
+        else:
+            c_inst = make_unique[cCustomFieldNames]()
+
+        if error_message is not None:
+            deref(c_inst).error_message_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(error_message.encode('utf-8'))))
+            deref(c_inst).__isset.error_message = True
+        if internal_error_message is not None:
+            deref(c_inst).internal_error_message_ref().assign(thrift.py3.types.move(thrift.py3.types.bytes_to_string(internal_error_message.encode('utf-8'))))
+            deref(c_inst).__isset.internal_error_message = True
+        # in C++ you don't have to call move(), but this doesn't translate
+        # into a C++ return statement, so you do here
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("CustomFieldNames", {
+          "error_message": cpp_obj.error_message_ref().has_value(),
+          "internal_error_message": cpp_obj.internal_error_message_ref().has_value(),
+        })
+
+    def __iter__(self):
+        yield 'error_message', self.error_message
+        yield 'internal_error_message', self.internal_error_message
+
+    def __bool__(self):
+        return True
+
+    @staticmethod
+    cdef create(shared_ptr[cCustomFieldNames] cpp_obj):
+        __fbthrift_inst = <CustomFieldNames>CustomFieldNames.__new__(CustomFieldNames, (<bytes>deref(cpp_obj).what()).decode('utf-8'))
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        _builtins.Exception.__init__(__fbthrift_inst, __fbthrift_inst.error_message, __fbthrift_inst.internal_error_message)
+        return __fbthrift_inst
+
+    @property
+    def error_message(self):
+
+        return (<bytes>deref(self._cpp_obj).error_message_ref().value()).decode('UTF-8')
+
+    @property
+    def internal_error_message(self):
+
+        return (<bytes>deref(self._cpp_obj).internal_error_message_ref().value()).decode('UTF-8')
+
+
+    def __hash__(CustomFieldNames self):
+        return super().__hash__()
+
+    def __str__(CustomFieldNames self):
+        field = self.internal_error_message
+        if field is None:
+            return str(field)
+        return field
+
+    def __repr__(CustomFieldNames self):
+        return f'CustomFieldNames(error_message={repr(self.error_message)}, internal_error_message={repr(self.internal_error_message)})'
+    def __copy__(CustomFieldNames self):
+        cdef shared_ptr[cCustomFieldNames] cpp_obj = make_shared[cCustomFieldNames](
+            deref(self._cpp_obj)
+        )
+        return CustomFieldNames.create(__fbthrift_move_shared(cpp_obj))
+
+    def __richcmp__(self, other, op):
+        cdef int cop = op
+        if not (
+                isinstance(self, CustomFieldNames) and
+                isinstance(other, CustomFieldNames)):
+            if cop == Py_EQ:  # different types are never equal
+                return False
+            elif cop == Py_NE:  # different types are always notequal
+                return True
+            else:
+                return NotImplemented
+
+        cdef cCustomFieldNames* cself = (<CustomFieldNames>self)._cpp_obj.get()
+        cdef cCustomFieldNames* cother = (<CustomFieldNames>other)._cpp_obj.get()
+        if cop == Py_EQ:
+            return deref(cself) == deref(cother)
+        elif cop == Py_NE:
+            return deref(cself) != deref(cother)
+        elif cop == Py_LT:
+            return deref(cself) < deref(cother)
+        elif cop == Py_LE:
+            return deref(cself) <= deref(cother)
+        elif cop == Py_GT:
+            return deref(cself) > deref(cother)
+        elif cop == Py_GE:
+            return deref(cself) >= deref(cother)
+        else:
+            return NotImplemented
+
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__CustomFieldNames()
 
 
 

@@ -1,23 +1,19 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 /*
  * This file is programmatically sanitized for style:
  * astyle --style=1tbs -f -p -H -j -U t_go_generator.cc
@@ -32,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem.hpp>
 
 #include <stdlib.h>
@@ -42,20 +39,16 @@
 #include <clocale>
 #include <sstream>
 
-using std::endl;
-using std::map;
-using std::ofstream;
-using std::ostringstream;
-using std::pair;
-using std::set;
-using std::string;
-using std::stringstream;
-using std::unordered_map;
-using std::vector;
+using namespace std;
+
+namespace apache {
+namespace thrift {
+namespace compiler {
 
 // static const string endl = "\n"; // avoid ostream << std::endl flushes
 
-const string default_thrift_import = "github.com/facebook/fbthrift-go";
+const string default_thrift_import =
+    "github.com/facebook/fbthrift/thrift/lib/go/thrift";
 static std::string package_flag;
 
 /**
@@ -122,7 +115,8 @@ class t_go_generator : public t_concat_generator {
   std::string render_const_value(
       t_type* type,
       const t_const_value* value,
-      const string& name);
+      const string& name,
+      bool is_optional = false);
 
   /**
    * Struct generation code
@@ -165,6 +159,7 @@ class t_go_generator : public t_concat_generator {
       t_field* tfield,
       string* OUT_pub_name,
       const t_const_value** OUT_def_value) const;
+  string make_client_interface_name(t_service* tservice);
 
   /**
    * Service-level generation functions
@@ -172,7 +167,20 @@ class t_go_generator : public t_concat_generator {
 
   void generate_service_helpers(t_service* tservice);
   void generate_service_interface(t_service* tservice);
-  void generate_service_client(t_service* tservice);
+  void generate_service_client_interface(t_service* tservice);
+  void generate_service_client(t_service* tservice, bool);
+  void generate_service_client_common_methods(string&, bool);
+  void generate_service_client_method(
+      string&,
+      const vector<t_function*>::const_iterator&,
+      bool);
+  void generate_service_client_send_msg_call(
+      const vector<t_function*>::const_iterator&);
+  void generate_service_client_recv_method(
+      string&,
+      const vector<t_function*>::const_iterator&);
+  void generate_service_client_recv_method_exception_handling(
+      const std::vector<t_field*>& exceptions);
   void generate_service_client_threadsafe(t_service* tservice);
   void generate_service_remote(t_service* tservice);
   void generate_service_server(t_service* tservice);
@@ -301,7 +309,10 @@ class t_go_generator : public t_concat_generator {
   std::string argument_list(t_struct* tstruct);
   std::string type_to_enum(t_type* ttype);
   std::string type_to_go_type(t_type* ttype);
-  std::string type_to_go_type_with_opt(t_type* ttype, bool optional_field);
+  std::string type_to_go_type_with_opt(
+      t_type* ttype,
+      bool optional_field,
+      bool from_typedef = false);
   std::string type_to_go_key_type(t_type* ttype);
   std::string type_to_spec_args(t_type* ttype);
 
@@ -318,6 +329,13 @@ class t_go_generator : public t_concat_generator {
   }
 
  private:
+  struct MethodDefinition {
+    string name;
+    string returnType;
+  };
+
+  vector<MethodDefinition> common_client_methods_;
+
   std::string gen_package_prefix_;
   std::string gen_thrift_import_;
   std::string gen_processor_func_ = "thrift.ProcessorFunction";
@@ -331,6 +349,7 @@ class t_go_generator : public t_concat_generator {
   std::string f_types_name_;
   std::ofstream f_consts_;
   std::string f_consts_name_;
+  std::ostringstream f_const_vars_;
   std::stringstream f_const_values_;
   std::ofstream f_service_;
 
@@ -346,7 +365,6 @@ class t_go_generator : public t_concat_generator {
       const std::string& value,
       bool is_args_or_result = false) const;
   std::string privatize(const std::string& value) const;
-  std::string new_prefix(const std::string& value) const;
   static std::string variable_name_to_go_name(const std::string& value);
   static bool is_pointer_field(t_field* tfield, bool in_container = false);
   static bool omit_initialization(t_field* tfield);
@@ -369,12 +387,12 @@ bool t_go_generator::omit_initialization(t_field* tfield) {
         throw "";
 
       case t_base_type::TYPE_STRING:
-        if (((t_base_type*)type)->is_binary()) {
-          //[]byte are always inline
-          return false;
-        }
         // strings are pointers if has no default
         return value->get_string().empty();
+
+      case t_base_type::TYPE_BINARY:
+        //[]byte are always inline
+        return false;
 
       case t_base_type::TYPE_BOOL:
       case t_base_type::TYPE_BYTE:
@@ -398,8 +416,7 @@ bool t_go_generator::omit_initialization(t_field* tfield) {
 bool t_go_generator::type_need_reference(t_type* type) {
   type = type->get_true_type();
   if (type->is_map() || type->is_set() || type->is_list() ||
-      type->is_struct() || type->is_xception() ||
-      (type->is_string() && ((t_base_type*)type)->is_binary())) {
+      type->is_struct() || type->is_xception() || type->is_binary()) {
     return false;
   }
   return true;
@@ -431,12 +448,12 @@ bool t_go_generator::is_pointer_field(
         throw "";
 
       case t_base_type::TYPE_STRING:
-        if (((t_base_type*)type)->is_binary()) {
-          //[]byte are always inline
-          return false;
-        }
         // strings are pointers if has no default
         return !has_default;
+
+      case t_base_type::TYPE_BINARY:
+        //[]byte are always inline
+        return false;
 
       case t_base_type::TYPE_BOOL:
       case t_base_type::TYPE_BYTE:
@@ -540,19 +557,6 @@ std::string t_go_generator::publicize(
   }
 
   return prefix + value2;
-}
-
-std::string t_go_generator::new_prefix(const std::string& value) const {
-  if (value.size() <= 0) {
-    return value;
-  }
-
-  string::size_type dot_pos = value.rfind('.');
-  if (dot_pos != string::npos) {
-    return value.substr(0, dot_pos + 1) + "New" +
-        publicize(value.substr(dot_pos + 1));
-  }
-  return "New" + publicize(value);
 }
 
 std::string t_go_generator::privatize(const std::string& value) const {
@@ -704,6 +708,12 @@ void t_go_generator::init_generator() {
   string target = module;
   package_dir_ = get_out_dir();
 
+  common_client_methods_ = {
+      {"Open", "error"},
+      {"Close", "error"},
+      {"IsOpen", "bool"},
+  };
+
   // This set is taken from
   // https://github.com/golang/lint/blob/master/lint.go#L692
   commonInitialisms.insert("API");
@@ -770,7 +780,7 @@ void t_go_generator::init_generator() {
 
   string::size_type loc;
 
-  while ((loc = target.find(".")) != string::npos) {
+  while ((loc = target.find('.')) != string::npos) {
     target.replace(loc, 1, 1, '/');
   }
 
@@ -905,6 +915,7 @@ string t_go_generator::go_imports_end() {
  */
 void t_go_generator::close_generator() {
   f_const_values_ << "}" << endl << endl;
+  f_consts_ << f_const_vars_.str();
   f_consts_ << f_const_values_.str();
 
   // Close types and constants files
@@ -920,7 +931,8 @@ void t_go_generator::close_generator() {
 void t_go_generator::generate_typedef(t_typedef* ttypedef) {
   generate_go_docstring(f_types_, ttypedef);
   string new_type_name(publicize(ttypedef->get_symbolic()));
-  string base_type(type_to_go_type(ttypedef->get_type()));
+  t_type* tbasetype(ttypedef->get_type());
+  string base_type(type_to_go_type_with_opt(tbasetype, false, true));
 
   if (base_type == new_type_name) {
     return;
@@ -929,9 +941,36 @@ void t_go_generator::generate_typedef(t_typedef* ttypedef) {
   f_types_ << "type " << new_type_name << " = " << base_type << endl << endl;
   // Generate a convenience function that converts an instance of a type
   // (which may be a constant) into a pointer to an instance of a type.
-  f_types_ << "func " << new_type_name << "Ptr(v " << new_type_name << ") *"
-           << new_type_name << " { return &v }" << endl
-           << endl;
+  // Special case: If a newtype ends in "Ptr" this function might redeclare the
+  // typename as a function. So if that would happen, name it with the suffix
+  // ToPointer instead.
+  int name_len = new_type_name.length();
+  if (name_len >= 3 && new_type_name[name_len - 3] == 'P' &&
+      new_type_name[name_len - 2] == 't' &&
+      new_type_name[name_len - 1] == 'r') {
+    f_types_ << "func " << new_type_name << "ToPointer(v " << new_type_name
+             << ") *" << new_type_name << " { return &v }" << endl
+             << endl;
+  } else {
+    f_types_ << "func " << new_type_name << "Ptr(v " << new_type_name << ") *"
+             << new_type_name << " { return &v }" << endl
+             << endl;
+  }
+  // Generate New* function
+  if (tbasetype->is_struct() || tbasetype->is_xception()) {
+    const t_program* program = tbasetype->get_program();
+    string ctor;
+    if (program != nullptr && program != program_) {
+      string module(package_identifiers[get_real_go_module(program)]);
+      ctor = module + ".New" + publicize(tbasetype->get_name());
+    } else {
+      ctor = "New" + publicize(tbasetype->get_name());
+    }
+    f_types_ << "func "
+             << "New" << new_type_name << "() *" << new_type_name
+             << " { return " << ctor << "() }" << endl
+             << endl;
+  }
 }
 
 /**
@@ -954,11 +993,10 @@ void t_go_generator::generate_enum(t_enum* tenum) {
 
   vector<t_enum_value*> constants = tenum->get_enum_values();
   vector<t_enum_value*>::iterator c_iter;
-  int value = -1;
   set<int> seen;
 
   for (c_iter = constants.begin(); c_iter != constants.end(); ++c_iter) {
-    value = (*c_iter)->get_value();
+    int value = (*c_iter)->get_value();
 
     string iter_std_name(escape_string((*c_iter)->get_name()));
     string iter_name((*c_iter)->get_name());
@@ -1041,7 +1079,8 @@ void t_go_generator::generate_const(t_const* tconst) {
 string t_go_generator::render_const_value(
     t_type* type,
     const t_const_value* value,
-    const string& name) {
+    const string& name,
+    bool is_optional) {
   type = type->get_true_type();
   std::ostringstream out;
 
@@ -1050,14 +1089,11 @@ string t_go_generator::render_const_value(
 
     switch (tbase) {
       case t_base_type::TYPE_STRING:
-        if (((t_base_type*)type)->is_binary()) {
-          out << "[]byte(\"" << get_escaped_string(value) << "\")";
-        } else {
-          out << '"' << get_escaped_string(value) << '"';
-        }
-
+        out << '"' << get_escaped_string(value) << '"';
         break;
-
+      case t_base_type::TYPE_BINARY:
+        out << "[]byte(\"" << get_escaped_string(value) << "\")";
+        break;
       case t_base_type::TYPE_BOOL:
         out << (value->get_integer() > 0 ? "true" : "false");
         break;
@@ -1066,18 +1102,37 @@ string t_go_generator::render_const_value(
       case t_base_type::TYPE_I16:
       case t_base_type::TYPE_I32:
       case t_base_type::TYPE_I64:
-        out << value->get_integer();
+        if (is_optional) {
+          f_const_vars_ << "var const_lit_" << name << " "
+                        << type_to_go_type(type) << " = "
+                        << value->get_integer() << endl;
+          out << "&const_lit_" << name;
+        } else {
+          out << value->get_integer();
+        }
         break;
 
       case t_base_type::TYPE_DOUBLE:
-      case t_base_type::TYPE_FLOAT:
+      case t_base_type::TYPE_FLOAT: {
+        if (is_optional) {
+          f_const_vars_ << "var const_lit_" << name << " "
+                        << type_to_go_type(type) << " = ";
+        }
+
+        std::ostringstream& value_out = (is_optional ? f_const_vars_ : out);
         if (value->get_type() == t_const_value::CV_INTEGER) {
-          out << value->get_integer();
+          value_out << value->get_integer();
         } else {
-          out << value->get_double();
+          value_out << value->get_double();
+        }
+
+        if (is_optional) {
+          f_const_vars_ << endl;
+          out << "&const_lit_" << name;
         }
 
         break;
+      }
 
       default:
         throw "compiler error: no const of base type " +
@@ -1094,12 +1149,23 @@ string t_go_generator::render_const_value(
     const vector<pair<t_const_value*, t_const_value*>>& val = value->get_map();
     vector<pair<t_const_value*, t_const_value*>>::const_iterator v_iter;
 
+    if (((t_struct*)type)->is_union()) {
+      for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
+        (*f_iter)->set_req(t_field::T_OPTIONAL);
+      }
+    }
+
     for (v_iter = val.begin(); v_iter != val.end(); ++v_iter) {
       t_type* field_type = nullptr;
+      bool is_field_optional = false;
+      string field_name;
 
       for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
         if ((*f_iter)->get_name() == v_iter->first->get_string()) {
+          field_name = name + "_" + (*f_iter)->get_name();
           field_type = (*f_iter)->get_type();
+          is_field_optional = ((*f_iter)->get_req() == t_field::T_OPTIONAL);
+          break;
         }
       }
 
@@ -1109,8 +1175,9 @@ string t_go_generator::render_const_value(
       }
 
       out << indent() << publicize(v_iter->first->get_string()) << ": "
-          << render_const_value(field_type, v_iter->second, name) << ","
-          << endl;
+          << render_const_value(
+                 field_type, v_iter->second, field_name, is_field_optional)
+          << "," << endl;
     }
     indent_down();
     out << indent() << "}";
@@ -1119,7 +1186,7 @@ string t_go_generator::render_const_value(
     t_type* ktype = ((t_map*)type)->get_key_type();
     t_type* vtype = ((t_map*)type)->get_val_type();
     const vector<pair<t_const_value*, t_const_value*>>& val = value->get_map();
-    out << "map[" << type_to_go_type(ktype) << "]" << type_to_go_type(vtype)
+    out << "map[" << type_to_go_key_type(ktype) << "]" << type_to_go_type(vtype)
         << "{" << endl;
     indent_up();
     vector<pair<t_const_value*, t_const_value*>>::const_iterator v_iter;
@@ -1284,6 +1351,14 @@ void t_go_generator::generate_go_struct_definition(
   // don't have thrift_spec.
   indent_up();
 
+  if (is_args) {
+    out << indent() << "thrift.IRequest" << endl;
+  }
+
+  if (is_result) {
+    out << indent() << "thrift.IResponse" << endl;
+  }
+
   int num_setable = 0;
   if (sorted_members.empty() || (sorted_members[0]->get_key() >= 0)) {
     int sorted_keys_pos = 0;
@@ -1402,9 +1477,43 @@ void t_go_generator::generate_go_struct_definition(
       << endl;
   out << indent() << "  if p == nil {" << endl;
   out << indent() << "    return \"<nil>\"" << endl;
-  out << indent() << "  }" << endl;
+  out << indent() << "  }" << endl << endl;
+
+  std::vector<std::string> format;
+  string values;
+  for (m_iter = sorted_members.begin(); m_iter != sorted_members.end();
+       ++m_iter) {
+    if (is_pointer_field(*m_iter)) {
+      out << indent() << "  var " << privatize((*m_iter)->get_name())
+          << "Val string" << endl;
+      out << indent() << "  if p." << publicize((*m_iter)->get_name())
+          << " == nil {" << endl;
+      out << indent() << "    " << privatize((*m_iter)->get_name())
+          << "Val = \"<nil>\"" << endl;
+      out << indent() << "  } else {" << endl;
+
+      if (type_need_reference((*m_iter)->get_type())) {
+        out << indent() << "    " << privatize((*m_iter)->get_name())
+            << "Val = fmt.Sprintf(\"%v\", *p."
+            << publicize((*m_iter)->get_name()) << ")" << endl;
+      } else {
+        out << indent() << "    " << privatize((*m_iter)->get_name())
+            << "Val = fmt.Sprintf(\"%v\", p."
+            << publicize((*m_iter)->get_name()) << ")" << endl;
+      }
+
+      out << indent() << "  }" << endl;
+    } else {
+      out << indent() << "  " << privatize((*m_iter)->get_name())
+          << "Val := fmt.Sprintf(\"%v\", p." << publicize((*m_iter)->get_name())
+          << ")" << endl;
+    }
+    format.push_back(publicize((*m_iter)->get_name()) + ":%s");
+    values = values + ", " + privatize((*m_iter)->get_name()) + "Val";
+  }
   out << indent() << "  return fmt.Sprintf(\"" << escape_string(tstruct_name)
-      << "(%+v)\", *p)" << endl;
+      << "({" << boost::algorithm::join(format, " ") << "})\"" << values << ")"
+      << endl;
   out << indent() << "}" << endl << endl;
 
   if (is_exception) {
@@ -1436,8 +1545,7 @@ void t_go_generator::generate_isset_helpers(
           << "() bool {" << endl;
       indent_up();
       t_type* ttype = (*f_iter)->get_type()->get_true_type();
-      bool is_byteslice =
-          ttype->is_base_type() && ((t_base_type*)ttype)->is_binary();
+      bool is_byteslice = ttype->is_base_type() && ttype->is_binary();
       bool compare_to_nil_only = ttype->is_set() || ttype->is_list() ||
           ttype->is_map() || (is_byteslice && !(*f_iter)->get_value());
       if (is_pointer_field(*f_iter) || compare_to_nil_only) {
@@ -1476,11 +1584,10 @@ void t_go_generator::generate_countsetfields_helper(
   indent_up();
   out << indent() << "count := 0" << endl;
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
-    if ((*f_iter)->get_req() == t_field::T_REQUIRED)
+    if ((*f_iter)->get_req() != t_field::T_OPTIONAL &&
+        !is_pointer_field(*f_iter)) {
       continue;
-
-    if (!is_pointer_field(*f_iter))
-      continue;
+    }
 
     const string field_name(publicize(escape_string((*f_iter)->get_name())));
 
@@ -1547,7 +1654,6 @@ void t_go_generator::generate_go_struct_reader(
 
   string thriftFieldTypeId;
   // Generate deserialization code for known cases
-  int32_t field_id = -1;
   set<int32_t> seen;
 
   // Switch statement on the field we are reading, false if no fields present
@@ -1558,7 +1664,7 @@ void t_go_generator::generate_go_struct_reader(
 
   // All the fields we know
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
-    field_id = (*f_iter)->get_key();
+    int32_t field_id = (*f_iter)->get_key();
 
     // if negative id, ensure we generate a valid method name
     string field_method_prefix("ReadField");
@@ -1646,7 +1752,7 @@ void t_go_generator::generate_go_struct_reader(
     string field_type_name(publicize((*f_iter)->get_type()->get_name()));
     string field_name(publicize((*f_iter)->get_name()));
     string field_method_prefix("ReadField");
-    field_id = (*f_iter)->get_key();
+    int32_t field_id = (*f_iter)->get_key();
 
     if (field_id < 0) {
       field_method_prefix += "_";
@@ -1671,7 +1777,7 @@ void t_go_generator::generate_go_struct_writer(
     bool is_result,
     bool uses_countsetfields) {
   (void)is_result;
-  string name(tstruct->get_name());
+  const string& name = tstruct->get_name();
   const vector<t_field*>& fields = tstruct->get_sorted_members();
   vector<t_field*>::const_iterator f_iter;
   indent(out) << "func (p *" << tstruct_name
@@ -1693,17 +1799,11 @@ void t_go_generator::generate_go_struct_writer(
          "\"%T write struct begin error: \", p), err) }"
       << endl;
 
-  string field_name;
-  string escape_field_name;
-  // t_const_value* field_default_value;
-  t_field::e_req field_required;
-  int32_t field_id = -1;
-
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
     string field_method_prefix("writeField");
-    field_name = (*f_iter)->get_name();
-    escape_field_name = escape_string(field_name);
-    field_id = (*f_iter)->get_key();
+    int32_t field_id = (*f_iter)->get_key();
+    const string& field_name = (*f_iter)->get_name();
+    string escape_field_name = escape_string(field_name);
 
     if (field_id < 0) {
       field_method_prefix += "_";
@@ -1729,11 +1829,10 @@ void t_go_generator::generate_go_struct_writer(
 
   for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
     string field_method_prefix("writeField");
-    field_id = (*f_iter)->get_key();
-    field_name = (*f_iter)->get_name();
-    escape_field_name = escape_string(field_name);
-    // field_default_value = (*f_iter)->get_value();
-    field_required = (*f_iter)->get_req();
+    int32_t field_id = (*f_iter)->get_key();
+    const string& field_name = (*f_iter)->get_name();
+    string escape_field_name = escape_string(field_name);
+    t_field::e_req field_required = (*f_iter)->get_req();
 
     if (field_id < 0) {
       field_method_prefix += "_";
@@ -1802,8 +1901,9 @@ void t_go_generator::generate_service(t_service* tservice) {
   f_service_ << go_autogen_comment() << go_package() << render_includes();
 
   generate_service_interface(tservice);
-  generate_service_client(tservice);
-  generate_service_client_threadsafe(tservice);
+  generate_service_client_interface(tservice);
+  generate_service_client(tservice, false);
+  generate_service_client(tservice, true); // threadsafe client
   generate_service_server(tservice);
   generate_service_helpers(tservice);
   generate_service_remote(tservice);
@@ -1868,11 +1968,11 @@ void t_go_generator::generate_service_interface(t_service* tservice) {
   string extends = "";
   string extends_if = "";
   string serviceName(publicize(tservice->get_name()));
-  string interfaceName = serviceName;
+  const string& interfaceName = serviceName;
 
   if (tservice->get_extends() != nullptr) {
     extends = type_name(tservice->get_extends());
-    size_t index = extends.rfind(".");
+    size_t index = extends.rfind('.');
 
     if (index != string::npos) {
       extends_if = "\n" + indent() + "  " + extends.substr(0, index + 1) +
@@ -1894,6 +1994,7 @@ void t_go_generator::generate_service_interface(t_service* tservice) {
 
     for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
       generate_go_docstring(f_service_, (*f_iter));
+
       f_service_ << indent()
                  << function_signature_if(*f_iter, "", gen_use_context_)
                  << endl;
@@ -1904,107 +2005,276 @@ void t_go_generator::generate_service_interface(t_service* tservice) {
   f_service_ << indent() << "}" << endl << endl;
 }
 
+void t_go_generator::generate_service_client_method(
+    string& clientTypeName,
+    const vector<t_function*>::const_iterator& f_iter,
+    bool isThreadsafe) {
+  string funname = publicize((*f_iter)->get_name());
+  // Open function
+  generate_go_docstring(f_service_, (*f_iter));
+  f_service_ << indent() << "func (p *" << clientTypeName << ") "
+             << function_signature_if(*f_iter, "", false) << " {" << endl;
+  indent_up();
+  /*
+  f_service_ <<
+    indent() << "p.SeqId += 1" << endl;
+  if (!(*f_iter)->is_oneway()) {
+    f_service_ <<
+      indent() << "d := defer.Deferred()" << endl <<
+      indent() << "p.Reqs[p.SeqId] = d" << endl;
+  }
+  */
+
+  if (isThreadsafe) {
+    f_service_ << indent() << "p.Mu.Lock()" << endl;
+    f_service_ << indent() << "defer p.Mu.Unlock()" << endl;
+  }
+
+  generate_service_client_send_msg_call(f_iter);
+
+  f_service_ << indent() << "if err != nil { return }" << endl;
+
+  if (!(*f_iter)->is_oneway()) {
+    f_service_ << indent() << "return p.recv" << funname << "()" << endl;
+  } else {
+    f_service_ << indent() << "return" << endl;
+  }
+
+  indent_down();
+  f_service_ << indent() << "}" << endl << endl;
+
+  if (!(*f_iter)->is_oneway()) {
+    generate_service_client_recv_method(clientTypeName, f_iter);
+  }
+}
+
+void t_go_generator::generate_service_client_send_msg_call(
+    const vector<t_function*>::const_iterator& f_iter) {
+  auto methodName = (*f_iter)->get_name();
+  auto argsType = publicize(methodName + "_args", true);
+  auto messageType = (*f_iter)->is_oneway() ? "thrift.ONEWAY" : "thrift.CALL";
+
+  auto arg_struct = (*f_iter)->get_arglist();
+  const auto& fields = arg_struct->get_members();
+
+  // If there are no fields in the struct, don't bother initializing anything
+  if (fields.size() == 0) {
+    f_service_ << indent() << "var args " << argsType << endl;
+  } else {
+    f_service_ << indent() << "args := " << argsType << "{" << endl;
+    indent_up();
+    for (auto fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
+      f_service_ << indent() << publicize((*fld_iter)->get_name()) << " : "
+                 << variable_name_to_go_name((*fld_iter)->get_name()) << ","
+                 << endl;
+    }
+    indent_down();
+    f_service_ << indent() << "}" << endl;
+  }
+
+  f_service_ << indent() << "err = p.CC.SendMsg(\"" << methodName
+             << "\", &args, " << messageType << ")" << endl;
+}
+
+void t_go_generator::generate_service_client_recv_method(
+    string& clientTypeName,
+    const vector<t_function*>::const_iterator& f_iter) {
+  std::string result_type_name =
+      publicize((*f_iter)->get_name() + "_result", true);
+  auto methodName = (*f_iter)->get_name();
+  auto returnsVoid = (*f_iter)->get_returntype()->is_void();
+  const auto& exceptions = (*f_iter)->get_xceptions()->get_members();
+  bool raisesExceptions = exceptions.size() > 0;
+
+  // Open function
+  f_service_ << endl
+             << indent() << "func (p *" << clientTypeName << ") recv"
+             << publicize((*f_iter)->get_name()) << "() (";
+
+  if (!returnsVoid) {
+    f_service_ << "value " << type_to_go_type((*f_iter)->get_returntype())
+               << ", ";
+  }
+
+  f_service_ << "err error) {" << endl;
+  indent_up();
+  f_service_ << indent() << "var result " << result_type_name << endl;
+
+  if (returnsVoid && !raisesExceptions) {
+    f_service_ << indent() << "return p.CC.RecvMsg(\"" << methodName
+               << "\", &result)" << endl;
+  } else {
+    f_service_ << indent() << "err = p.CC.RecvMsg(\"" << methodName
+               << "\", &result)" << endl;
+    f_service_ << indent() << "if err != nil { return }" << endl;
+
+    // If there are no exceptions, no code is generated. So we can always call
+    // this.
+    generate_service_client_recv_method_exception_handling(exceptions);
+
+    // Careful, only return _result if not a void function
+    if (!returnsVoid) {
+      f_service_ << indent() << "return result.GetSuccess(), nil" << endl;
+    } else {
+      f_service_ << indent() << "return nil" << endl;
+    }
+  }
+
+  // Close function
+  indent_down();
+  f_service_ << indent() << "}" << endl << endl;
+}
+
+void t_go_generator::generate_service_client_recv_method_exception_handling(
+    const std::vector<t_field*>& exceptions) {
+  // NOTE: Trick to avoid copying the entire string every iteration of
+  // the for loop below. We just copy the pointer to the string instead of the
+  // whole thing.
+  auto indent_str = indent();
+  auto else_delim = " else ";
+  auto* delim = indent_str.c_str();
+
+  for (const auto& exception : exceptions) {
+    const std::string pubname = publicize(exception->get_name());
+
+    f_service_ << delim << "if result." << pubname << " != nil {" << endl;
+    f_service_ << indent() << "  err = result." << pubname << endl;
+    f_service_ << indent() << "  return " << endl;
+    f_service_ << indent() << "}";
+    delim = else_delim;
+  }
+  f_service_ << endl;
+}
+
+void t_go_generator::generate_service_client_common_methods(
+    string& clientTypeName,
+    bool isThreadsafe) {
+  for (auto& method : common_client_methods_) {
+    f_service_ << indent() << "func(client *" << clientTypeName << ") "
+               << method.name << "() " << method.returnType << " {" << endl;
+
+    indent_up();
+    if (isThreadsafe) {
+      f_service_ << indent() << "client.Mu.Lock()" << endl;
+      f_service_ << indent() << "defer client.Mu.Unlock()" << endl;
+    }
+
+    f_service_ << indent() << "return client.CC." << method.name << "()"
+               << endl;
+    indent_down();
+    f_service_ << indent() << "}" << endl << endl;
+  }
+}
+
+string t_go_generator::make_client_interface_name(t_service* tservice) {
+  return publicize(tservice->get_name()) + "ClientInterface";
+}
+
+void t_go_generator::generate_service_client_interface(t_service* tservice) {
+  auto clientInterfaceName = make_client_interface_name(tservice);
+  f_service_ << "type " << clientInterfaceName << " interface {" << endl;
+  indent_up();
+
+  // Embed the base ClientInterface into this one
+  f_service_ << indent() << "thrift.ClientInterface" << endl;
+
+  for (auto* function : tservice->get_functions()) {
+    generate_go_docstring(f_service_, function);
+    f_service_ << indent() << function_signature_if(function, "", false)
+               << endl;
+  }
+
+  indent_down();
+  f_service_ << indent() << "}" << endl << endl;
+}
+
 /**
  * Generates a service client definition.
  *
- * @param tservice The service to generate a server for.
+ * @param tservice The service to generate a client for.
+ * @param isThreadsafe indicates if the generated client should be
+ *     threadsafe.
  */
-void t_go_generator::generate_service_client(t_service* tservice) {
+void t_go_generator::generate_service_client(
+    t_service* tservice,
+    bool isThreadsafe) {
   string extends = "";
   string extends_field = "";
   string extends_client = "";
   string extends_client_new = "";
   string serviceName(publicize(tservice->get_name()));
+  string clientTypeNameSuffix = (isThreadsafe) ? "ThreadsafeClient" : "Client";
+  string clientTypeName = serviceName + clientTypeNameSuffix;
 
   if (tservice->get_extends() != nullptr) {
     extends = type_name(tservice->get_extends());
-    size_t index = extends.rfind(".");
+    size_t index = extends.rfind('.');
 
     if (index != string::npos) {
       extends_client = extends.substr(0, index + 1) +
-          publicize(extends.substr(index + 1)) + "Client";
+          publicize(extends.substr(index + 1)) + clientTypeNameSuffix;
       extends_client_new = extends.substr(0, index + 1) + "New" +
-          publicize(extends.substr(index + 1)) + "Client";
+          publicize(extends.substr(index + 1)) + clientTypeNameSuffix;
     } else {
-      extends_client = publicize(extends) + "Client";
+      extends_client = publicize(extends) + clientTypeNameSuffix;
       extends_client_new = "New" + extends_client;
     }
   }
 
-  extends_field = extends_client.substr(extends_client.find(".") + 1);
+  extends_field = extends_client.substr(extends_client.find('.') + 1);
 
   generate_go_docstring(f_service_, tservice);
-  f_service_ << indent() << "type " << serviceName << "Client struct {" << endl;
+  f_service_ << indent() << "type " << clientTypeName << " struct {" << endl;
   indent_up();
+
+  // Force the client struct to implement the expected interface.
+  f_service_ << indent() << make_client_interface_name(tservice) << endl;
 
   if (!extends_client.empty()) {
     f_service_ << indent() << "*" << extends_client << endl;
   } else {
-    f_service_ << indent() << "Transport thrift.Transport" << endl;
-    f_service_ << indent() << "ProtocolFactory thrift.ProtocolFactory" << endl;
-    f_service_ << indent() << "InputProtocol thrift.Protocol" << endl;
-    f_service_ << indent() << "OutputProtocol thrift.Protocol" << endl;
-    f_service_ << indent() << "SeqId int32" << endl;
+    f_service_ << indent() << "CC thrift.ClientConn" << endl;
+    if (isThreadsafe) {
+      f_service_ << indent() << "Mu sync.Mutex" << endl;
+    }
     /*f_service_ << indent() << "reqs map[int32]Deferred" << endl*/;
   }
 
   indent_down();
   f_service_ << indent() << "}" << endl << endl;
 
-  // Close() function
-  f_service_ << indent() << "func (client *" << serviceName
-             << "Client) Close() error {" << endl;
-  indent_up();
-  f_service_ << indent() << "return client.Transport.Close()" << endl;
-  indent_down();
-  f_service_ << indent() << "}" << endl;
-  f_service_ << indent() << endl;
+  generate_service_client_common_methods(clientTypeName, isThreadsafe);
 
   // Constructor function
-  f_service_ << indent() << "func New" << serviceName
-             << "ClientFactory(t thrift.Transport, f thrift.ProtocolFactory) *"
-             << serviceName << "Client {" << endl;
+  f_service_ << indent() << "func New" << clientTypeName
+             << "Factory(t thrift.Transport, f thrift.ProtocolFactory) *"
+             << clientTypeName << " {" << endl;
   indent_up();
-  f_service_ << indent() << "return &" << serviceName << "Client";
+  f_service_ << indent() << "return &" << clientTypeName;
 
   if (!extends.empty()) {
     f_service_ << "{" << extends_field << ": " << extends_client_new
-               << "Factory(t, f)}";
+               << "Factory(t, f)}" << endl;
   } else {
-    indent_up();
-    f_service_ << "{Transport: t," << endl;
-    f_service_ << indent() << "ProtocolFactory: f," << endl;
-    f_service_ << indent() << "InputProtocol: f.GetProtocol(t)," << endl;
-    f_service_ << indent() << "OutputProtocol: f.GetProtocol(t)," << endl;
-    f_service_ << indent() << "SeqId: 0," << endl;
-    /*f_service_ << indent() << "Reqs: make(map[int32]Deferred)" << endl*/;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
+    f_service_ << "{ CC: thrift.NewClientConn(t, f) }" << endl;
   }
 
   indent_down();
   f_service_ << indent() << "}" << endl << endl;
   // Constructor function
   f_service_
-      << indent() << "func New" << serviceName
-      << "Client(t thrift.Transport, iprot thrift.Protocol, oprot thrift.Protocol) *"
-      << serviceName << "Client {" << endl;
+      << indent() << "func New" << clientTypeName
+      << "(t thrift.Transport, iprot thrift.Protocol, oprot thrift.Protocol) *"
+      << clientTypeName << " {" << endl;
   indent_up();
-  f_service_ << indent() << "return &" << serviceName << "Client";
+  f_service_ << indent() << "return &" << clientTypeName;
 
   if (!extends.empty()) {
     f_service_ << "{" << extends_field << ": " << extends_client_new
                << "(t, iprot, oprot)}" << endl;
   } else {
-    indent_up();
-    f_service_ << "{Transport: t," << endl;
-    f_service_ << indent() << "ProtocolFactory: nil," << endl;
-    f_service_ << indent() << "InputProtocol: iprot," << endl;
-    f_service_ << indent() << "OutputProtocol: oprot," << endl;
-    f_service_ << indent() << "SeqId: 0," << endl;
-    /*f_service_ << indent() << "Reqs: make(map[int32]interface{})" << endl*/;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
+    f_service_ << "{ CC: thrift.NewClientConnWithProtocols(t, iprot, oprot) }"
+               << endl;
   }
 
   indent_down();
@@ -2014,517 +2284,7 @@ void t_go_generator::generate_service_client(t_service* tservice) {
   vector<t_function*>::const_iterator f_iter;
 
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
-    t_struct* arg_struct = (*f_iter)->get_arglist();
-    const vector<t_field*>& fields = arg_struct->get_members();
-    vector<t_field*>::const_iterator fld_iter;
-    string funname = publicize((*f_iter)->get_name());
-    // Open function
-    generate_go_docstring(f_service_, (*f_iter));
-    f_service_ << indent() << "func (p *" << serviceName << "Client) "
-               << function_signature_if(*f_iter, "", false) << " {" << endl;
-    indent_up();
-    /*
-    f_service_ <<
-      indent() << "p.SeqId += 1" << endl;
-    if (!(*f_iter)->is_oneway()) {
-      f_service_ <<
-        indent() << "d := defer.Deferred()" << endl <<
-        indent() << "p.Reqs[p.SeqId] = d" << endl;
-    }
-    */
-    f_service_ << indent() << "if err = p.send" << funname << "(";
-    bool first = true;
-
-    for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-      if (first) {
-        first = false;
-      } else {
-        f_service_ << ", ";
-      }
-
-      f_service_ << variable_name_to_go_name((*fld_iter)->get_name());
-    }
-
-    f_service_ << "); err != nil { return }" << endl;
-
-    if (!(*f_iter)->is_oneway()) {
-      f_service_ << indent() << "return p.recv" << funname << "()" << endl;
-    } else {
-      f_service_ << indent() << "return" << endl;
-    }
-
-    indent_down();
-    f_service_ << indent() << "}" << endl << endl;
-    f_service_ << indent() << "func (p *" << serviceName << "Client) send"
-               << function_signature(*f_iter) << "(err error) {" << endl;
-    indent_up();
-    std::string argsname = publicize((*f_iter)->get_name() + "_args", true);
-    // Serialize the request header
-    f_service_ << indent() << "oprot := p.OutputProtocol" << endl;
-    f_service_ << indent() << "if oprot == nil {" << endl;
-    f_service_ << indent()
-               << "  oprot = p.ProtocolFactory.GetProtocol(p.Transport)"
-               << endl;
-    f_service_ << indent() << "  p.OutputProtocol = oprot" << endl;
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "p.SeqId++" << endl;
-    f_service_ << indent() << "if err = oprot.WriteMessageBegin(\""
-               << (*f_iter)->get_name() << "\", "
-               << ((*f_iter)->is_oneway() ? "thrift.ONEWAY" : "thrift.CALL")
-               << ", p.SeqId); err != nil {" << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "args := " << argsname << "{" << endl;
-
-    for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-      f_service_ << indent() << publicize((*fld_iter)->get_name()) << " : "
-                 << variable_name_to_go_name((*fld_iter)->get_name()) << ","
-                 << endl;
-    }
-    f_service_ << indent() << "}" << endl;
-
-    // Write to the stream
-    f_service_ << indent() << "if err = args.Write(oprot); err != nil {"
-               << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "if err = oprot.WriteMessageEnd(); err != nil {"
-               << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "return oprot.Flush()" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl << endl;
-
-    if (!(*f_iter)->is_oneway()) {
-      std::string resultname =
-          publicize((*f_iter)->get_name() + "_result", true);
-      // Open function
-      f_service_ << endl
-                 << indent() << "func (p *" << serviceName << "Client) recv"
-                 << publicize((*f_iter)->get_name()) << "() (";
-
-      if (!(*f_iter)->get_returntype()->is_void()) {
-        f_service_ << "value " << type_to_go_type((*f_iter)->get_returntype())
-                   << ", ";
-      }
-
-      f_service_ << "err error) {" << endl;
-      indent_up();
-      // TODO(mcslee): Validate message reply here, seq ids etc.
-      string error(tmp("error"));
-      string error2(tmp("error"));
-      f_service_ << indent() << "iprot := p.InputProtocol" << endl;
-      f_service_ << indent() << "if iprot == nil {" << endl;
-      f_service_ << indent()
-                 << "  iprot = p.ProtocolFactory.GetProtocol(p.Transport)"
-                 << endl;
-      f_service_ << indent() << "  p.InputProtocol = iprot" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent()
-                 << "method, mTypeId, seqId, err := iprot.ReadMessageBegin()"
-                 << endl;
-      f_service_ << indent() << "if err != nil {" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if method != \"" << (*f_iter)->get_name()
-                 << "\" {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.WRONG_METHOD_NAME, \"" << (*f_iter)->get_name()
-                 << " failed: wrong method name\")" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if p.SeqId != seqId {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.BAD_SEQUENCE_ID, \"" << (*f_iter)->get_name()
-                 << " failed: out of sequence response\")" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if mTypeId == thrift.EXCEPTION {" << endl;
-      f_service_
-          << indent() << "  " << error
-          << " := thrift.NewApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "
-             "\"Unknown Exception\")"
-          << endl;
-      f_service_ << indent() << "  var " << error2 << " error" << endl;
-      f_service_ << indent() << "  " << error2 << ", err = " << error
-                 << ".Read(iprot)" << endl;
-      f_service_ << indent() << "  if err != nil {" << endl;
-      f_service_ << indent() << "    return" << endl;
-      f_service_ << indent() << "  }" << endl;
-      f_service_ << indent()
-                 << "  if err = iprot.ReadMessageEnd(); err != nil {" << endl;
-      f_service_ << indent() << "    return" << endl;
-      f_service_ << indent() << "  }" << endl;
-      f_service_ << indent() << "  err = " << error2 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if mTypeId != thrift.REPLY {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.INVALID_MESSAGE_TYPE_EXCEPTION, \""
-                 << (*f_iter)->get_name() << " failed: invalid message type\")"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "result := " << resultname << "{}" << endl;
-      f_service_ << indent() << "if err = result.Read(iprot); err != nil {"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if err = iprot.ReadMessageEnd(); err != nil {"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-
-      t_struct* xs = (*f_iter)->get_xceptions();
-      const std::vector<t_field*>& xceptions = xs->get_members();
-      vector<t_field*>::const_iterator x_iter;
-
-      for (x_iter = xceptions.begin(); x_iter != xceptions.end(); ++x_iter) {
-        const std::string pubname = publicize((*x_iter)->get_name());
-
-        f_service_ << indent() << "if result." << pubname << " != nil {"
-                   << endl;
-        f_service_ << indent() << "  err = result." << pubname << endl;
-        f_service_ << indent() << "  return " << endl;
-        f_service_ << indent() << "}";
-
-        if ((x_iter + 1) != xceptions.end()) {
-          f_service_ << " else ";
-        } else {
-          f_service_ << endl;
-        }
-      }
-
-      // Careful, only return _result if not a void function
-      if (!(*f_iter)->get_returntype()->is_void()) {
-        f_service_ << indent() << "value = result.GetSuccess()" << endl;
-      }
-
-      f_service_ << indent() << "return" << endl;
-      // Close function
-      indent_down();
-      f_service_ << indent() << "}" << endl << endl;
-    }
-  }
-
-  // indent_down();
-  f_service_ << endl;
-}
-
-/**
- * Generates a thread safe service client definition.
- *
- * @param tservice The service to generate a server for.
- */
-void t_go_generator::generate_service_client_threadsafe(t_service* tservice) {
-  string extends = "";
-  string extends_field = "";
-  string extends_client = "";
-  string extends_client_new = "";
-  string serviceName(publicize(tservice->get_name()) + "Threadsafe");
-
-  if (tservice->get_extends() != nullptr) {
-    extends = type_name(tservice->get_extends());
-    size_t index = extends.rfind(".");
-
-    if (index != string::npos) {
-      extends_client = extends.substr(0, index + 1) +
-          publicize(extends.substr(index + 1)) + "ThreadsafeClient";
-      extends_client_new = extends.substr(0, index + 1) + "New" +
-          publicize(extends.substr(index + 1)) + "ThreadsafeClient";
-    } else {
-      extends_client = publicize(extends) + "ThreadsafeClient";
-      extends_client_new = "New" + extends_client;
-    }
-  }
-
-  extends_field = extends_client.substr(extends_client.find(".") + 1);
-
-  generate_go_docstring(f_service_, tservice);
-  f_service_ << indent() << "type " << serviceName << "Client struct {" << endl;
-  indent_up();
-
-  if (!extends_client.empty()) {
-    f_service_ << indent() << "*" << extends_client << endl;
-  } else {
-    f_service_ << indent() << "Transport thrift.Transport" << endl;
-    f_service_ << indent() << "ProtocolFactory thrift.ProtocolFactory" << endl;
-    f_service_ << indent() << "InputProtocol thrift.Protocol" << endl;
-    f_service_ << indent() << "OutputProtocol thrift.Protocol" << endl;
-    f_service_ << indent() << "SeqId int32" << endl;
-    f_service_ << indent() << "Mu sync.Mutex" << endl;
-    /*f_service_ << indent() << "reqs map[int32]Deferred" << endl*/;
-  }
-
-  indent_down();
-  f_service_ << indent() << "}" << endl << endl;
-  // Constructor function
-  f_service_ << indent() << "func New" << serviceName
-             << "ClientFactory(t thrift.Transport, f thrift.ProtocolFactory) *"
-             << serviceName << "Client {" << endl;
-  indent_up();
-  f_service_ << indent() << "return &" << serviceName << "Client";
-
-  if (!extends.empty()) {
-    f_service_ << "{" << extends_field << ": " << extends_client_new
-               << "Factory(t, f)}";
-  } else {
-    indent_up();
-    f_service_ << "{Transport: t," << endl;
-    f_service_ << indent() << "ProtocolFactory: f," << endl;
-    f_service_ << indent() << "InputProtocol: f.GetProtocol(t)," << endl;
-    f_service_ << indent() << "OutputProtocol: f.GetProtocol(t)," << endl;
-    f_service_ << indent() << "SeqId: 0," << endl;
-    /*f_service_ << indent() << "Reqs: make(map[int32]Deferred)" << endl*/;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-  }
-
-  indent_down();
-  f_service_ << indent() << "}" << endl << endl;
-  // Constructor function
-  f_service_
-      << indent() << "func New" << serviceName
-      << "Client(t thrift.Transport, iprot thrift.Protocol, oprot thrift.Protocol) *"
-      << serviceName << "Client {" << endl;
-  indent_up();
-  f_service_ << indent() << "return &" << serviceName << "Client";
-
-  if (!extends.empty()) {
-    f_service_ << "{" << extends_field << ": " << extends_client_new
-               << "(t, iprot, oprot)}" << endl;
-  } else {
-    indent_up();
-    f_service_ << "{Transport: t," << endl;
-    f_service_ << indent() << "ProtocolFactory: nil," << endl;
-    f_service_ << indent() << "InputProtocol: iprot," << endl;
-    f_service_ << indent() << "OutputProtocol: oprot," << endl;
-    f_service_ << indent() << "SeqId: 0," << endl;
-    /*f_service_ << indent() << "Reqs: make(map[int32]interface{})" << endl*/;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-  }
-
-  indent_down();
-  f_service_ << indent() << "}" << endl << endl;
-
-  // Generate marker to allow users to test for thread safety
-  f_service_ << indent() << "func (p *" << serviceName
-             << "Client) Threadsafe() {}" << endl;
-  f_service_ << endl;
-
-  // Generate client method implementations
-  vector<t_function*> functions = tservice->get_functions();
-  vector<t_function*>::const_iterator f_iter;
-
-  for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
-    t_struct* arg_struct = (*f_iter)->get_arglist();
-    const vector<t_field*>& fields = arg_struct->get_members();
-    vector<t_field*>::const_iterator fld_iter;
-    string funname = publicize((*f_iter)->get_name());
-    // Open function
-    generate_go_docstring(f_service_, (*f_iter));
-    f_service_ << indent() << "func (p *" << serviceName << "Client) "
-               << function_signature_if(*f_iter, "", false) << " {" << endl;
-    indent_up();
-    /*
-    f_service_ <<
-      indent() << "p.SeqId += 1" << endl;
-    if (!(*f_iter)->is_oneway()) {
-      f_service_ <<
-        indent() << "d := defer.Deferred()" << endl <<
-        indent() << "p.Reqs[p.SeqId] = d" << endl;
-    }
-    */
-    f_service_ << indent() << "p.Mu.Lock()" << endl;
-    f_service_ << indent() << "defer p.Mu.Unlock()" << endl;
-    f_service_ << indent() << "if err = p.send" << funname << "(";
-    bool first = true;
-
-    for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-      if (first) {
-        first = false;
-      } else {
-        f_service_ << ", ";
-      }
-
-      f_service_ << variable_name_to_go_name((*fld_iter)->get_name());
-    }
-
-    f_service_ << "); err != nil { return }" << endl;
-
-    if (!(*f_iter)->is_oneway()) {
-      f_service_ << indent() << "return p.recv" << funname << "()" << endl;
-    } else {
-      f_service_ << indent() << "return" << endl;
-    }
-
-    indent_down();
-    f_service_ << indent() << "}" << endl << endl;
-    f_service_ << indent() << "func (p *" << serviceName << "Client) send"
-               << function_signature(*f_iter) << "(err error) {" << endl;
-    indent_up();
-    std::string argsname = publicize((*f_iter)->get_name() + "_args", true);
-    // Serialize the request header
-    f_service_ << indent() << "oprot := p.OutputProtocol" << endl;
-    f_service_ << indent() << "if oprot == nil {" << endl;
-    f_service_ << indent()
-               << "  oprot = p.ProtocolFactory.GetProtocol(p.Transport)"
-               << endl;
-    f_service_ << indent() << "  p.OutputProtocol = oprot" << endl;
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "p.SeqId++" << endl;
-    f_service_ << indent() << "if err = oprot.WriteMessageBegin(\""
-               << (*f_iter)->get_name() << "\", "
-               << ((*f_iter)->is_oneway() ? "thrift.ONEWAY" : "thrift.CALL")
-               << ", p.SeqId); err != nil {" << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "args := " << argsname << "{" << endl;
-
-    for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-      f_service_ << indent() << publicize((*fld_iter)->get_name()) << " : "
-                 << variable_name_to_go_name((*fld_iter)->get_name()) << ","
-                 << endl;
-    }
-    f_service_ << indent() << "}" << endl;
-
-    // Write to the stream
-    f_service_ << indent() << "if err = args.Write(oprot); err != nil {"
-               << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "if err = oprot.WriteMessageEnd(); err != nil {"
-               << endl;
-    indent_up();
-    f_service_ << indent() << "  return" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl;
-    f_service_ << indent() << "return oprot.Flush()" << endl;
-    indent_down();
-    f_service_ << indent() << "}" << endl << endl;
-
-    if (!(*f_iter)->is_oneway()) {
-      std::string resultname =
-          publicize((*f_iter)->get_name() + "_result", true);
-      // Open function
-      f_service_ << endl
-                 << indent() << "func (p *" << serviceName << "Client) recv"
-                 << publicize((*f_iter)->get_name()) << "() (";
-
-      if (!(*f_iter)->get_returntype()->is_void()) {
-        f_service_ << "value " << type_to_go_type((*f_iter)->get_returntype())
-                   << ", ";
-      }
-
-      f_service_ << "err error) {" << endl;
-      indent_up();
-      // TODO(mcslee): Validate message reply here, seq ids etc.
-      string error(tmp("error"));
-      string error2(tmp("error"));
-      f_service_ << indent() << "iprot := p.InputProtocol" << endl;
-      f_service_ << indent() << "if iprot == nil {" << endl;
-      f_service_ << indent()
-                 << "  iprot = p.ProtocolFactory.GetProtocol(p.Transport)"
-                 << endl;
-      f_service_ << indent() << "  p.InputProtocol = iprot" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent()
-                 << "method, mTypeId, seqId, err := iprot.ReadMessageBegin()"
-                 << endl;
-      f_service_ << indent() << "if err != nil {" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if method != \"" << (*f_iter)->get_name()
-                 << "\" {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.WRONG_METHOD_NAME, \"" << (*f_iter)->get_name()
-                 << " failed: wrong method name\")" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if p.SeqId != seqId {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.BAD_SEQUENCE_ID, \"" << (*f_iter)->get_name()
-                 << " failed: out of sequence response\")" << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if mTypeId == thrift.EXCEPTION {" << endl;
-      f_service_
-          << indent() << "  " << error
-          << " := thrift.NewApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "
-             "\"Unknown Exception\")"
-          << endl;
-      f_service_ << indent() << "  var " << error2 << " error" << endl;
-      f_service_ << indent() << "  " << error2 << ", err = " << error
-                 << ".Read(iprot)" << endl;
-      f_service_ << indent() << "  if err != nil {" << endl;
-      f_service_ << indent() << "    return" << endl;
-      f_service_ << indent() << "  }" << endl;
-      f_service_ << indent()
-                 << "  if err = iprot.ReadMessageEnd(); err != nil {" << endl;
-      f_service_ << indent() << "    return" << endl;
-      f_service_ << indent() << "  }" << endl;
-      f_service_ << indent() << "  err = " << error2 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if mTypeId != thrift.REPLY {" << endl;
-      f_service_ << indent() << "  err = thrift.NewApplicationException("
-                 << "thrift.INVALID_MESSAGE_TYPE_EXCEPTION, \""
-                 << (*f_iter)->get_name() << " failed: invalid message type\")"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "result := " << resultname << "{}" << endl;
-      f_service_ << indent() << "if err = result.Read(iprot); err != nil {"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-      f_service_ << indent() << "if err = iprot.ReadMessageEnd(); err != nil {"
-                 << endl;
-      f_service_ << indent() << "  return" << endl;
-      f_service_ << indent() << "}" << endl;
-
-      t_struct* xs = (*f_iter)->get_xceptions();
-      const std::vector<t_field*>& xceptions = xs->get_members();
-      vector<t_field*>::const_iterator x_iter;
-
-      for (x_iter = xceptions.begin(); x_iter != xceptions.end(); ++x_iter) {
-        const std::string pubname = publicize((*x_iter)->get_name());
-
-        f_service_ << indent() << "if result." << pubname << " != nil {"
-                   << endl;
-        f_service_ << indent() << "  err = result." << pubname << endl;
-        f_service_ << indent() << "  return " << endl;
-        f_service_ << indent() << "}";
-
-        if ((x_iter + 1) != xceptions.end()) {
-          f_service_ << " else ";
-        } else {
-          f_service_ << endl;
-        }
-      }
-
-      // Careful, only return _result if not a void function
-      if (!(*f_iter)->get_returntype()->is_void()) {
-        f_service_ << indent() << "value = result.GetSuccess()" << endl;
-      }
-
-      f_service_ << indent() << "return" << endl;
-      // Close function
-      indent_down();
-      f_service_ << indent() << "}" << endl << endl;
-    }
+    generate_service_client_method(clientTypeName, f_iter, isThreadsafe);
   }
 
   // indent_down();
@@ -2555,7 +2315,7 @@ void t_go_generator::generate_service_remote(t_service* tservice) {
   string service_module = get_real_go_module(program_);
   string::size_type loc;
 
-  while ((loc = service_module.find(".")) != string::npos) {
+  while ((loc = service_module.find('.')) != string::npos) {
     service_module.replace(loc, 1, 1, '/');
   }
   if (!gen_package_prefix_.empty()) {
@@ -2594,7 +2354,6 @@ void t_go_generator::generate_service_remote(t_service* tservice) {
              << (*f_iter)->get_name() << "(";
     t_struct* arg_struct = (*f_iter)->get_arglist();
     const std::vector<t_field*>& args = arg_struct->get_members();
-    vector<t_field*>::const_iterator a_iter;
     std::vector<t_field*>::size_type num_args = args.size();
     bool first = true;
 
@@ -2762,7 +2521,6 @@ void t_go_generator::generate_service_remote(t_service* tservice) {
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     t_struct* arg_struct = (*f_iter)->get_arglist();
     const std::vector<t_field*>& args = arg_struct->get_members();
-    vector<t_field*>::const_iterator a_iter;
     std::vector<t_field*>::size_type num_args = args.size();
     string funcName((*f_iter)->get_name());
     string pubName(publicize(funcName));
@@ -2802,13 +2560,12 @@ void t_go_generator::generate_service_remote(t_service* tservice) {
             break;
 
           case t_base_type::TYPE_STRING:
-            if (((t_base_type*)the_type2)->is_binary()) {
-              f_remote << indent() << "argvalue" << i << " := []byte(flag.Arg("
-                       << flagArg << "))" << endl;
-            } else {
-              f_remote << indent() << "argvalue" << i << " := flag.Arg("
-                       << flagArg << ")" << endl;
-            }
+            f_remote << indent() << "argvalue" << i << " := flag.Arg("
+                     << flagArg << ")" << endl;
+            break;
+          case t_base_type::TYPE_BINARY:
+            f_remote << indent() << "argvalue" << i << " := []byte(flag.Arg("
+                     << flagArg << "))" << endl;
             break;
 
           case t_base_type::TYPE_BOOL:
@@ -2988,6 +2745,7 @@ void t_go_generator::generate_service_remote(t_service* tservice) {
             break;
 
           case t_base_type::TYPE_STRING:
+          case t_base_type::TYPE_BINARY:
           case t_base_type::TYPE_BOOL:
           case t_base_type::TYPE_BYTE:
           case t_base_type::TYPE_I16:
@@ -3049,7 +2807,7 @@ void t_go_generator::generate_service_server(t_service* tservice) {
 
   if (tservice->get_extends() != nullptr) {
     extends = type_name(tservice->get_extends());
-    size_t index = extends.rfind(".");
+    size_t index = extends.rfind('.');
 
     if (index != string::npos) {
       extends_processor = extends.substr(0, index + 1) +
@@ -3080,9 +2838,13 @@ void t_go_generator::generate_service_server(t_service* tservice) {
                << gen_processor_func_ << ") {" << endl;
     f_service_ << indent() << "  p.processorMap[key] = processor" << endl;
     f_service_ << indent() << "}" << endl << endl;
-    f_service_ << indent() << "func (p *" << serviceName
-               << "Processor) GetProcessorFunction(key string) "
-               << "(processor " << gen_processor_func_ << ", err error) {"
+    f_service_ << indent() << "func (p *" << serviceName << "Processor) ";
+    if (gen_use_context_) {
+      f_service_ << "GetProcessorFunctionContext(key string) ";
+    } else {
+      f_service_ << "GetProcessorFunction(key string) ";
+    }
+    f_service_ << "(processor " << gen_processor_func_ << ", err error) {"
                << endl;
     indent_up();
     f_service_ << indent() << "if processor, ok := p.processorMap[key]; ok {"
@@ -3173,7 +2935,6 @@ void t_go_generator::generate_read_function(
   string argsname = publicize(tfunction->get_name() + "_args", true);
   // t_struct* xs = tfunction->get_xceptions();
   // const std::vector<t_field*>& xceptions = xs->get_members();
-  vector<t_field*>::const_iterator x_iter;
   f_service_ << indent() << "func (p *" << processorName
              << ") Read(iprot thrift.Protocol) "
              << "(thrift.Struct, thrift.Exception) {" << endl;
@@ -3387,7 +3148,7 @@ void t_go_generator::generate_deserialize_field(
   if (type->is_struct() || type->is_xception()) {
     generate_deserialize_struct(
         out,
-        (t_struct*)type,
+        (t_struct*)orig_type,
         is_pointer_field(tfield, in_container_value),
         declare,
         name);
@@ -3413,12 +3174,15 @@ void t_go_generator::generate_deserialize_field(
               name;
 
         case t_base_type::TYPE_STRING:
-          if (((t_base_type*)type)->is_binary() && !inkey) {
+          out << "ReadString()";
+          break;
+
+        case t_base_type::TYPE_BINARY:
+          if (!inkey) {
             out << "ReadBinary()";
           } else {
             out << "ReadString()";
           }
-
           break;
 
         case t_base_type::TYPE_BOOL:
@@ -3464,7 +3228,7 @@ void t_go_generator::generate_deserialize_field(
     out << "} else {" << endl;
     string wrap;
 
-    if (((t_base_type*)type)->is_binary() && inkey) {
+    if (type->is_binary() && inkey) {
       wrap = "";
     } else if (type->is_enum() || orig_type->is_typedef()) {
       wrap = publicize(type_name(orig_type));
@@ -3621,13 +3385,15 @@ void t_go_generator::generate_deserialize_map_element(
   (void)declare;
   string key = tmp("_key");
   string val = tmp("_val");
+
   t_field fkey(tmap->get_key_type(), key);
   t_field fval(tmap->get_val_type(), val);
+  string derefs = is_pointer_field(&fkey) ? "*" : "";
   fkey.set_req(t_field::T_OPT_IN_REQ_OUT);
   fval.set_req(t_field::T_OPT_IN_REQ_OUT);
   generate_deserialize_field(out, &fkey, true, "", false, false, true);
   generate_deserialize_field(out, &fval, true, "", false, false, false, true);
-  indent(out) << prefix << "[" << key << "] = " << val << endl;
+  indent(out) << prefix << "[" << derefs << key << "] = " << val << endl;
 }
 
 /**
@@ -3703,12 +3469,15 @@ void t_go_generator::generate_serialize_field(
               name;
 
         case t_base_type::TYPE_STRING:
-          if (((t_base_type*)type)->is_binary() && !inkey) {
+          out << "WriteString(string(" << name << "))";
+          break;
+
+        case t_base_type::TYPE_BINARY:
+          if (!inkey) {
             out << "WriteBinary(" << name << ")";
           } else {
             out << "WriteString(string(" << name << "))";
           }
-
           break;
 
         case t_base_type::TYPE_BOOL:
@@ -4057,7 +3826,7 @@ string t_go_generator::function_signature_if(
   t_type* ret = tfunction->get_returntype();
 
   if (!ret->is_void()) {
-    signature += "r " + type_to_go_type(ret) + ", ";
+    signature += "_r " + type_to_go_type(ret) + ", ";
   }
 
   signature += "err error)";
@@ -4113,11 +3882,10 @@ string t_go_generator::type_to_enum(t_type* type) {
         throw "NO T_VOID CONSTRUCT";
 
       case t_base_type::TYPE_STRING:
-        /* this is wrong, binary is still a string type internally
-        if (((t_base_type*)type)->is_binary()) {
-            return "thrift.BINARY";
-        }
-        */
+        return "thrift.STRING";
+
+      case t_base_type::TYPE_BINARY:
+        // binary is still a string type internally
         return "thrift.STRING";
 
       case t_base_type::TYPE_BOOL:
@@ -4156,6 +3924,12 @@ string t_go_generator::type_to_enum(t_type* type) {
   throw "INVALID TYPE IN type_to_enum: " + type->get_name();
 }
 
+string strip_type_pointer(string tname) {
+  if (!tname.empty() && tname.front() == '*') {
+    return tname.substr(1, tname.size() - 1);
+  }
+  return tname;
+}
 /**
  * Converts the parse type to a go map type, will throw an exception if it will
  * not produce a valid go map type.
@@ -4173,10 +3947,11 @@ string t_go_generator::type_to_go_key_type(t_type* type) {
         type_to_go_type(type) + " - aborting.";
   }
 
-  if (resolved_type->is_string() && ((t_base_type*)resolved_type)->is_binary())
+  if (resolved_type->is_binary()) {
     return "string";
+  }
 
-  return type_to_go_type(type);
+  return strip_type_pointer(type_to_go_type(type));
 }
 
 /**
@@ -4192,7 +3967,8 @@ string t_go_generator::type_to_go_type(t_type* type) {
  */
 string t_go_generator::type_to_go_type_with_opt(
     t_type* type,
-    bool optional_field) {
+    bool optional_field,
+    bool from_typedef) {
   string maybe_pointer(optional_field ? "*" : "");
 
   if (type->is_typedef() && !((t_typedef*)type)->is_defined()) {
@@ -4207,11 +3983,10 @@ string t_go_generator::type_to_go_type_with_opt(
         throw "";
 
       case t_base_type::TYPE_STRING:
-        if (((t_base_type*)type)->is_binary()) {
-          return maybe_pointer + "[]byte";
-        }
-
         return maybe_pointer + "string";
+
+      case t_base_type::TYPE_BINARY:
+        return maybe_pointer + "[]byte";
 
       case t_base_type::TYPE_BOOL:
         return maybe_pointer + "bool";
@@ -4237,6 +4012,9 @@ string t_go_generator::type_to_go_type_with_opt(
   } else if (type->is_enum()) {
     return maybe_pointer + publicize(type_name(type));
   } else if (type->is_struct() || type->is_xception()) {
+    if (from_typedef) {
+      return publicize(type_name(type));
+    }
     return "*" + publicize(type_name(type));
   } else if (type->is_map()) {
     t_map* t = (t_map*)type;
@@ -4252,6 +4030,10 @@ string t_go_generator::type_to_go_type_with_opt(
     string elemType = type_to_go_type(t->get_elem_type());
     return maybe_pointer + string("[]") + elemType;
   } else if (type->is_typedef()) {
+    auto true_type = type->get_true_type();
+    if (true_type->is_struct() || true_type->is_xception()) {
+      return "*" + publicize(type_name(type));
+    }
     return maybe_pointer + publicize(type_name(type));
   }
 
@@ -4291,4 +4073,9 @@ THRIFT_REGISTER_GENERATOR(
     "    thrift_import=   Override thrift package import path (default:" +
         default_thrift_import +
         ")\n"
-        "    package=         Package name (default: inferred from thrift file name)\n");
+        "    package=         Package name (default: inferred from thrift file name)\n"
+        "    use_context      Generate code with context on all thrift server handlers\n");
+
+} // namespace compiler
+} // namespace thrift
+} // namespace apache

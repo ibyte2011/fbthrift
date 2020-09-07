@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,8 +46,8 @@ void ChannelTestFixture::sendAndReceiveStream(
     unordered_map<string, string>*& outputHeaders,
     IOBuf*& outputPayload,
     bool omitEnvelope) {
-  auto channel =
-      std::make_shared<SingleRpcChannel>(responseHandler_.get(), processor);
+  auto channel = std::make_shared<SingleRpcChannel>(
+      responseHandler_->getTransaction(), processor);
   string payload;
   if (omitEnvelope) {
     payload = inputPayload;

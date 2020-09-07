@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,6 +46,8 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport hsmodule.types as _hsmodule_types
 import hsmodule.types as _hsmodule_types
+
+cimport hsmodule.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -47,22 +59,24 @@ from hsmodule.services_wrapper cimport cHsTestServiceInterface
 
 
 cdef extern from "<utility>" namespace "std":
-    cdef cFollyPromise[int64_t] move_promise_int64_t "std::move"(
-        cFollyPromise[int64_t])
+    cdef cFollyPromise[cint64_t] move_promise_cint64_t "std::move"(
+        cFollyPromise[cint64_t])
 
-cdef class Promise_int64_t:
-    cdef cFollyPromise[int64_t] cPromise
+@cython.auto_pickle(False)
+cdef class Promise_cint64_t:
+    cdef cFollyPromise[cint64_t] cPromise
 
     @staticmethod
-    cdef create(cFollyPromise[int64_t] cPromise):
-        inst = <Promise_int64_t>Promise_int64_t.__new__(Promise_int64_t)
-        inst.cPromise = move_promise_int64_t(cPromise)
+    cdef create(cFollyPromise[cint64_t] cPromise):
+        inst = <Promise_cint64_t>Promise_cint64_t.__new__(Promise_cint64_t)
+        inst.cPromise = move_promise_cint64_t(cPromise)
         return inst
 
 cdef object _HsTestService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class HsTestServiceInterface(
     ServiceInterface
 ):
@@ -83,20 +97,24 @@ cdef class HsTestServiceInterface(
             int1):
         raise NotImplementedError("async def init is not implemented")
 
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__HsTestService(for_clients=False)
+
+
 
 cdef api void call_cy_HsTestService_init(
     object self,
     Cpp2RequestContext* ctx,
-    cFollyPromise[int64_t] cPromise,
-    int64_t int1
+    cFollyPromise[cint64_t] cPromise,
+    cint64_t int1
 ):
-    cdef HsTestServiceInterface __iface
-    __iface = self
-    __promise = Promise_int64_t.create(move_promise_int64_t(cPromise))
+    __promise = Promise_cint64_t.create(move_promise_cint64_t(cPromise))
     arg_int1 = int1
-    __context = None
-    if __iface._pass_context_init:
-        __context = RequestContext.create(ctx)
+    __context = RequestContext.create(ctx)
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __context_token = __THRIFT_REQUEST_CONTEXT.set(__context)
+        __context = None
     asyncio.get_event_loop().create_task(
         HsTestService_init_coro(
             self,
@@ -105,15 +123,17 @@ cdef api void call_cy_HsTestService_init(
             arg_int1
         )
     )
+    if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+        __THRIFT_REQUEST_CONTEXT.reset(__context_token)
 
 async def HsTestService_init_coro(
     object self,
     object ctx,
-    Promise_int64_t promise,
+    Promise_cint64_t promise,
     int1
 ):
     try:
-        if ctx is not None:
+        if ctx and getattr(self.init, "pass_context", False):
             result = await self.init(ctx,
                       int1)
         else:
@@ -133,5 +153,5 @@ async def HsTestService_init_coro(
             cTApplicationExceptionType__UNKNOWN, repr(ex).encode('UTF-8')
         ))
     else:
-        promise.cPromise.setValue(<int64_t> result)
+        promise.cPromise.setValue(<cint64_t> result)
 

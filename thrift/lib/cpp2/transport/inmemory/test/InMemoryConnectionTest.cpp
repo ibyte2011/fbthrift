@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include <gtest/gtest.h>
+#include <folly/portability/GTest.h>
 
 #include <folly/ExceptionWrapper.h>
 #include <folly/futures/Future.h>
@@ -108,9 +108,10 @@ void testClientWithHandler() {
       std::make_unique<DivisionAsyncClient>(std::move(thriftClient));
 
   // Synchronous client
-  EXPECT_EQ(3, divisionClient->sync_divide(15, 5));
-  EXPECT_THROW({ divisionClient->sync_divide(1, 0); }, DivideByZero);
-  EXPECT_EQ(7, divisionClient->sync_divide(7, 1));
+  EXPECT_EQ(3, divisionClient->semifuture_divide(15, 5).get());
+  EXPECT_THROW(
+      { divisionClient->semifuture_divide(1, 0).get(); }, DivideByZero);
+  EXPECT_EQ(7, divisionClient->semifuture_divide(7, 1).get());
 
   // Asynchronous client
   {

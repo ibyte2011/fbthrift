@@ -1,10 +1,26 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace cpp test_cpp1.cpp_reflection
 namespace cpp2 test_cpp2.cpp_reflection
 namespace d test_d.cpp_reflection
 namespace java test_java.cpp_reflection
 namespace java.swift test_swift.cpp_reflection
 namespace php test_php.cpp_reflection
-namespace python test_py.cpp_reflection
+namespace py3 test_py.cpp_reflection
 
 include "thrift/test/reflection_dep_B.thrift"
 include "thrift/test/reflection_dep_C.thrift"
@@ -134,10 +150,10 @@ struct structC {
 struct struct1 {
   1: required i32 field0
   2: optional string field1
-  3: enum1 field2
-  4: required enum2 field3
-  5: optional union1 field4
-  6: union2 field5
+  4: enum1 field2
+  8: required enum2 field3
+  16: optional union1 field4
+  32: union2 field5
 }
 
 struct struct2 {
@@ -259,7 +275,7 @@ enum enum_with_special_names {
   getter = 1,
   lists = 2,
   maps = 3,
-  name = 4,
+  name = 4 (py3.name = "name_"),
   name_to_value = 5,
   names = 6,
   prefix_tree = 7,
@@ -268,7 +284,7 @@ enum enum_with_special_names {
   str = 10,
   strings = 11,
   type = 12,
-  value = 13,
+  value = 13 (py3.name = "value_"),
   value_to_name = 14,
   values = 15,
   id = 16,
@@ -397,6 +413,11 @@ struct hasRefUnique {
   9: optional map<string, string> (cpp.template="std::unordered_map")
       anOptionalMap (cpp2.ref_type = "unique"),
   10: optional unionA anOptionalUnion (cpp2.ref_type = "unique"),
+}
+
+union variantHasRefUnique {
+  1: structA aStruct (cpp2.ref_type = "unique"),
+  2: i32 anInt
 }
 
 struct hasRefShared {

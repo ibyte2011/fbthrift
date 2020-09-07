@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <folly/lang/Bits.h>
 #include <thrift/lib/cpp2/protocol/CompactProtocol.h>
 
 namespace apache {
@@ -36,6 +37,7 @@ class CompactV1ProtocolWriter : protected CompactProtocolWriter {
   using ProtocolReader = CompactV1ProtocolReader;
 
   using CompactProtocolWriter::CompactProtocolWriter;
+  using CompactProtocolWriter::kSortKeys;
   using CompactProtocolWriter::protocolType;
   using CompactProtocolWriter::setOutput;
 
@@ -130,11 +132,12 @@ class CompactV1ProtocolReader : protected CompactProtocolReader {
   using CompactProtocolReader::readString;
   using CompactProtocolReader::skip;
 
-  using CompactProtocolReader::getCurrentPosition;
+  using CompactProtocolReader::getCursor;
+  using CompactProtocolReader::getCursorPosition;
   using CompactProtocolReader::readFromPositionAndAppend;
 };
 
 } // namespace thrift
 } // namespace apache
 
-#include <thrift/lib/cpp2/protocol/CompactV1Protocol.tcc>
+#include <thrift/lib/cpp2/protocol/CompactV1Protocol-inl.h>

@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,50 +25,48 @@
 
 #include <folly/IntrusiveList.h>
 #include <folly/Likely.h>
+#include <folly/Portability.h>
 #include <folly/fibers/Baton.h>
 
 #include <thrift/lib/cpp2/transport/rocket/Types.h>
 #include <thrift/lib/cpp2/transport/rocket/framing/FrameType.h>
 #include <thrift/lib/cpp2/transport/rocket/framing/Frames.h>
 #include <thrift/lib/cpp2/transport/rocket/framing/Serializer.h>
-
-namespace folly {
-namespace io {
-class IOBuf;
-} // namespace io
-} // namespace folly
+#include <thrift/lib/thrift/gen-cpp2/RpcMetadata_types.h>
 
 namespace apache {
 namespace thrift {
 namespace rocket {
-
-namespace detail {
-SetupFrame makeSetupFrame();
-} // namespace detail
-
 class RequestContextQueue;
 
 class RequestContext {
  public:
+  class WriteSuccessCallback {
+   public:
+    virtual ~WriteSuccessCallback() = default;
+    virtual void onWriteSuccess() noexcept = 0;
+  };
+
   enum class State : uint8_t {
     WRITE_NOT_SCHEDULED,
     WRITE_SCHEDULED,
-    WRITE_SENDING, /* AsyncSocket::writev() called, but not yet confirmed as
-                      written to the underlying socket */
+    WRITE_SENDING, /* AsyncSocket::writeChain() called, but WriteCallback has
+                      not yet fired */
     WRITE_SENT, /* Write to socket completed (possibly with error) */
-    RESPONSE_RECEIVED,
-    REQUEST_ABORTED, /* Request timed out, errored out, or was aborted */
+    COMPLETE, /* Terminal state. Result stored in responsePayload_ */
   };
 
   template <class Frame>
   RequestContext(
       Frame&& frame,
       RequestContextQueue& queue,
-      bool setupFrameNeeded)
+      SetupFrame* setupFrame = nullptr,
+      WriteSuccessCallback* writeSuccessCallback = nullptr)
       : queue_(queue),
         streamId_(frame.streamId()),
-        frameType_(Frame::frameType()) {
-    serialize(std::forward<Frame>(frame), setupFrameNeeded);
+        frameType_(Frame::frameType()),
+        writeSuccessCallback_(writeSuccessCallback) {
+    serialize(std::forward<Frame>(frame), setupFrame);
   }
 
   RequestContext(const RequestContext&) = delete;
@@ -78,17 +76,32 @@ class RequestContext {
 
   // For REQUEST_RESPONSE contexts, where an immediate matching response is
   // expected
-  Payload waitForResponse(std::chrono::milliseconds timeout);
+  FOLLY_NODISCARD folly::Try<Payload> waitForResponse(
+      std::chrono::milliseconds timeout);
+  FOLLY_NODISCARD folly::Try<Payload> getResponse() &&;
 
   // For request types for which an immediate matching response is not
   // necessarily expected, e.g., REQUEST_FNF and REQUEST_STREAM
-  void waitForWriteToComplete();
+  FOLLY_NODISCARD folly::Try<void> waitForWriteToComplete();
+
+  void waitForWriteToCompleteSchedule(folly::fibers::Baton::Waiter* waiter);
+  FOLLY_NODISCARD folly::Try<void> waitForWriteToCompleteResult();
+
+  void setTimeoutInfo(
+      folly::HHWheelTimer& timer,
+      folly::HHWheelTimer::Callback& callback,
+      std::chrono::milliseconds timeout) {
+    timer_ = &timer;
+    timeoutCallback_ = &callback;
+    requestTimeout_ = timeout;
+  }
 
   void scheduleTimeoutForResponse() {
     DCHECK(isRequestResponse());
     // In some edge cases, response may arrive before write to socket finishes.
-    if (state_ != State::RESPONSE_RECEIVED) {
-      awaitResponseTimeoutHandler_.scheduleTimeout(awaitResponseTimeout_);
+    if (state_ != State::COMPLETE &&
+        requestTimeout_ != std::chrono::milliseconds::zero()) {
+      timer_->scheduleTimeout(timeoutCallback_, requestTimeout_);
     }
   }
 
@@ -112,6 +125,12 @@ class RequestContext {
   void onPayloadFrame(PayloadFrame&& payloadFrame);
   void onErrorFrame(ErrorFrame&& errorFrame);
 
+  void onWriteSuccess() noexcept;
+
+  bool hasPartialPayload() const {
+    return responsePayload_.hasValue();
+  }
+
  private:
   RequestContextQueue& queue_;
   folly::SafeIntrusiveListHook queueHook_;
@@ -119,24 +138,42 @@ class RequestContext {
   const StreamId streamId_;
   const FrameType frameType_;
   State state_{State::WRITE_NOT_SCHEDULED};
+  bool lastInWriteBatch_{false};
+  bool isDummyEndOfBatchMarker_{false};
 
   boost::intrusive::unordered_set_member_hook<> setHook_;
   folly::fibers::Baton baton_;
-  std::chrono::milliseconds awaitResponseTimeout_{1000};
-  folly::fibers::Baton::TimeoutHandler awaitResponseTimeoutHandler_;
+  std::chrono::milliseconds requestTimeout_{1000};
+  folly::HHWheelTimer* timer_{nullptr};
+  folly::HHWheelTimer::Callback* timeoutCallback_{nullptr};
   folly::Try<Payload> responsePayload_;
+  WriteSuccessCallback* const writeSuccessCallback_{nullptr};
 
   template <class Frame>
-  void serialize(Frame&& frame, bool setupFrameNeeded) {
-    Serializer writer;
-    if (setupFrameNeeded) {
-      auto setupFrame = detail::makeSetupFrame();
-      setupFrame.serialize(writer);
-    }
-    std::forward<Frame>(frame).serialize(writer);
-
+  void serialize(Frame&& frame, SetupFrame* setupFrame) {
     DCHECK(!serializedFrame_);
-    serializedFrame_ = std::move(writer).move();
+
+    serializedFrame_ = std::move(frame).serialize();
+
+    if (UNLIKELY(setupFrame != nullptr)) {
+      Serializer writer;
+      std::move(*setupFrame).serialize(writer);
+      auto setupBuffer = std::move(writer).move();
+      setupBuffer->prependChain(std::move(serializedFrame_));
+      serializedFrame_ = std::move(setupBuffer);
+    }
+  }
+
+  explicit RequestContext(RequestContextQueue& queue)
+      : queue_(queue), frameType_(FrameType::REQUEST_RESPONSE) {}
+
+  static RequestContext& createDummyEndOfBatchMarker(
+      RequestContextQueue& queue) {
+    auto* rctx = new RequestContext(queue);
+    rctx->lastInWriteBatch_ = true;
+    rctx->isDummyEndOfBatchMarker_ = true;
+    rctx->state_ = State::WRITE_SENDING;
+    return *rctx;
   }
 
   struct Equal {

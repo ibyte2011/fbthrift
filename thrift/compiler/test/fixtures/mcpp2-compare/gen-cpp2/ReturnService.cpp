@@ -4,352 +4,344 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/ReturnService.h"
-#include "src/gen-cpp2/ReturnService.tcc"
-
-#include <thrift/lib/cpp2/protocol/BinaryProtocol.h>
-#include <thrift/lib/cpp2/protocol/CompactProtocol.h>
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/ReturnService.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/ReturnService.tcc"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/module_metadata.h"
+#include <thrift/lib/cpp2/gen/service_cpp.h>
 
 namespace some { namespace valid { namespace ns {
 std::unique_ptr<apache::thrift::AsyncProcessor> ReturnServiceSvIf::getProcessor() {
   return std::make_unique<ReturnServiceAsyncProcessor>(this);
 }
 
-void ReturnServiceSvIf::noReturn() {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("noReturn");
-}
 
-folly::Future<folly::Unit> ReturnServiceSvIf::future_noReturn() {
-  return apache::thrift::detail::si::future(semifuture_noReturn(), getThreadManager());
-}
-
-folly::SemiFuture<folly::Unit> ReturnServiceSvIf::semifuture_noReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return noReturn(); });
-}
 
 void ReturnServiceSvIf::async_eb_noReturn(std::unique_ptr<apache::thrift::HandlerCallback<void>> callback) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this]() mutable { return future_noReturn(); });
+  callback->exception(apache::thrift::TApplicationException("Function noReturn is unimplemented"));
 }
 
 bool ReturnServiceSvIf::boolReturn() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("boolReturn");
 }
 
+folly::SemiFuture<bool> ReturnServiceSvIf::semifuture_boolReturn() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return boolReturn();
+  });
+}
+
 folly::Future<bool> ReturnServiceSvIf::future_boolReturn() {
   return apache::thrift::detail::si::future(semifuture_boolReturn(), getThreadManager());
 }
 
-folly::SemiFuture<bool> ReturnServiceSvIf::semifuture_boolReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return boolReturn(); });
-}
 
 void ReturnServiceSvIf::async_tm_boolReturn(std::unique_ptr<apache::thrift::HandlerCallback<bool>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_boolReturn(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_boolReturn();
+  });
 }
 
 int16_t ReturnServiceSvIf::i16Return() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("i16Return");
 }
 
+folly::SemiFuture<int16_t> ReturnServiceSvIf::semifuture_i16Return() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return i16Return();
+  });
+}
+
 folly::Future<int16_t> ReturnServiceSvIf::future_i16Return() {
   return apache::thrift::detail::si::future(semifuture_i16Return(), getThreadManager());
 }
 
-folly::SemiFuture<int16_t> ReturnServiceSvIf::semifuture_i16Return() {
-  return apache::thrift::detail::si::semifuture([&] { return i16Return(); });
-}
 
 void ReturnServiceSvIf::async_tm_i16Return(std::unique_ptr<apache::thrift::HandlerCallback<int16_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_i16Return(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_i16Return();
+  });
 }
 
 int32_t ReturnServiceSvIf::i32Return() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("i32Return");
 }
 
+folly::SemiFuture<int32_t> ReturnServiceSvIf::semifuture_i32Return() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return i32Return();
+  });
+}
+
 folly::Future<int32_t> ReturnServiceSvIf::future_i32Return() {
   return apache::thrift::detail::si::future(semifuture_i32Return(), getThreadManager());
 }
 
-folly::SemiFuture<int32_t> ReturnServiceSvIf::semifuture_i32Return() {
-  return apache::thrift::detail::si::semifuture([&] { return i32Return(); });
-}
 
 void ReturnServiceSvIf::async_tm_i32Return(std::unique_ptr<apache::thrift::HandlerCallback<int32_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_i32Return(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_i32Return();
+  });
 }
 
 int64_t ReturnServiceSvIf::i64Return() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("i64Return");
 }
 
+folly::SemiFuture<int64_t> ReturnServiceSvIf::semifuture_i64Return() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return i64Return();
+  });
+}
+
 folly::Future<int64_t> ReturnServiceSvIf::future_i64Return() {
   return apache::thrift::detail::si::future(semifuture_i64Return(), getThreadManager());
 }
 
-folly::SemiFuture<int64_t> ReturnServiceSvIf::semifuture_i64Return() {
-  return apache::thrift::detail::si::semifuture([&] { return i64Return(); });
-}
 
 void ReturnServiceSvIf::async_tm_i64Return(std::unique_ptr<apache::thrift::HandlerCallback<int64_t>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_i64Return(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_i64Return();
+  });
 }
 
 float ReturnServiceSvIf::floatReturn() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("floatReturn");
 }
 
+folly::SemiFuture<float> ReturnServiceSvIf::semifuture_floatReturn() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return floatReturn();
+  });
+}
+
 folly::Future<float> ReturnServiceSvIf::future_floatReturn() {
   return apache::thrift::detail::si::future(semifuture_floatReturn(), getThreadManager());
 }
 
-folly::SemiFuture<float> ReturnServiceSvIf::semifuture_floatReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return floatReturn(); });
-}
 
 void ReturnServiceSvIf::async_tm_floatReturn(std::unique_ptr<apache::thrift::HandlerCallback<float>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_floatReturn(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_floatReturn();
+  });
 }
 
 double ReturnServiceSvIf::doubleReturn() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("doubleReturn");
 }
 
+folly::SemiFuture<double> ReturnServiceSvIf::semifuture_doubleReturn() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return doubleReturn();
+  });
+}
+
 folly::Future<double> ReturnServiceSvIf::future_doubleReturn() {
   return apache::thrift::detail::si::future(semifuture_doubleReturn(), getThreadManager());
 }
 
-folly::SemiFuture<double> ReturnServiceSvIf::semifuture_doubleReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return doubleReturn(); });
-}
 
 void ReturnServiceSvIf::async_tm_doubleReturn(std::unique_ptr<apache::thrift::HandlerCallback<double>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_doubleReturn(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_doubleReturn();
+  });
 }
 
-void ReturnServiceSvIf::stringReturn(std::string& /*_return*/) {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("stringReturn");
+
+void ReturnServiceSvIf::async_eb_stringReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::string>>> callback) {
+  callback->exception(apache::thrift::TApplicationException("Function stringReturn is unimplemented"));
 }
 
-folly::Future<std::unique_ptr<std::string>> ReturnServiceSvIf::future_stringReturn() {
-  return apache::thrift::detail::si::future(semifuture_stringReturn(), getThreadManager());
-}
-
-folly::SemiFuture<std::unique_ptr<std::string>> ReturnServiceSvIf::semifuture_stringReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::string& _return) { stringReturn(_return); });
-}
-
-void ReturnServiceSvIf::async_eb_stringReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::string>>> callback) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this]() mutable { return future_stringReturn(); });
-}
-
-void ReturnServiceSvIf::binaryReturn(std::string& /*_return*/) {
+void ReturnServiceSvIf::binaryReturn(::std::string& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("binaryReturn");
 }
 
-folly::Future<std::unique_ptr<std::string>> ReturnServiceSvIf::future_binaryReturn() {
+folly::SemiFuture<std::unique_ptr<::std::string>> ReturnServiceSvIf::semifuture_binaryReturn() {
+  return apache::thrift::detail::si::semifuture_returning_uptr([&](::std::string& _return) { binaryReturn(_return); });
+}
+
+folly::Future<std::unique_ptr<::std::string>> ReturnServiceSvIf::future_binaryReturn() {
   return apache::thrift::detail::si::future(semifuture_binaryReturn(), getThreadManager());
 }
 
-folly::SemiFuture<std::unique_ptr<std::string>> ReturnServiceSvIf::semifuture_binaryReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::string& _return) { binaryReturn(_return); });
+
+void ReturnServiceSvIf::async_tm_binaryReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::string>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_binaryReturn();
+  });
 }
 
-void ReturnServiceSvIf::async_tm_binaryReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::string>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_binaryReturn(); });
-}
-
-void ReturnServiceSvIf::mapReturn(std::map<std::string, int64_t>& /*_return*/) {
+void ReturnServiceSvIf::mapReturn(::std::map<::std::string, int64_t>& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("mapReturn");
 }
 
-folly::Future<std::unique_ptr<std::map<std::string, int64_t>>> ReturnServiceSvIf::future_mapReturn() {
+folly::SemiFuture<std::unique_ptr<::std::map<::std::string, int64_t>>> ReturnServiceSvIf::semifuture_mapReturn() {
+  return apache::thrift::detail::si::semifuture_returning_uptr([&](::std::map<::std::string, int64_t>& _return) { mapReturn(_return); });
+}
+
+folly::Future<std::unique_ptr<::std::map<::std::string, int64_t>>> ReturnServiceSvIf::future_mapReturn() {
   return apache::thrift::detail::si::future(semifuture_mapReturn(), getThreadManager());
 }
 
-folly::SemiFuture<std::unique_ptr<std::map<std::string, int64_t>>> ReturnServiceSvIf::semifuture_mapReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::map<std::string, int64_t>& _return) { mapReturn(_return); });
-}
 
-void ReturnServiceSvIf::async_tm_mapReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::map<std::string, int64_t>>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_mapReturn(); });
+void ReturnServiceSvIf::async_tm_mapReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::map<::std::string, int64_t>>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_mapReturn();
+  });
 }
 
  ::some::valid::ns::simpleTypeDef ReturnServiceSvIf::simpleTypedefReturn() {
   apache::thrift::detail::si::throw_app_exn_unimplemented("simpleTypedefReturn");
 }
 
+folly::SemiFuture< ::some::valid::ns::simpleTypeDef> ReturnServiceSvIf::semifuture_simpleTypedefReturn() {
+  return apache::thrift::detail::si::semifuture([&] {
+    return simpleTypedefReturn();
+  });
+}
+
 folly::Future< ::some::valid::ns::simpleTypeDef> ReturnServiceSvIf::future_simpleTypedefReturn() {
   return apache::thrift::detail::si::future(semifuture_simpleTypedefReturn(), getThreadManager());
 }
 
-folly::SemiFuture< ::some::valid::ns::simpleTypeDef> ReturnServiceSvIf::semifuture_simpleTypedefReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return simpleTypedefReturn(); });
-}
 
 void ReturnServiceSvIf::async_tm_simpleTypedefReturn(std::unique_ptr<apache::thrift::HandlerCallback< ::some::valid::ns::simpleTypeDef>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_simpleTypedefReturn(); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_simpleTypedefReturn();
+  });
 }
 
 void ReturnServiceSvIf::complexTypedefReturn( ::some::valid::ns::complexStructTypeDef& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("complexTypedefReturn");
 }
 
-folly::Future<std::unique_ptr< ::some::valid::ns::complexStructTypeDef>> ReturnServiceSvIf::future_complexTypedefReturn() {
-  return apache::thrift::detail::si::future(semifuture_complexTypedefReturn(), getThreadManager());
-}
-
 folly::SemiFuture<std::unique_ptr< ::some::valid::ns::complexStructTypeDef>> ReturnServiceSvIf::semifuture_complexTypedefReturn() {
   return apache::thrift::detail::si::semifuture_returning_uptr([&]( ::some::valid::ns::complexStructTypeDef& _return) { complexTypedefReturn(_return); });
 }
 
-void ReturnServiceSvIf::async_tm_complexTypedefReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::complexStructTypeDef>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_complexTypedefReturn(); });
+folly::Future<std::unique_ptr< ::some::valid::ns::complexStructTypeDef>> ReturnServiceSvIf::future_complexTypedefReturn() {
+  return apache::thrift::detail::si::future(semifuture_complexTypedefReturn(), getThreadManager());
 }
 
-void ReturnServiceSvIf::list_mostComplexTypedefReturn(std::vector< ::some::valid::ns::mostComplexTypeDef>& /*_return*/) {
+
+void ReturnServiceSvIf::async_tm_complexTypedefReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::complexStructTypeDef>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_complexTypedefReturn();
+  });
+}
+
+void ReturnServiceSvIf::list_mostComplexTypedefReturn(::std::vector< ::some::valid::ns::mostComplexTypeDef>& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("list_mostComplexTypedefReturn");
 }
 
-folly::Future<std::unique_ptr<std::vector< ::some::valid::ns::mostComplexTypeDef>>> ReturnServiceSvIf::future_list_mostComplexTypedefReturn() {
+folly::SemiFuture<std::unique_ptr<::std::vector< ::some::valid::ns::mostComplexTypeDef>>> ReturnServiceSvIf::semifuture_list_mostComplexTypedefReturn() {
+  return apache::thrift::detail::si::semifuture_returning_uptr([&](::std::vector< ::some::valid::ns::mostComplexTypeDef>& _return) { list_mostComplexTypedefReturn(_return); });
+}
+
+folly::Future<std::unique_ptr<::std::vector< ::some::valid::ns::mostComplexTypeDef>>> ReturnServiceSvIf::future_list_mostComplexTypedefReturn() {
   return apache::thrift::detail::si::future(semifuture_list_mostComplexTypedefReturn(), getThreadManager());
 }
 
-folly::SemiFuture<std::unique_ptr<std::vector< ::some::valid::ns::mostComplexTypeDef>>> ReturnServiceSvIf::semifuture_list_mostComplexTypedefReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::vector< ::some::valid::ns::mostComplexTypeDef>& _return) { list_mostComplexTypedefReturn(_return); });
+
+void ReturnServiceSvIf::async_tm_list_mostComplexTypedefReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::vector< ::some::valid::ns::mostComplexTypeDef>>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_list_mostComplexTypedefReturn();
+  });
 }
 
-void ReturnServiceSvIf::async_tm_list_mostComplexTypedefReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::vector< ::some::valid::ns::mostComplexTypeDef>>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_list_mostComplexTypedefReturn(); });
-}
-
- ::some::valid::ns::MyEnumA ReturnServiceSvIf::enumReturn() {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("enumReturn");
-}
-
-folly::Future< ::some::valid::ns::MyEnumA> ReturnServiceSvIf::future_enumReturn() {
-  return apache::thrift::detail::si::future(semifuture_enumReturn(), getThreadManager());
-}
-
-folly::SemiFuture< ::some::valid::ns::MyEnumA> ReturnServiceSvIf::semifuture_enumReturn() {
-  return apache::thrift::detail::si::semifuture([&] { return enumReturn(); });
-}
 
 void ReturnServiceSvIf::async_eb_enumReturn(std::unique_ptr<apache::thrift::HandlerCallback< ::some::valid::ns::MyEnumA>> callback) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this]() mutable { return future_enumReturn(); });
+  callback->exception(apache::thrift::TApplicationException("Function enumReturn is unimplemented"));
 }
 
-void ReturnServiceSvIf::list_EnumReturn(std::vector< ::some::valid::ns::MyEnumA>& /*_return*/) {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("list_EnumReturn");
-}
 
-folly::Future<std::unique_ptr<std::vector< ::some::valid::ns::MyEnumA>>> ReturnServiceSvIf::future_list_EnumReturn() {
-  return apache::thrift::detail::si::future(semifuture_list_EnumReturn(), getThreadManager());
-}
-
-folly::SemiFuture<std::unique_ptr<std::vector< ::some::valid::ns::MyEnumA>>> ReturnServiceSvIf::semifuture_list_EnumReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::vector< ::some::valid::ns::MyEnumA>& _return) { list_EnumReturn(_return); });
-}
-
-void ReturnServiceSvIf::async_eb_list_EnumReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::vector< ::some::valid::ns::MyEnumA>>>> callback) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this]() mutable { return future_list_EnumReturn(); });
+void ReturnServiceSvIf::async_eb_list_EnumReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::vector< ::some::valid::ns::MyEnumA>>>> callback) {
+  callback->exception(apache::thrift::TApplicationException("Function list_EnumReturn is unimplemented"));
 }
 
 void ReturnServiceSvIf::structReturn( ::some::valid::ns::MyStruct& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("structReturn");
 }
 
-folly::Future<std::unique_ptr< ::some::valid::ns::MyStruct>> ReturnServiceSvIf::future_structReturn() {
-  return apache::thrift::detail::si::future(semifuture_structReturn(), getThreadManager());
-}
-
 folly::SemiFuture<std::unique_ptr< ::some::valid::ns::MyStruct>> ReturnServiceSvIf::semifuture_structReturn() {
   return apache::thrift::detail::si::semifuture_returning_uptr([&]( ::some::valid::ns::MyStruct& _return) { structReturn(_return); });
 }
 
-void ReturnServiceSvIf::async_tm_structReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::MyStruct>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_structReturn(); });
+folly::Future<std::unique_ptr< ::some::valid::ns::MyStruct>> ReturnServiceSvIf::future_structReturn() {
+  return apache::thrift::detail::si::future(semifuture_structReturn(), getThreadManager());
 }
 
-void ReturnServiceSvIf::set_StructReturn(std::set< ::some::valid::ns::MyStruct>& /*_return*/) {
+
+void ReturnServiceSvIf::async_tm_structReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::MyStruct>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_structReturn();
+  });
+}
+
+void ReturnServiceSvIf::set_StructReturn(::std::set< ::some::valid::ns::MyStruct>& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("set_StructReturn");
 }
 
-folly::Future<std::unique_ptr<std::set< ::some::valid::ns::MyStruct>>> ReturnServiceSvIf::future_set_StructReturn() {
+folly::SemiFuture<std::unique_ptr<::std::set< ::some::valid::ns::MyStruct>>> ReturnServiceSvIf::semifuture_set_StructReturn() {
+  return apache::thrift::detail::si::semifuture_returning_uptr([&](::std::set< ::some::valid::ns::MyStruct>& _return) { set_StructReturn(_return); });
+}
+
+folly::Future<std::unique_ptr<::std::set< ::some::valid::ns::MyStruct>>> ReturnServiceSvIf::future_set_StructReturn() {
   return apache::thrift::detail::si::future(semifuture_set_StructReturn(), getThreadManager());
 }
 
-folly::SemiFuture<std::unique_ptr<std::set< ::some::valid::ns::MyStruct>>> ReturnServiceSvIf::semifuture_set_StructReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::set< ::some::valid::ns::MyStruct>& _return) { set_StructReturn(_return); });
+
+void ReturnServiceSvIf::async_tm_set_StructReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::set< ::some::valid::ns::MyStruct>>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_set_StructReturn();
+  });
 }
 
-void ReturnServiceSvIf::async_tm_set_StructReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::set< ::some::valid::ns::MyStruct>>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_set_StructReturn(); });
-}
-
-void ReturnServiceSvIf::unionReturn( ::some::valid::ns::ComplexUnion& /*_return*/) {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("unionReturn");
-}
-
-folly::Future<std::unique_ptr< ::some::valid::ns::ComplexUnion>> ReturnServiceSvIf::future_unionReturn() {
-  return apache::thrift::detail::si::future(semifuture_unionReturn(), getThreadManager());
-}
-
-folly::SemiFuture<std::unique_ptr< ::some::valid::ns::ComplexUnion>> ReturnServiceSvIf::semifuture_unionReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&]( ::some::valid::ns::ComplexUnion& _return) { unionReturn(_return); });
-}
 
 void ReturnServiceSvIf::async_eb_unionReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::ComplexUnion>>> callback) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this]() mutable { return future_unionReturn(); });
+  callback->exception(apache::thrift::TApplicationException("Function unionReturn is unimplemented"));
 }
 
-void ReturnServiceSvIf::list_UnionReturn(std::vector< ::some::valid::ns::ComplexUnion>& /*_return*/) {
+void ReturnServiceSvIf::list_UnionReturn(::std::vector< ::some::valid::ns::ComplexUnion>& /*_return*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("list_UnionReturn");
 }
 
-folly::Future<std::unique_ptr<std::vector< ::some::valid::ns::ComplexUnion>>> ReturnServiceSvIf::future_list_UnionReturn() {
+folly::SemiFuture<std::unique_ptr<::std::vector< ::some::valid::ns::ComplexUnion>>> ReturnServiceSvIf::semifuture_list_UnionReturn() {
+  return apache::thrift::detail::si::semifuture_returning_uptr([&](::std::vector< ::some::valid::ns::ComplexUnion>& _return) { list_UnionReturn(_return); });
+}
+
+folly::Future<std::unique_ptr<::std::vector< ::some::valid::ns::ComplexUnion>>> ReturnServiceSvIf::future_list_UnionReturn() {
   return apache::thrift::detail::si::future(semifuture_list_UnionReturn(), getThreadManager());
 }
 
-folly::SemiFuture<std::unique_ptr<std::vector< ::some::valid::ns::ComplexUnion>>> ReturnServiceSvIf::semifuture_list_UnionReturn() {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&](std::vector< ::some::valid::ns::ComplexUnion>& _return) { list_UnionReturn(_return); });
+
+void ReturnServiceSvIf::async_tm_list_UnionReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<::std::vector< ::some::valid::ns::ComplexUnion>>>> callback) {
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_list_UnionReturn();
+  });
 }
 
-void ReturnServiceSvIf::async_tm_list_UnionReturn(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr<std::vector< ::some::valid::ns::ComplexUnion>>>> callback) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_list_UnionReturn(); });
-}
 
-void ReturnServiceSvIf::readDataEb( ::some::valid::ns::IOBuf& /*_return*/, int64_t /*size*/) {
-  apache::thrift::detail::si::throw_app_exn_unimplemented("readDataEb");
-}
-
-folly::Future<std::unique_ptr< ::some::valid::ns::IOBuf>> ReturnServiceSvIf::future_readDataEb(int64_t size) {
-  return apache::thrift::detail::si::future(semifuture_readDataEb(size), getThreadManager());
-}
-
-folly::SemiFuture<std::unique_ptr< ::some::valid::ns::IOBuf>> ReturnServiceSvIf::semifuture_readDataEb(int64_t size) {
-  return apache::thrift::detail::si::semifuture_returning_uptr([&]( ::some::valid::ns::IOBuf& _return) { readDataEb(_return, size); });
-}
-
-void ReturnServiceSvIf::async_eb_readDataEb(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::IOBuf>>> callback, int64_t size) {
-  apache::thrift::detail::si::async_eb(this, std::move(callback), [this, size]() mutable { return future_readDataEb(size); });
+void ReturnServiceSvIf::async_eb_readDataEb(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::IOBuf>>> callback, int64_t /*size*/) {
+  callback->exception(apache::thrift::TApplicationException("Function readDataEb is unimplemented"));
 }
 
 void ReturnServiceSvIf::readData( ::some::valid::ns::IOBufPtr& /*_return*/, int64_t /*size*/) {
   apache::thrift::detail::si::throw_app_exn_unimplemented("readData");
 }
 
-folly::Future<std::unique_ptr< ::some::valid::ns::IOBufPtr>> ReturnServiceSvIf::future_readData(int64_t size) {
-  return apache::thrift::detail::si::future(semifuture_readData(size), getThreadManager());
-}
-
 folly::SemiFuture<std::unique_ptr< ::some::valid::ns::IOBufPtr>> ReturnServiceSvIf::semifuture_readData(int64_t size) {
   return apache::thrift::detail::si::semifuture_returning_uptr([&]( ::some::valid::ns::IOBufPtr& _return) { readData(_return, size); });
 }
 
+folly::Future<std::unique_ptr< ::some::valid::ns::IOBufPtr>> ReturnServiceSvIf::future_readData(int64_t size) {
+  return apache::thrift::detail::si::future(semifuture_readData(size), getThreadManager());
+}
+
+
 void ReturnServiceSvIf::async_tm_readData(std::unique_ptr<apache::thrift::HandlerCallback<std::unique_ptr< ::some::valid::ns::IOBufPtr>>> callback, int64_t size) {
-  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] { return future_readData(size); });
+  apache::thrift::detail::si::async_tm(this, std::move(callback), [&] {
+    return future_readData(size);
+  });
 }
 
 bool ReturnServiceSvNull::boolReturn() {
@@ -376,9 +368,9 @@ double ReturnServiceSvNull::doubleReturn() {
   return 0;
 }
 
-void ReturnServiceSvNull::binaryReturn(std::string& /*_return*/) {}
+void ReturnServiceSvNull::binaryReturn(::std::string& /*_return*/) {}
 
-void ReturnServiceSvNull::mapReturn(std::map<std::string, int64_t>& /*_return*/) {}
+void ReturnServiceSvNull::mapReturn(::std::map<::std::string, int64_t>& /*_return*/) {}
 
  ::some::valid::ns::simpleTypeDef ReturnServiceSvNull::simpleTypedefReturn() {
   return 0;
@@ -386,13 +378,13 @@ void ReturnServiceSvNull::mapReturn(std::map<std::string, int64_t>& /*_return*/)
 
 void ReturnServiceSvNull::complexTypedefReturn( ::some::valid::ns::complexStructTypeDef& /*_return*/) {}
 
-void ReturnServiceSvNull::list_mostComplexTypedefReturn(std::vector< ::some::valid::ns::mostComplexTypeDef>& /*_return*/) {}
+void ReturnServiceSvNull::list_mostComplexTypedefReturn(::std::vector< ::some::valid::ns::mostComplexTypeDef>& /*_return*/) {}
 
 void ReturnServiceSvNull::structReturn( ::some::valid::ns::MyStruct& /*_return*/) {}
 
-void ReturnServiceSvNull::set_StructReturn(std::set< ::some::valid::ns::MyStruct>& /*_return*/) {}
+void ReturnServiceSvNull::set_StructReturn(::std::set< ::some::valid::ns::MyStruct>& /*_return*/) {}
 
-void ReturnServiceSvNull::list_UnionReturn(std::vector< ::some::valid::ns::ComplexUnion>& /*_return*/) {}
+void ReturnServiceSvNull::list_UnionReturn(::std::vector< ::some::valid::ns::ComplexUnion>& /*_return*/) {}
 
 void ReturnServiceSvNull::readData( ::some::valid::ns::IOBufPtr& /*_return*/, int64_t /*size*/) {}
 
@@ -400,25 +392,23 @@ const char* ReturnServiceAsyncProcessor::getServiceName() {
   return "ReturnService";
 }
 
-folly::Optional<std::string> ReturnServiceAsyncProcessor::getCacheKey(folly::IOBuf* buf, apache::thrift::protocol::PROTOCOL_TYPES protType) {
-  return apache::thrift::detail::ap::get_cache_key(buf, protType, cacheKeyMap_);
+void ReturnServiceAsyncProcessor::getServiceMetadata(apache::thrift::metadata::ThriftServiceMetadataResponse& response) {
+  ::apache::thrift::detail::md::ServiceMetadata<ReturnServiceSvIf>::gen(*response.metadata_ref(), *response.context_ref());
 }
 
-void ReturnServiceAsyncProcessor::process(std::unique_ptr<apache::thrift::ResponseChannelRequest> req, std::unique_ptr<folly::IOBuf> buf, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
-  apache::thrift::detail::ap::process(this, std::move(req), std::move(buf), protType, context, eb, tm);
+void ReturnServiceAsyncProcessor::processSerializedRequest(apache::thrift::ResponseChannelRequest::UniquePtr req, apache::thrift::SerializedRequest&& serializedRequest, apache::thrift::protocol::PROTOCOL_TYPES protType, apache::thrift::Cpp2RequestContext* context, folly::EventBase* eb, apache::thrift::concurrency::ThreadManager* tm) {
+  apache::thrift::detail::ap::process(this, std::move(req), std::move(serializedRequest), protType, context, eb, tm);
 }
 
-bool ReturnServiceAsyncProcessor::isOnewayMethod(const folly::IOBuf* buf, const apache::thrift::transport::THeader* header) {
-  return apache::thrift::detail::ap::is_oneway_method(buf, header, onewayMethods_);
+std::shared_ptr<folly::RequestContext> ReturnServiceAsyncProcessor::getBaseContextForRequest() {
+  return iface_->getBaseContextForRequest();
 }
 
-std::unordered_set<std::string> ReturnServiceAsyncProcessor::onewayMethods_ {};
-std::unordered_map<std::string, int16_t> ReturnServiceAsyncProcessor::cacheKeyMap_ {};
-const ReturnServiceAsyncProcessor::BinaryProtocolProcessMap& ReturnServiceAsyncProcessor::getBinaryProtocolProcessMap() {
+const ReturnServiceAsyncProcessor::ProcessMap& ReturnServiceAsyncProcessor::getBinaryProtocolProcessMap() {
   return binaryProcessMap_;
 }
 
-const ReturnServiceAsyncProcessor::BinaryProtocolProcessMap ReturnServiceAsyncProcessor::binaryProcessMap_ {
+const ReturnServiceAsyncProcessor::ProcessMap ReturnServiceAsyncProcessor::binaryProcessMap_ {
   {"noReturn", &ReturnServiceAsyncProcessor::process_noReturn<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
   {"boolReturn", &ReturnServiceAsyncProcessor::_processInThread_boolReturn<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
   {"i16Return", &ReturnServiceAsyncProcessor::_processInThread_i16Return<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
@@ -442,11 +432,11 @@ const ReturnServiceAsyncProcessor::BinaryProtocolProcessMap ReturnServiceAsyncPr
   {"readData", &ReturnServiceAsyncProcessor::_processInThread_readData<apache::thrift::BinaryProtocolReader, apache::thrift::BinaryProtocolWriter>},
 };
 
-const ReturnServiceAsyncProcessor::CompactProtocolProcessMap& ReturnServiceAsyncProcessor::getCompactProtocolProcessMap() {
+const ReturnServiceAsyncProcessor::ProcessMap& ReturnServiceAsyncProcessor::getCompactProtocolProcessMap() {
   return compactProcessMap_;
 }
 
-const ReturnServiceAsyncProcessor::CompactProtocolProcessMap ReturnServiceAsyncProcessor::compactProcessMap_ {
+const ReturnServiceAsyncProcessor::ProcessMap ReturnServiceAsyncProcessor::compactProcessMap_ {
   {"noReturn", &ReturnServiceAsyncProcessor::process_noReturn<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
   {"boolReturn", &ReturnServiceAsyncProcessor::_processInThread_boolReturn<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
   {"i16Return", &ReturnServiceAsyncProcessor::_processInThread_i16Return<apache::thrift::CompactProtocolReader, apache::thrift::CompactProtocolWriter>},
@@ -471,6 +461,3 @@ const ReturnServiceAsyncProcessor::CompactProtocolProcessMap ReturnServiceAsyncP
 };
 
 }}} // some::valid::ns
-namespace apache { namespace thrift {
-
-}} // apache::thrift

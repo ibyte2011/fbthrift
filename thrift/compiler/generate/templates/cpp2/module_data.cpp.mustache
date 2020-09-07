@@ -1,12 +1,12 @@
 <%!
 
-  Copyright 2016 Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,19 +18,27 @@
 
 #include "<%program:include_prefix%><%program:name%>_data.h"
 
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
+
+namespace apache {
+namespace thrift {
+
 <%#program:enums%>
-<% > common/namespace_cpp2_begin%>
 
+constexpr const std::size_t TEnumDataStorage<<% > common/namespace_cpp2%><%enum:name%>>::size;
+constexpr const std::array<<% > common/namespace_cpp2%><%enum:name%>, <%enum:size%>> TEnumDataStorage<<% > common/namespace_cpp2%><%enum:name%>>::values;
+constexpr const std::array<folly::StringPiece, <%enum:size%>> TEnumDataStorage<<% > common/namespace_cpp2%><%enum:name%>>::names;
 
-constexpr const std::size_t _<%enum:name%>EnumDataStorage::size;
-constexpr const std::array<<%enum:name%>, <%enum:size%>> _<%enum:name%>EnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, <%enum:size%>> _<%enum:name%>EnumDataStorage::names;
-
-<% > common/namespace_cpp2_end%>
-
-namespace apache { namespace thrift {
-
-}} // apache::thrift
 <%/program:enums%>
+<%#program:structs%>
+<%#struct:union?%>
 
+constexpr const std::size_t TEnumDataStorage<<% > common/namespace_cpp2%><%struct:name%>::Type>::size;
+constexpr const std::array<<% > common/namespace_cpp2%><%struct:name%>::Type, <%struct:num_union_members%>> TEnumDataStorage<<% > common/namespace_cpp2%><%struct:name%>::Type>::values;
+constexpr const std::array<folly::StringPiece, <%struct:num_union_members%>> TEnumDataStorage<<% > common/namespace_cpp2%><%struct:name%>::Type>::names;
 
+<%/struct:union?%>
+<%/program:structs%>
+
+} // namespace thrift
+} // namespace apache

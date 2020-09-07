@@ -1,12 +1,12 @@
 <%!
 
-  Copyright 2016 Facebook, Inc.
+  Copyright (c) Facebook, Inc. and its affiliates.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,17 +18,19 @@
 #include "<%program:include_prefix%><%program:name%>_types.h"
 #include "<%program:include_prefix%><%program:name%>_types.tcc"
 
-#include <algorithm>
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_types_cpp.h>
 
 #include "<%program:include_prefix%><%program:name%>_data.h"
 
-<% > common/push_and_undef_colliding_macros%>
 <% > module_types_cpp/declare_enums%>
+<%#program:structs%>
 <% > module_types_cpp/tcc_struct_traits%>
+<% > module_types_cpp/frozen%>
+<%#struct:union?%>
+<% > module_types_cpp/declare_union_types%>
+<%/struct:union?%>
 
-<%#program:structs%><%!
-%><% > common/namespace_cpp2_begin%>
+<% > common/namespace_cpp2_begin%>
 
 
 <%^struct:union?%>
@@ -89,9 +91,42 @@ template uint32_t <%struct:name%>::write<>(apache::thrift::SimpleJSONProtocolWri
 template uint32_t <%struct:name%>::serializedSize<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
 template uint32_t <%struct:name%>::serializedSizeZC<>(apache::thrift::SimpleJSONProtocolWriter const*) const;
 <%/program:json?%>
+<%#program:nimble?%>
+template void <%struct:name%>::readNoXfer<>(apache::thrift::NimbleProtocolReader*);
+template uint32_t <%struct:name%>::write<>(apache::thrift::NimbleProtocolWriter*) const;
+template uint32_t <%struct:name%>::serializedSize<>(apache::thrift::NimbleProtocolWriter const*) const;
+template uint32_t <%struct:name%>::serializedSizeZC<>(apache::thrift::NimbleProtocolWriter const*) const;
+<%/program:nimble?%>
+
+<%! enforce that if this thrift file is generated with extern template instances
+    for simple-json protocol then all its dependencies are too %>
+<%#struct:fields%>
+<%#field:type%>
+<%#type:transitively_refers_to_struct?%>
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        <%struct:name%>,
+        <%type:fatal_type_class%>,
+        <% > types/type%>>,
+    "inconsistent use of json option");
+<%/type:transitively_refers_to_struct?%>
+<%/field:type%>
+<%/struct:fields%>
+
+<%! if this struct is generated with extern template instances for nimble
+    protocol, enforce that all its dependencies are too %>
+<%#struct:fields%>
+<%#field:type%>
+<%#type:transitively_refers_to_struct?%>
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        <%struct:name%>,
+        <%type:fatal_type_class%>,
+        <% > types/type%>>,
+    "inconsistent use of nimble option");
+<%/type:transitively_refers_to_struct?%>
+<%/field:type%>
+<%/struct:fields%>
 
 <% > common/namespace_cpp2_end%>
-
-<% > module_types_cpp/frozen%>
 <%/program:structs%>
-<% > common/pop_colliding_macros%>

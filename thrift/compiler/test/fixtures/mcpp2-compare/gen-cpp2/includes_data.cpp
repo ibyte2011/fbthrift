@@ -5,16 +5,18 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/includes_data.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/includes_data.h"
 
-namespace a { namespace different { namespace ns {
+#include <thrift/lib/cpp2/gen/module_data_cpp.h>
 
-constexpr const std::size_t _AnEnumEnumDataStorage::size;
-constexpr const std::array<AnEnum, 2> _AnEnumEnumDataStorage::values;
-constexpr const std::array<folly::StringPiece, 2> _AnEnumEnumDataStorage::names;
+namespace apache {
+namespace thrift {
 
-}}} // a::different::ns
-namespace apache { namespace thrift {
 
-}} // apache::thrift
+constexpr const std::size_t TEnumDataStorage<::a::different::ns::AnEnum>::size;
+constexpr const std::array<::a::different::ns::AnEnum, 2> TEnumDataStorage<::a::different::ns::AnEnum>::values;
+constexpr const std::array<folly::StringPiece, 2> TEnumDataStorage<::a::different::ns::AnEnum>::names;
 
+
+} // namespace thrift
+} // namespace apache

@@ -5,12 +5,12 @@
 #  @generated
 #
 
-from folly.iobuf import IOBuf as __IOBuf
+import folly.iobuf as __iobuf
 import thrift.py3.types
 import thrift.py3.exceptions
-from thrift.py3.types import NOTSET, NOTSETTYPE
-from thrift.py3.serializer import Protocol
+from thrift.py3.types import __NotSet, NOTSET
 import typing as _typing
+from typing_extensions import Final
 
 import sys
 import itertools
@@ -21,6 +21,12 @@ __property__ = property
 
 
 class MyStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        field: bool
+        pass
+
+    field: Final[str] = ...
+
     def __init__(
         self, *,
         field: _typing.Optional[str]=None
@@ -28,7 +34,7 @@ class MyStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
 
     def __call__(
         self, *,
-        field: _typing.Union[str, NOTSETTYPE, None]=NOTSET
+        field: _typing.Union[str, __NotSet, None]=NOTSET
     ) -> MyStruct: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['MyStruct'], bytes]]: ...
@@ -41,11 +47,23 @@ class MyStruct(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typi
     def __le__(self, other: 'MyStruct') -> bool: ...
     def __ge__(self, other: 'MyStruct') -> bool: ...
 
-    @__property__
-    def field(self) -> str: ...
-
 
 class Combo(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.Tuple[str, _typing.Any]]):
+    class __fbthrift_IsSet:
+        listOfOurMyStructLists: bool
+        theirMyStructList: bool
+        ourMyStructList: bool
+        listOfTheirMyStructList: bool
+        pass
+
+    listOfOurMyStructLists: Final[_typing.Sequence[_typing.Sequence['MyStruct']]] = ...
+
+    theirMyStructList: Final[_typing.Sequence[_module_types.MyStruct]] = ...
+
+    ourMyStructList: Final[_typing.Sequence['MyStruct']] = ...
+
+    listOfTheirMyStructList: Final[_typing.Sequence[_typing.Sequence[_module_types.MyStruct]]] = ...
+
     def __init__(
         self, *,
         listOfOurMyStructLists: _typing.Optional[_typing.Sequence[_typing.Sequence['MyStruct']]]=None,
@@ -56,10 +74,10 @@ class Combo(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.
 
     def __call__(
         self, *,
-        listOfOurMyStructLists: _typing.Union[_typing.Sequence[_typing.Sequence['MyStruct']], NOTSETTYPE, None]=NOTSET,
-        theirMyStructList: _typing.Union[_typing.Sequence[_module_types.MyStruct], NOTSETTYPE, None]=NOTSET,
-        ourMyStructList: _typing.Union[_typing.Sequence['MyStruct'], NOTSETTYPE, None]=NOTSET,
-        listOfTheirMyStructList: _typing.Union[_typing.Sequence[_typing.Sequence[_module_types.MyStruct]], NOTSETTYPE, None]=NOTSET
+        listOfOurMyStructLists: _typing.Union[_typing.Sequence[_typing.Sequence['MyStruct']], __NotSet, None]=NOTSET,
+        theirMyStructList: _typing.Union[_typing.Sequence[_module_types.MyStruct], __NotSet, None]=NOTSET,
+        ourMyStructList: _typing.Union[_typing.Sequence['MyStruct'], __NotSet, None]=NOTSET,
+        listOfTheirMyStructList: _typing.Union[_typing.Sequence[_typing.Sequence[_module_types.MyStruct]], __NotSet, None]=NOTSET
     ) -> Combo: ...
 
     def __reduce__(self) -> _typing.Tuple[_typing.Callable, _typing.Tuple[_typing.Type['Combo'], bytes]]: ...
@@ -71,15 +89,6 @@ class Combo(thrift.py3.types.Struct, _typing.Hashable, _typing.Iterable[_typing.
     def __gt__(self, other: 'Combo') -> bool: ...
     def __le__(self, other: 'Combo') -> bool: ...
     def __ge__(self, other: 'Combo') -> bool: ...
-
-    @__property__
-    def listOfOurMyStructLists(self) -> _typing.Sequence[_typing.Sequence['MyStruct']]: ...
-    @__property__
-    def theirMyStructList(self) -> _typing.Sequence[_module_types.MyStruct]: ...
-    @__property__
-    def ourMyStructList(self) -> _typing.Sequence['MyStruct']: ...
-    @__property__
-    def listOfTheirMyStructList(self) -> _typing.Sequence[_typing.Sequence[_module_types.MyStruct]]: ...
 
 
 _List__MyStructT = _typing.TypeVar('_List__MyStructT', bound=_typing.Sequence['MyStruct'])

@@ -5,11 +5,8 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/ReturnService.h"
-#include "src/gen-cpp2/ReturnService.tcc"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/ReturnService.h"
+#include "thrift/compiler/test/fixtures/mcpp2-compare/gen-cpp2/ReturnService.tcc"
 
 namespace some { namespace valid { namespace ns {
 }}} // some::valid::ns
-namespace apache { namespace thrift {
-
-}} // apache::thrift

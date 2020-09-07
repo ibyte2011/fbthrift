@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,15 +18,13 @@
 #include <string>
 #include <vector>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <folly/portability/GMock.h>
+#include <folly/portability/GTest.h>
 
 #include <thrift/compiler/ast/t_function.h>
 #include <thrift/compiler/ast/t_service.h>
 #include <thrift/compiler/test/parser_test_helpers.h>
 #include <thrift/compiler/validator/validator.h>
-
-using namespace apache::thrift::compiler;
 
 namespace {
 
@@ -47,9 +45,8 @@ TEST_F(ValidatorTest, run_validator) {
 
   t_program program("/path/to/file.thrift");
   auto errors = run_validator<fake_validator>(&program);
-  EXPECT_THAT(
-      errors,
-      testing::ElementsAre("[FAILURE:/path/to/file.thrift:50] sadface"));
+  EXPECT_EQ(1, errors.size());
+  EXPECT_EQ("[FAILURE:/path/to/file.thrift:50] sadface", errors.front().str());
 }
 
 TEST_F(ValidatorTest, ServiceNamesUniqueNoError) {
@@ -88,7 +85,7 @@ TEST_F(ValidatorTest, ReapeatedNamesInService) {
   auto errors =
       run_validator<service_method_name_uniqueness_validator>(&program);
   EXPECT_EQ(1, errors.size());
-  EXPECT_EQ(expected, errors.front());
+  EXPECT_EQ(expected, errors.front().str());
 }
 
 TEST_F(ValidatorTest, RepeatedNameInExtendedService) {
@@ -126,7 +123,7 @@ TEST_F(ValidatorTest, RepeatedNameInExtendedService) {
       "Function qux.foo redefines service bar.foo";
   errors = run_validator<service_method_name_uniqueness_validator>(&program);
   EXPECT_EQ(1, errors.size());
-  EXPECT_EQ(expected, errors.front());
+  EXPECT_EQ(expected, errors.front().str());
 }
 
 TEST_F(ValidatorTest, RepeatedNamesInEnumValues) {
@@ -154,7 +151,7 @@ TEST_F(ValidatorTest, RepeatedNamesInEnumValues) {
       "Redefinition of value bar in enum foo";
   errors = run_validator<enum_value_names_uniqueness_validator>(&program);
   EXPECT_EQ(1, errors.size());
-  EXPECT_EQ(expected, errors.front());
+  EXPECT_EQ(expected, errors.front().str());
 }
 
 TEST_F(ValidatorTest, DuplicatedEnumValues) {
@@ -173,16 +170,10 @@ TEST_F(ValidatorTest, DuplicatedEnumValues) {
   // An error will be found
   const std::string expected =
       "[FAILURE:/path/to/file.thrift:1] "
-      "Duplicate value foo=1 with value bar in enum foo. "
-      "Add thrift.duplicate_values annotation to enum to suppress this error";
+      "Duplicate value foo=1 with value bar in enum foo.";
   auto errors = run_validator<enum_values_uniqueness_validator>(&program);
   EXPECT_EQ(1, errors.size());
-  EXPECT_EQ(expected, errors.front());
-
-  // Now check that opt-out mechanism works
-  tenum_ptr->annotations_["thrift.duplicate_values"] = "";
-  errors = run_validator<enum_values_uniqueness_validator>(&program);
-  EXPECT_TRUE(errors.empty());
+  EXPECT_EQ(expected, errors.front().str());
 }
 
 TEST_F(ValidatorTest, UnsetEnumValues) {
@@ -201,11 +192,66 @@ TEST_F(ValidatorTest, UnsetEnumValues) {
 
   // An error will be found
   auto errors = run_validator<enum_values_set_validator>(&program);
-  EXPECT_THAT(
-      errors,
-      testing::ElementsAre(
-          "[FAILURE:/path/to/file.thrift:2] Unset enum value Bar in enum Foo. "
-          "Add an explicit value to suppress this error",
-          "[FAILURE:/path/to/file.thrift:3] Unset enum value Baz in enum Foo. "
-          "Add an explicit value to suppress this error"));
+  EXPECT_EQ(2, errors.size());
+  EXPECT_EQ(
+      "[FAILURE:/path/to/file.thrift:2] Unset enum value Bar in enum Foo. "
+      "Add an explicit value to suppress this error",
+      errors.at(0).str());
+  EXPECT_EQ(
+      "[FAILURE:/path/to/file.thrift:3] Unset enum value Baz in enum Foo. "
+      "Add an explicit value to suppress this error",
+      errors.at(1).str());
+}
+
+TEST_F(ValidatorTest, QualifiedInUnion) {
+  t_program program("/path/to/file.thrift");
+  t_base_type i64type("i64", t_base_type::TYPE_I64);
+
+  auto field = std::make_unique<t_field>(&i64type, "foo", 1);
+  field->set_lineno(5);
+  field->set_req(t_field::T_REQUIRED);
+
+  auto struct_union = std::make_unique<t_struct>(&program, "Bar");
+  struct_union->set_union(true);
+
+  struct_union->append(std::move(field));
+
+  field = std::make_unique<t_field>(&i64type, "baz", 1);
+  field->set_lineno(6);
+  field->set_req(t_field::T_OPTIONAL);
+  struct_union->append(std::move(field));
+
+  field = std::make_unique<t_field>(&i64type, "qux", 1);
+  field->set_lineno(7);
+  struct_union->append(std::move(field));
+
+  program.add_struct(std::move(struct_union));
+
+  auto errors = run_validator<union_no_qualified_fields_validator>(&program);
+  EXPECT_EQ(2, errors.size());
+  EXPECT_EQ(
+      "[FAILURE:/path/to/file.thrift:5] Unions cannot contain qualified fields. "
+      "Remove required qualifier from field 'foo'",
+      errors.front().str());
+  EXPECT_EQ(
+      "[FAILURE:/path/to/file.thrift:6] Unions cannot contain qualified fields. "
+      "Remove optional qualifier from field 'baz'",
+      errors.at(1).str());
+}
+
+TEST_F(ValidatorTest, DuplicatedStructNames) {
+  t_program program("/path/to/file.thrift");
+
+  program.add_struct(std::make_unique<t_struct>(&program, "Foo"));
+  program.add_struct(std::make_unique<t_struct>(&program, "Bar"));
+  auto ex = std::make_unique<t_struct>(&program, "Foo");
+  ex->set_xception(true);
+  ex->set_lineno(42);
+  program.add_xception(std::move(ex));
+
+  auto errors = run_validator<struct_names_uniqueness_validator>(&program);
+  EXPECT_EQ(1, errors.size());
+  EXPECT_EQ(
+      "[FAILURE:/path/to/file.thrift:42] Redefinition of type `Foo`",
+      errors.front().str());
 }

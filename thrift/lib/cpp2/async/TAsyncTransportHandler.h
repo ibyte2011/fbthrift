@@ -1,11 +1,11 @@
 /*
- * Copyright 2014 Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,9 +18,10 @@
 
 #include <folly/io/IOBuf.h>
 #include <folly/io/IOBufQueue.h>
+#include <folly/io/async/AsyncSocketException.h>
+#include <folly/io/async/AsyncTransport.h>
 #include <folly/io/async/EventBase.h>
 #include <folly/io/async/EventBaseManager.h>
-#include <thrift/lib/cpp/async/TAsyncTransport.h>
 #include <thrift/lib/cpp/transport/TTransportException.h>
 #include <wangle/channel/Handler.h>
 
@@ -29,10 +30,10 @@ namespace thrift {
 
 // This Handler may only be used in a single Pipeline
 class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
-                               public async::TAsyncTransport::ReadCallback {
+                               public folly::AsyncTransport::ReadCallback {
  public:
   explicit TAsyncTransportHandler(
-      std::shared_ptr<async::TAsyncTransport> transport)
+      std::shared_ptr<folly::AsyncTransport> transport)
       : transport_(std::move(transport)) {}
 
   TAsyncTransportHandler(TAsyncTransportHandler&&) = default;
@@ -43,17 +44,17 @@ class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
     }
   }
 
-  void setTransport(const std::shared_ptr<async::TAsyncTransport>& transport) {
+  void setTransport(const std::shared_ptr<folly::AsyncTransport>& transport) {
     transport_ = transport;
   }
 
   void attachReadCallback() {
-    transport_->setReadCallback(transport_->good() ? this : nullptr);
+    transport_->setReadCB(transport_->good() ? this : nullptr);
   }
 
   void detachReadCallback() {
     if (transport_->getReadCallback() == this) {
-      transport_->setReadCallback(nullptr);
+      transport_->setReadCB(nullptr);
     }
   }
 
@@ -103,7 +104,7 @@ class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
   }
 
   // Must override to avoid warnings about hidden overloaded virtual due to
-  // TAsyncTransport::ReadCallback::readEOF()
+  // AsyncTransport::ReadCallback::readEOF()
   void readEOF(Context* ctx) override {
     ctx->fireReadEOF();
   }
@@ -135,10 +136,10 @@ class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
     getContext()->fireReadEOF();
   }
 
-  void readError(const transport::TTransportException& ex) noexcept override {
+  void readErr(const folly::AsyncSocketException& ex) noexcept override {
     getContext()->fireReadException(
         folly::make_exception_wrapper<transport::TTransportException>(
-            std::move(ex)));
+            transport::TTransportException(ex)));
   }
 
  private:
@@ -154,16 +155,16 @@ class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
     return folly::makeFuture();
   }
 
-  class WriteCallback : private async::TAsyncTransport::WriteCallback {
+  class WriteCallback : private folly::AsyncTransport::WriteCallback {
     void writeSuccess() noexcept override {
       promise_.setValue();
       delete this;
     }
 
-    void writeError(
+    void writeErr(
         size_t /*bytesWritten*/,
-        const transport::TTransportException& ex) noexcept override {
-      promise_.setException(ex);
+        const folly::AsyncSocketException& ex) noexcept override {
+      promise_.setException(transport::TTransportException(ex));
       delete this;
     }
 
@@ -173,7 +174,7 @@ class TAsyncTransportHandler : public wangle::BytesToBytesHandler,
   };
 
   folly::IOBufQueue bufQueue_{folly::IOBufQueue::cacheChainLength()};
-  std::shared_ptr<async::TAsyncTransport> transport_;
+  std::shared_ptr<folly::AsyncTransport> transport_;
 };
 
 } // namespace thrift

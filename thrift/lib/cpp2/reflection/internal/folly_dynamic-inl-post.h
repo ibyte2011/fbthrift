@@ -1,11 +1,11 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef THRIFT_FATAL_FOLLY_DYNAMIC_INL_POST_H_
 #define THRIFT_FATAL_FOLLY_DYNAMIC_INL_POST_H_ 1
 
@@ -228,7 +229,7 @@ struct dynamic_converter_impl<type_class::variant> {
         input.getType(), [&](auto indexed) {
           using descriptor = decltype(fatal::tag_type(indexed));
           dynamic_converter_impl<typename descriptor::metadata::type_class>::to(
-              out[fatal::enum_to_string(input.getType())],
+              out[fatal::enum_to_string(input.getType(), nullptr)],
               typename descriptor::getter()(input),
               format);
         });

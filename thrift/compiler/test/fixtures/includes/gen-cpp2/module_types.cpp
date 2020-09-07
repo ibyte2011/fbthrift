@@ -4,36 +4,42 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-#include "src/gen-cpp2/module_types.h"
-#include "src/gen-cpp2/module_types.tcc"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/module_types.tcc"
 
-#include <algorithm>
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_types_cpp.h>
 
-#include "src/gen-cpp2/module_data.h"
+#include "thrift/compiler/test/fixtures/includes/gen-cpp2/module_data.h"
 
 
 namespace apache {
 namespace thrift {
 namespace detail {
 
-void TccStructTraits< ::cpp2::MyStruct>::translateFieldName(
+void TccStructTraits<::cpp2::MyStruct>::translateFieldName(
     FOLLY_MAYBE_UNUSED folly::StringPiece _fname,
     FOLLY_MAYBE_UNUSED int16_t& fid,
-    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) {
-  if (false) {}
-  else if (_fname == "MyIncludedField") {
-    fid = 1;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "MyOtherIncludedField") {
-    fid = 2;
-    _ftype = apache::thrift::protocol::T_STRUCT;
-  }
-  else if (_fname == "MyIncludedInt") {
-    fid = 3;
-    _ftype = apache::thrift::protocol::T_I64;
-  }
+    FOLLY_MAYBE_UNUSED apache::thrift::protocol::TType& _ftype) noexcept {
+  using TType = apache::thrift::protocol::TType;
+  constexpr size_t _size = 3;
+  static constexpr folly::StringPiece _names[] = {
+    "MyIncludedField",
+    "MyOtherIncludedField",
+    "MyIncludedInt",
+  };
+  static constexpr int16_t _ids[] = {
+    1,
+    2,
+    3,
+  };
+  static constexpr TType _types[] = {
+    TType::T_STRUCT,
+    TType::T_STRUCT,
+    TType::T_I64,
+  };
+  static constexpr st::translate_field_name_table
+      table{_size, _names, _ids, _types};
+  st::translate_field_name(_fname, fid, _ftype, table);
 }
 
 } // namespace detail
@@ -42,6 +48,7 @@ void TccStructTraits< ::cpp2::MyStruct>::translateFieldName(
 
 namespace cpp2 {
 
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
 MyStruct::MyStruct(apache::thrift::FragileConstructor,  ::cpp2::Included MyIncludedField__arg,  ::cpp2::Included MyOtherIncludedField__arg,  ::cpp2::IncludedInt64 MyIncludedInt__arg) :
     MyIncludedField(std::move(MyIncludedField__arg)),
     MyOtherIncludedField(std::move(MyOtherIncludedField__arg)),
@@ -50,13 +57,15 @@ MyStruct::MyStruct(apache::thrift::FragileConstructor,  ::cpp2::Included MyInclu
   __isset.MyOtherIncludedField = true;
   __isset.MyIncludedInt = true;
 }
-
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 void MyStruct::__clear() {
   // clear all fields
   ::apache::thrift::Cpp2Ops<  ::cpp2::Included>::clear(&MyIncludedField);
   ::apache::thrift::Cpp2Ops<  ::cpp2::Included>::clear(&MyOtherIncludedField);
   MyIncludedInt = 42LL;
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   __isset = {};
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 bool MyStruct::operator==(const MyStruct& rhs) const {
@@ -110,10 +119,12 @@ const  ::cpp2::Included& MyStruct::get_MyOtherIncludedField() const& {
 
 void swap(MyStruct& a, MyStruct& b) {
   using ::std::swap;
-  swap(a.MyIncludedField, b.MyIncludedField);
-  swap(a.MyOtherIncludedField, b.MyOtherIncludedField);
-  swap(a.MyIncludedInt, b.MyIncludedInt);
+  swap(a.MyIncludedField_ref().value(), b.MyIncludedField_ref().value());
+  swap(a.MyOtherIncludedField_ref().value(), b.MyOtherIncludedField_ref().value());
+  swap(a.MyIncludedInt_ref().value(), b.MyIncludedInt_ref().value());
+THRIFT_IGNORE_ISSET_USE_WARNING_BEGIN
   swap(a.__isset, b.__isset);
+THRIFT_IGNORE_ISSET_USE_WARNING_END
 }
 
 template void MyStruct::readNoXfer<>(apache::thrift::BinaryProtocolReader*);
@@ -124,5 +135,31 @@ template void MyStruct::readNoXfer<>(apache::thrift::CompactProtocolReader*);
 template uint32_t MyStruct::write<>(apache::thrift::CompactProtocolWriter*) const;
 template uint32_t MyStruct::serializedSize<>(apache::thrift::CompactProtocolWriter const*) const;
 template uint32_t MyStruct::serializedSizeZC<>(apache::thrift::CompactProtocolWriter const*) const;
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Included>,
+    "inconsistent use of json option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_json<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Included>,
+    "inconsistent use of json option");
+
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Included>,
+    "inconsistent use of nimble option");
+static_assert(
+    ::apache::thrift::detail::st::gen_check_nimble<
+        MyStruct,
+        ::apache::thrift::type_class::structure,
+         ::cpp2::Included>,
+    "inconsistent use of nimble option");
 
 } // cpp2

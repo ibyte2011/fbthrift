@@ -5,11 +5,18 @@
 #  @generated
 #
 
+cimport cython
+from cpython.version cimport PY_VERSION_HEX
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+)
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
 from libcpp.map cimport map as cmap
@@ -28,6 +35,9 @@ from folly cimport (
 )
 from thrift.py3.types cimport move
 
+if PY_VERSION_HEX >= 0x030702F0:  # 3.7.2 Final
+    from thrift.py3.server cimport THRIFT_REQUEST_CONTEXT as __THRIFT_REQUEST_CONTEXT
+
 cimport folly.futures
 from folly.executor cimport get_executor
 cimport folly.iobuf as __iobuf
@@ -36,6 +46,8 @@ from folly.iobuf cimport move as move_iobuf
 
 cimport empty.types as _empty_types
 import empty.types as _empty_types
+
+cimport empty.services_reflection as _services_reflection
 
 import asyncio
 import functools
@@ -53,6 +65,7 @@ cdef object _NullService_annotations = _py_types.MappingProxyType({
 })
 
 
+@cython.auto_pickle(False)
 cdef class NullServiceInterface(
     ServiceInterface
 ):
@@ -63,5 +76,10 @@ cdef class NullServiceInterface(
             <PyObject *> self,
             get_executor()
         )
+
+    @classmethod
+    def __get_reflection__(cls):
+        return _services_reflection.get_reflection__NullService(for_clients=False)
+
 
 

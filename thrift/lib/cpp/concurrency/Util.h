@@ -1,34 +1,34 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef _THRIFT_CONCURRENCY_UTIL_H_
 #define _THRIFT_CONCURRENCY_UTIL_H_ 1
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <time.h>
+#include <cassert>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <ctime>
 
+#include <folly/Utility.h>
 #include <folly/portability/SysTime.h>
 
-namespace apache { namespace thrift { namespace concurrency {
+namespace apache {
+namespace thrift {
+namespace concurrency {
 
 /**
  * Utility methods
@@ -68,13 +68,12 @@ class Util {
     result.tv_nsec = (value % MS_PER_S) * NS_PER_MS; // ms to ns
   }
 
-  static void toTimeval(struct timeval& result, int64_t value) {
-    result.tv_sec = value / MS_PER_S; // ms to s
-    result.tv_usec = (value % MS_PER_S) * US_PER_MS; // ms to us
-  }
-
-  static void toTicks(int64_t& result, int64_t secs, int64_t oldTicks,
-                      int64_t oldTicksPerSec, int64_t newTicksPerSec) {
+  static void toTicks(
+      int64_t& result,
+      int64_t secs,
+      int64_t oldTicks,
+      int64_t oldTicksPerSec,
+      int64_t newTicksPerSec) {
     result = secs * newTicksPerSec;
     result += oldTicks * newTicksPerSec / oldTicksPerSec;
 
@@ -86,34 +85,30 @@ class Util {
   /**
    * Converts struct timespec to arbitrary-sized ticks since epoch
    */
-  static void toTicks(int64_t& result,
-                      const struct timespec& value,
-                      int64_t ticksPerSec) {
+  static void
+  toTicks(int64_t& result, const struct timespec& value, int64_t ticksPerSec) {
     return toTicks(result, value.tv_sec, value.tv_nsec, NS_PER_S, ticksPerSec);
   }
 
   /**
    * Converts struct timeval to arbitrary-sized ticks since epoch
    */
-  static void toTicks(int64_t& result,
-                      const struct timeval& value,
-                      int64_t ticksPerSec) {
+  static void
+  toTicks(int64_t& result, const struct timeval& value, int64_t ticksPerSec) {
     return toTicks(result, value.tv_sec, value.tv_usec, US_PER_S, ticksPerSec);
   }
 
   /**
    * Converts struct timespec to milliseconds
    */
-  static void toMilliseconds(int64_t& result,
-                             const struct timespec& value) {
+  static void toMilliseconds(int64_t& result, const struct timespec& value) {
     return toTicks(result, value, MS_PER_S);
   }
 
   /**
    * Converts struct timeval to milliseconds
    */
-  static void toMilliseconds(int64_t& result,
-                             const struct timeval& value) {
+  static void toMilliseconds(int64_t& result, const struct timeval& value) {
     return toTicks(result, value, MS_PER_S);
   }
 
@@ -139,12 +134,16 @@ class Util {
   /**
    * Get current time as milliseconds from epoch
    */
-  static int64_t currentTime() { return currentTimeTicks(MS_PER_S); }
+  static int64_t currentTime() {
+    return currentTimeTicks(MS_PER_S);
+  }
 
   /**
    * Get current time as micros from epoch
    */
-  static int64_t currentTimeUsec() { return currentTimeTicks(US_PER_S); }
+  static int64_t currentTimeUsec() {
+    return currentTimeTicks(US_PER_S);
+  }
 
   /**
    * Get monotonic time as a number of arbitrary-size ticks from some
@@ -158,7 +157,9 @@ class Util {
   /**
    * Get monotonic time as milliseconds.
    */
-  static int64_t monotonicTime() { return monotonicTimeTicks(MS_PER_S); }
+  static int64_t monotonicTime() {
+    return monotonicTimeTicks(MS_PER_S);
+  }
 
   /**
    * Get current time as micros from epoch
@@ -171,6 +172,8 @@ class Util {
 typedef std::chrono::system_clock SystemClock;
 typedef std::chrono::time_point<SystemClock> SystemClockTimePoint;
 
-}}} // apache::thrift::concurrency
+} // namespace concurrency
+} // namespace thrift
+} // namespace apache
 
 #endif // #ifndef _THRIFT_CONCURRENCY_UTIL_H_

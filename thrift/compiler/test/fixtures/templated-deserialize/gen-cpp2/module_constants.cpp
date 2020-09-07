@@ -5,9 +5,10 @@
  *  @generated
  */
 
-#include "src/gen-cpp2/module_constants.h"
+#include "thrift/compiler/test/fixtures/templated-deserialize/gen-cpp2/module_constants.h"
 
-#include <folly/Indestructible.h>
+#include <thrift/lib/cpp2/gen/module_constants_cpp.h>
+
 
 namespace cpp2 {
 

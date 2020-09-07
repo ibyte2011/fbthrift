@@ -1,30 +1,27 @@
 /*
- * Copyright 2004-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <thrift/lib/cpp/concurrency/Mutex.h>
 
-#include <gtest/gtest.h>
-#include <thread>
 #include <condition_variable>
+#include <thread>
 #include <vector>
+
+#include <folly/portability/GTest.h>
+#include <folly/synchronization/Baton.h>
 
 using namespace std;
 using namespace apache::thrift::concurrency;
@@ -38,7 +35,7 @@ static constexpr int kMaxReaders = 10;
 // user operation time on the lock in milliseconds
 static constexpr milliseconds kOpTimeInMs{200};
 
-TEST(RWMutexTest, Max_Readers ) {
+TEST(RWMutexTest, Max_Readers) {
   ReadWriteMutex l;
 
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -48,7 +45,7 @@ TEST(RWMutexTest, Max_Readers ) {
   EXPECT_TRUE(l.timedRead(kTimeoutMs));
 }
 
-TEST(RWMutexTest, Writer_Wait_Readers ) {
+TEST(RWMutexTest, Writer_Wait_Readers) {
   ReadWriteMutex l;
 
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -78,14 +75,14 @@ TEST(RWMutexTest, Writer_Wait_Readers ) {
 
   // wait shorter than the operation time will timeout
   std::thread thread1 = std::thread([&l] {
-      EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
-    });
+    EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
+  });
 
   // wait longer than the operation time will success
   std::thread thread2 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
+    l.release();
+  });
 
   for (auto& t : threads_) {
     t.join();
@@ -114,14 +111,16 @@ TEST(RWMutexTest, Readers_Wait_Writer) {
   }
 
   // Testing Timeout
-  std::thread wrThread = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(kTimeoutMs));
-      usleep(duration_cast<microseconds>(kOpTimeInMs).count());
-      l.release();
-    });
+  folly::Baton locked;
+  std::thread wrThread = std::thread([&l, &locked] {
+    EXPECT_TRUE(l.timedWrite(kTimeoutMs));
+    locked.post();
+    usleep(duration_cast<microseconds>(kOpTimeInMs).count());
+    l.release();
+  });
 
   // make sure wrThread lock the lock first
-  usleep(1000);
+  locked.wait();
 
   vector<std::thread> threads_;
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -155,24 +154,24 @@ TEST(RWMutexTest, Writer_Wait_Writer) {
 
   // Testing Timeout
   std::thread wrThread1 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(kTimeoutMs));
-      usleep(duration_cast<microseconds>(kOpTimeInMs).count());
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(kTimeoutMs));
+    usleep(duration_cast<microseconds>(kOpTimeInMs).count());
+    l.release();
+  });
 
   // make sure wrThread lock the lock first
   usleep(1000);
 
   // wait shorter than the operation time will timeout
   std::thread wrThread2 = std::thread([&l] {
-      EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
-    });
+    EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
+  });
 
   // wait longer than the operation time will success
   std::thread wrThread3 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
+    l.release();
+  });
 
   wrThread1.join();
   wrThread2.join();
@@ -197,16 +196,7 @@ TEST(RWMutexTest, Write_Holders) {
   EXPECT_FALSE(l.timedRead(kTimeoutMs));
 }
 
-TEST(MutexTest, Recursive_Holders) {
-  Mutex mutex(Mutex::RECURSIVE_INITIALIZER);
-  Guard g1(mutex);
-  {
-    Guard g2(mutex);
-  }
-  Guard g2(mutex);
-}
-
-TEST(NoStarveRWMutexTest, Max_Readers ) {
+TEST(NoStarveRWMutexTest, Max_Readers) {
   NoStarveReadWriteMutex l;
 
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -216,7 +206,7 @@ TEST(NoStarveRWMutexTest, Max_Readers ) {
   EXPECT_TRUE(l.timedRead(kTimeoutMs));
 }
 
-TEST(NoStarveRWMutexTest, Writer_Wait_Readers ) {
+TEST(NoStarveRWMutexTest, Writer_Wait_Readers) {
   NoStarveReadWriteMutex l;
 
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -253,19 +243,19 @@ TEST(NoStarveRWMutexTest, Writer_Wait_Readers ) {
 
   {
     std::unique_lock<std::mutex> lk(cv_m);
-    cv.wait(lk, [&] {return readers == kMaxReaders;});
+    cv.wait(lk, [&] { return readers == kMaxReaders; });
   }
 
   // wait shorter than the operation time will timeout
   std::thread thread1 = std::thread([&l] {
-      EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
-    });
+    EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
+  });
 
   // wait longer than the operation time will success
   std::thread thread2 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
+    l.release();
+  });
 
   for (auto& t : threads_) {
     t.join();
@@ -299,15 +289,15 @@ TEST(NoStarveRWMutexTest, Readers_Wait_Writer) {
 
   // Testing Timeout
   std::thread wrThread = std::thread([&] {
-      EXPECT_TRUE(l.timedWrite(kTimeoutMs));
-      {
-        std::lock_guard<std::mutex> lk(cv_m);
-        writer = true;
-        cv.notify_all();
-      }
-      usleep(duration_cast<microseconds>(kOpTimeInMs).count());
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(kTimeoutMs));
+    {
+      std::lock_guard<std::mutex> lk(cv_m);
+      writer = true;
+      cv.notify_all();
+    }
+    usleep(duration_cast<microseconds>(kOpTimeInMs).count());
+    l.release();
+  });
 
   vector<std::thread> threads_;
   for (int i = 0; i < kMaxReaders; ++i) {
@@ -345,24 +335,24 @@ TEST(NoStarveRWMutexTest, Writer_Wait_Writer) {
 
   // Testing Timeout
   std::thread wrThread1 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(kTimeoutMs));
-      usleep(duration_cast<microseconds>(kOpTimeInMs).count());
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(kTimeoutMs));
+    usleep(duration_cast<microseconds>(kOpTimeInMs).count());
+    l.release();
+  });
 
   // make sure wrThread lock the lock first
   usleep(1000);
 
   // wait shorter than the operation time will timeout
   std::thread wrThread2 = std::thread([&l] {
-      EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
-    });
+    EXPECT_FALSE(l.timedWrite(duration_cast<milliseconds>(0.5 * kOpTimeInMs)));
+  });
 
   // wait longer than the operation time will success
   std::thread wrThread3 = std::thread([&l] {
-      EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
-      l.release();
-    });
+    EXPECT_TRUE(l.timedWrite(duration_cast<milliseconds>(1.5 * kOpTimeInMs)));
+    l.release();
+  });
 
   wrThread1.join();
   wrThread2.join();

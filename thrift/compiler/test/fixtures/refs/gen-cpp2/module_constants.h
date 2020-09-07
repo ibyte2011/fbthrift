@@ -6,9 +6,9 @@
  */
 #pragma once
 
-#include <thrift/lib/cpp2/protocol/Protocol.h>
+#include <thrift/lib/cpp2/gen/module_constants_h.h>
 
-#include "src/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/refs/gen-cpp2/module_types.h"
 
 namespace cpp2 {
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace cpp2 apache.thrift.test
 
 struct TestStruct {
@@ -48,7 +64,7 @@ struct TestUnsignedIntMapStruct {
 service TestService {
   string sendResponse(1:i64 size)
   oneway void noResponse(1:i64 size)
-  string echoRequest(1:string req (cpp.cache))
+  string echoRequest(1:string req)
   i32 echoInt(1:i32 req)
   string serializationTest(1: bool inEventBase)
   string eventBaseAsync() (thread = 'eb')
@@ -56,5 +72,8 @@ service TestService {
   void voidResponse()
   i32 processHeader()
   IOBufPtr echoIOBuf(1: IOBuf buf)
+  oneway void noResponseIOBuf(1: IOBuf buf)
+  stream<byte> echoIOBufAsByteStream(1: IOBuf buf, 2: i32 delayMs)
   void throwsHandlerException();
+  stream<i32> range(1: i32 from, 2: i32 to)
 }

@@ -1,10 +1,26 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace cpp test_cpp1.cpp_reflection
 namespace cpp2 test_cpp2.cpp_reflection
 namespace d test_d.cpp_reflection
 namespace java test_java.cpp_reflection
 namespace java.swift test_swift.cpp_reflection
 namespace php test_php.cpp_reflection
-namespace python test_py.cpp_reflection
+namespace py3 test_py.cpp_reflection
 
 include "reflection_dep_B.thrift"
 include "reflection_dep_C.thrift"
@@ -28,10 +44,6 @@ enum enum3 {
   field1_3 = 1 (
     field_annotation = "field annotated",
   ),
-  field2_3 = 2 (
-    field_structured_annotation = '{"a": "foo", "b": 567, "c": true}',
-    field_annotation = "some other text",
-  ),
 } (
   one.here = "with some value associated",
   another.there = ".",
@@ -43,9 +55,9 @@ enum enum3 {
 
 union union1 {
   1: i32 ui
-  2: double ud
-  3: string us
-  4: enum1 ue
+  3: double ud
+  5: string us
+  7: enum1 ue
 }
 
 union union2 {
@@ -188,6 +200,12 @@ struct struct_binary {
 }
 
 struct dep_A_struct {
+  1: reflection_dep_B.dep_B_struct b
+  2: reflection_dep_C.dep_C_struct c
+  3: i32 i_a
+}
+
+struct dep_B_struct {
   1: reflection_dep_B.dep_B_struct b
   2: reflection_dep_C.dep_C_struct c
   3: i32 i_a

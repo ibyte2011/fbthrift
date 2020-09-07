@@ -1,11 +1,11 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,18 +61,14 @@ void CoreTestFixture::serializeSumTwoNumbers(
   auto writer = std::make_unique<apache::thrift::CompactProtocolWriter>();
   writer->setOutput(request);
   args.write(writer.get());
-  metadata->protocol = ProtocolId::COMPACT;
-  metadata->__isset.protocol = true;
+  metadata->protocol_ref() = ProtocolId::COMPACT;
   if (wrongMethodName) {
-    metadata->name = "wrongMethodName";
+    metadata->name_ref() = "wrongMethodName";
   } else {
-    metadata->name = "sumTwoNumbers";
+    metadata->name_ref() = "sumTwoNumbers";
   }
-  metadata->__isset.name = true;
-  metadata->kind = RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE;
-  metadata->__isset.kind = true;
-  metadata->seqId = 0;
-  metadata->__isset.seqId = true;
+  metadata->kind_ref() = RpcKind::SINGLE_REQUEST_SINGLE_RESPONSE;
+  metadata->seqId_ref() = 0;
 }
 
 int32_t CoreTestFixture::deserializeSumTwoNumbers(folly::IOBuf* buf) {
@@ -90,17 +86,13 @@ int32_t CoreTestFixture::deserializeSumTwoNumbers(folly::IOBuf* buf) {
   return result;
 }
 
-std::unique_ptr<RequestRpcMetadata>
+RequestRpcMetadata
 CoreTestFixture::makeMetadata(std::string name, int32_t seqId, RpcKind kind) {
-  auto metadata = std::make_unique<RequestRpcMetadata>();
-  metadata->protocol = ProtocolId::COMPACT;
-  metadata->__isset.protocol = true;
-  metadata->name = name;
-  metadata->__isset.name = true;
-  metadata->seqId = seqId;
-  metadata->__isset.seqId = true;
-  metadata->kind = kind;
-  metadata->__isset.kind = true;
+  RequestRpcMetadata metadata;
+  metadata.protocol_ref() = ProtocolId::COMPACT;
+  metadata.name_ref() = name;
+  metadata.seqId_ref() = seqId;
+  metadata.kind_ref() = kind;
   return metadata;
 }
 

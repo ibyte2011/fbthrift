@@ -6,29 +6,22 @@
  */
 #pragma once
 
-#include <folly/futures/Future.h>
-#include <thrift/lib/cpp/TApplicationException.h>
-#include <thrift/lib/cpp2/async/AsyncClient.h>
-#include <thrift/lib/cpp2/async/FutureRequest.h>
-#include "src/gen-cpp2/module_types.h"
-#include "src/gen-cpp2/MyNodeAsyncClient.h"
+#include <thrift/lib/cpp2/gen/client_h.h>
 
-namespace folly {
-  class IOBuf;
-  class IOBufQueue;
-}
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/module_types.h"
+#include "thrift/compiler/test/fixtures/inheritance/gen-cpp2/MyNodeAsyncClient.h"
+
 namespace apache { namespace thrift {
   class Cpp2RequestContext;
-  class BinaryProtocolReader;
-  class CompactProtocolReader;
+  namespace detail { namespace ac { struct ClientRequestContext; }}
   namespace transport { class THeader; }
 }}
 
 namespace cpp2 {
 
-class MyLeafAsyncClient : public  ::cpp2::MyNodeAsyncClient {
+class MyLeafAsyncClient : public ::cpp2::MyNodeAsyncClient {
  public:
-  using  ::cpp2::MyNodeAsyncClient::MyNodeAsyncClient;
+  using ::cpp2::MyNodeAsyncClient::MyNodeAsyncClient;
 
   char const* getServiceName() const noexcept override {
     return "MyLeaf";
@@ -36,8 +29,8 @@ class MyLeafAsyncClient : public  ::cpp2::MyNodeAsyncClient {
 
   virtual void do_leaf(std::unique_ptr<apache::thrift::RequestCallback> callback);
   virtual void do_leaf(apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback);
- private:
-  virtual void do_leafImpl(bool useSync, apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback);
+ protected:
+  void do_leafImpl(apache::thrift::RpcOptions& rpcOptions, std::shared_ptr<apache::thrift::detail::ac::ClientRequestContext> ctx, apache::thrift::RequestClientCallback::Ptr callback);
  public:
   virtual void sync_do_leaf();
   virtual void sync_do_leaf(apache::thrift::RpcOptions& rpcOptions);
@@ -47,6 +40,31 @@ class MyLeafAsyncClient : public  ::cpp2::MyNodeAsyncClient {
   virtual folly::SemiFuture<folly::Unit> semifuture_do_leaf(apache::thrift::RpcOptions& rpcOptions);
   virtual folly::Future<std::pair<folly::Unit, std::unique_ptr<apache::thrift::transport::THeader>>> header_future_do_leaf(apache::thrift::RpcOptions& rpcOptions);
   virtual folly::SemiFuture<std::pair<folly::Unit, std::unique_ptr<apache::thrift::transport::THeader>>> header_semifuture_do_leaf(apache::thrift::RpcOptions& rpcOptions);
+
+#if FOLLY_HAS_COROUTINES
+  template <int = 0>
+  folly::coro::Task<void> co_do_leaf() {
+    auto _task = semifuture_do_leaf();
+    const folly::CancellationToken& cancelToken =
+        co_await folly::coro::co_current_cancellation_token;
+    if (cancelToken.canBeCancelled()) {
+      co_yield folly::coro::co_result(co_await folly::coro::co_awaitTry(folly::coro::detachOnCancel(std::move(_task))));
+    } else {
+      co_yield folly::coro::co_result(co_await folly::coro::co_awaitTry(std::move(_task)));
+    }
+  }
+  template <int = 0>
+  folly::coro::Task<void> co_do_leaf(apache::thrift::RpcOptions& rpcOptions) {
+    auto _task = semifuture_do_leaf(rpcOptions);
+    const folly::CancellationToken& cancelToken =
+        co_await folly::coro::co_current_cancellation_token;
+    if (cancelToken.canBeCancelled()) {
+      co_yield folly::coro::co_result(co_await folly::coro::co_awaitTry(folly::coro::detachOnCancel(std::move(_task))));
+    } else {
+      co_yield folly::coro::co_result(co_await folly::coro::co_awaitTry(std::move(_task)));
+    }
+  }
+#endif // FOLLY_HAS_COROUTINES
   virtual void do_leaf(folly::Function<void (::apache::thrift::ClientReceiveState&&)> callback);
   static folly::exception_wrapper recv_wrapped_do_leaf(::apache::thrift::ClientReceiveState& state);
   static void recv_do_leaf(::apache::thrift::ClientReceiveState& state);
@@ -55,7 +73,7 @@ class MyLeafAsyncClient : public  ::cpp2::MyNodeAsyncClient {
   virtual folly::exception_wrapper recv_instance_wrapped_do_leaf(::apache::thrift::ClientReceiveState& state);
  private:
   template <typename Protocol_>
-  void do_leafT(Protocol_* prot, bool useSync, apache::thrift::RpcOptions& rpcOptions, std::unique_ptr<apache::thrift::RequestCallback> callback);
+  void do_leafT(Protocol_* prot, apache::thrift::RpcOptions& rpcOptions, std::shared_ptr<apache::thrift::detail::ac::ClientRequestContext> ctx, apache::thrift::RequestClientCallback::Ptr callback);
  public:
 };
 

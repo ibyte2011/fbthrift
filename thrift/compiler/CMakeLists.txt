@@ -1,5 +1,19 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Set the compiler directory
-set(COMPILER_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(COMPILER_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 # Override default install path for `make install` step
 set(CMAKE_INSTALL_PREFIX ${THRIFT_HOME})
@@ -21,9 +35,11 @@ add_library(
   compiler_ast
 
   ast/t_program.cc
+  ast/t_struct.cc
   ast/t_type.cc
   ast/t_typedef.cc
   ast/base_types.cc
+  ast/t_scope.cc
 )
 target_link_libraries(compiler_ast ${OPENSSL_LIBRARIES})
 
@@ -42,6 +58,18 @@ target_compile_definitions(
  compiler_base
  PRIVATE -DTHRIFTY_HH="${COMPILER_DIR}/thrifty.hh"
 )
+if (NOT MSVC)
+  target_compile_options(
+    compiler_base
+    PUBLIC "-Wno-deprecated-register"
+  )
+  # Some versions of flex emit `register` storage qualifiers,
+  # so let's just suppress that warning.
+  target_compile_options(
+    compiler_base
+    PRIVATE "-Wno-register"
+  )
+endif()
 target_link_libraries(
   compiler_base
 
@@ -54,6 +82,7 @@ add_library(
   compiler_lib
 
   lib/cpp2/util.cc
+  lib/java/util.cc
 )
 target_link_libraries(
   compiler_lib
@@ -62,22 +91,38 @@ target_link_libraries(
   ${Boost_LIBRARIES}
 )
 
+#build compiler/mustache
+add_library(
+  mustache_lib
+
+  mustache/mstch.cpp
+  mustache/render_context.cpp
+  mustache/state/in_section.cpp
+  mustache/state/outside_section.cpp
+  mustache/template_type.cpp
+  mustache/token.cpp
+  mustache/utils.cpp
+)
+target_link_libraries(mustache_lib ${Boost_LIBRARIES})
+
+add_subdirectory(generate)
+
 # build compiler/generate
 aux_source_directory(./generate GENERATOR_FILES)
-aux_source_directory(./generate/templates MSTCH_TEMPLATES)
+list(REMOVE_ITEM GENERATOR_FILES ./generate/build_templates.cc)
 add_library(
   compiler_generators
 
   ${GENERATOR_FILES}
-  ${MSTCH_TEMPLATES}
 )
 target_link_libraries(
   compiler_generators
 
+  compiler_generate_templates
   compiler_base
   compiler_lib
+  mustache_lib
   ${Boost_LIBRARIES}
-  ${MSTCH_LIBRARIES}
   ${OPENSSL_LIBRARIES}
 )
 # Force compiler_generators linking (compiler will optimize it out otherwise)
@@ -89,30 +134,14 @@ else()
   set(GENERATE_LINKED -Wl,--whole-archive compiler_generators -Wl,--no-whole-archive)
 endif(MSVC)
 
-set(TEMPLATE_DIRS
-  generate/templates/cpp2
-  generate/templates/cpp2/common
-  generate/templates/cpp2/module_types_cpp
-  generate/templates/cpp2/module_types_h
-  generate/templates/cpp2/module_types_tcc
-  generate/templates/cpp2/service_client_cpp
-  generate/templates/cpp2/service_common
-  generate/templates/cpp2/service_cpp
-  generate/templates/cpp2/service_h
-  generate/templates/cpp2/service_tcc
-  generate/templates/cpp2/types
-)
-foreach(dir ${TEMPLATE_DIRS})
-  install(DIRECTORY ${dir} DESTINATION ${TEMPLATES_INSTALL_DIR}
-          FILES_MATCHING PATTERN "*.mustache")
-endforeach()
-
 # Create the thrift compiler binary
 add_executable(
   thrift1
 
   main.cc
+  compiler.cc
   mutator/mutator.cc
+  validator/diagnostic.cc
   validator/validator.cc
   ast/visitor.cc
 )
@@ -122,6 +151,7 @@ target_link_libraries(
   compiler_ast
   compiler_base
   ${GENERATE_LINKED}
+  ${Boost_LIBRARIES}
 )
 # Force compiler_generators linking (compiler will optimize it out otherwise)
 if(MSVC)
@@ -137,6 +167,7 @@ install(
     compiler_ast
     compiler_base
     compiler_lib
+    mustache_lib
     compiler_generators
   EXPORT fbthrift-exports
   RUNTIME DESTINATION ${BIN_INSTALL_DIR}

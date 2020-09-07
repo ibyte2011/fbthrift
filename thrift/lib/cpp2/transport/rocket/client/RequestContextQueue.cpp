@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,38 +32,57 @@ void RequestContextQueue::enqueueScheduledWrite(RequestContext& req) noexcept {
   trackIfRequestResponse(req);
 }
 
-RequestContext&
-RequestContextQueue::markNextScheduledWriteAsSending() noexcept {
-  auto& req = writeScheduledQueue_.front();
-  writeScheduledQueue_.pop_front();
+std::unique_ptr<folly::IOBuf>
+RequestContextQueue::getNextScheduledWritesBatch() noexcept {
+  std::unique_ptr<folly::IOBuf> batchBuf;
 
-  DCHECK(req.state_ == State::WRITE_SCHEDULED);
-  req.state_ = State::WRITE_SENDING;
-  writeSendingQueue_.push_back(req);
+  while (!writeScheduledQueue_.empty()) {
+    auto& req = writeScheduledQueue_.front();
+    writeScheduledQueue_.pop_front();
 
-  return req;
-}
+    DCHECK(req.state_ == State::WRITE_SCHEDULED);
+    req.state_ = State::WRITE_SENDING;
+    if (req.isRequestResponse()) {
+      req.scheduleTimeoutForResponse();
+    }
+    writeSendingQueue_.push_back(req);
 
-RequestContext& RequestContextQueue::markNextSendingAsSent() noexcept {
-  auto& req = writeSendingQueue_.front();
-  writeSendingQueue_.pop_front();
-  if (LIKELY(req.state() == State::WRITE_SENDING)) {
-    req.state_ = State::WRITE_SENT;
-    // Move req to the WRITE_SENT queue even if req is not a REQUEST_RESPONSE
-    // request.
-    writeSentQueue_.push_back(req);
-  } else {
-    DCHECK(req.state() == State::RESPONSE_RECEIVED);
-    req.baton_.post();
+    if (writeScheduledQueue_.empty()) {
+      req.lastInWriteBatch_ = true;
+    }
+
+    auto reqBuf = req.serializedChain();
+    if (!batchBuf) {
+      batchBuf = std::move(reqBuf);
+    } else {
+      batchBuf->prependChain(std::move(reqBuf));
+    }
   }
-  return req;
+
+  return batchBuf;
 }
 
-void RequestContextQueue::abortSentRequest(RequestContext& req) noexcept {
-  DCHECK(req.state() == State::WRITE_SENT);
+void RequestContextQueue::timeOutSendingRequest(RequestContext& req) noexcept {
+  DCHECK(req.state_ == State::WRITE_SENDING);
+  DCHECK(!req.responsePayload_.hasException());
+
+  req.responsePayload_.emplaceException(transport::TTransportException(
+      transport::TTransportException::TIMED_OUT));
   untrackIfRequestResponse(req);
-  writeSentQueue_.erase(writeSentQueue_.iterator_to(req));
-  req.state_ = State::REQUEST_ABORTED;
+  removeFromWriteSendingQueue(req);
+  req.state_ = State::COMPLETE;
+}
+
+void RequestContextQueue::abortSentRequest(
+    RequestContext& req,
+    transport::TTransportException ex) noexcept {
+  if (req.state_ == State::COMPLETE) {
+    return;
+  }
+  DCHECK(req.state() == State::WRITE_SENT);
+  DCHECK(!req.responsePayload_.hasException());
+  req.responsePayload_ = folly::Try<Payload>(std::move(ex));
+  markAsResponded(req);
 }
 
 // For REQUEST_RESPONSE, this is called on the read path once the entire
@@ -74,41 +93,59 @@ void RequestContextQueue::markAsResponded(RequestContext& req) noexcept {
   untrackIfRequestResponse(req);
 
   if (LIKELY(req.state() == State::WRITE_SENT)) {
-    req.state_ = State::RESPONSE_RECEIVED;
     writeSentQueue_.erase(writeSentQueue_.iterator_to(req));
-    req.baton_.post();
   } else {
-    // Response arrived before AsyncSocket WriteCallback fired; we let the write
-    // complete. writeSuccess()/writeErr() are therefore responsible for
-    // handling this request's final queue transition and posting the baton.
+    // Response arrived after the socket write was initiated but before the
+    // socket WriteCallback fired
     DCHECK(req.isRequestResponse());
     DCHECK(req.state() == State::WRITE_SENDING);
-    req.state_ = State::RESPONSE_RECEIVED;
+    removeFromWriteSendingQueue(req);
+    req.onWriteSuccess();
   }
+
+  req.state_ = State::COMPLETE;
+  req.baton_.post();
 }
 
-void RequestContextQueue::failAllScheduledWrites(folly::exception_wrapper ew) {
-  // Not safe to call if some inflight requests haven't been drained
-  DCHECK(!hasInflightRequests());
-  failQueue(writeScheduledQueue_, std::move(ew));
+void RequestContextQueue::failAllScheduledWrites(
+    transport::TTransportException ex) {
+  failQueue(
+      writeScheduledQueue_,
+      transport::TTransportException(
+          transport::TTransportException::NOT_OPEN,
+          fmt::format(
+              "Dropping unsent request. Connection closed after: {}",
+              ex.what())));
 }
 
-void RequestContextQueue::failAllSentWrites(folly::exception_wrapper ew) {
-  failQueue(writeSentQueue_, std::move(ew));
+void RequestContextQueue::failAllSentWrites(transport::TTransportException ex) {
+  failQueue(writeSentQueue_, std::move(ex));
 }
 
 void RequestContextQueue::failQueue(
     RequestContext::Queue& queue,
-    folly::exception_wrapper ew) {
+    transport::TTransportException ex) {
   while (!queue.empty()) {
     auto& req = queue.front();
     queue.pop_front();
-    DCHECK(!req.responsePayload_.hasValue());
     DCHECK(!req.responsePayload_.hasException());
-    req.responsePayload_ = folly::Try<Payload>(ew);
+    req.responsePayload_ = folly::Try<Payload>(ex);
     untrackIfRequestResponse(req);
-    req.state_ = State::REQUEST_ABORTED;
+    req.state_ = State::COMPLETE;
     req.baton_.post();
+  }
+}
+
+void RequestContextQueue::removeFromWriteSendingQueue(
+    RequestContext& req) noexcept {
+  DCHECK(req.state_ == State::WRITE_SENDING);
+  auto it = writeSendingQueue_.erase(writeSendingQueue_.iterator_to(req));
+  // If req marks the end of a write batch, swap req with a dummy RequestContext
+  // that preserves the end-of-batch marking. This ensures that subsequent calls
+  // to writeSuccess()/writeErr() operate on the correct requests.
+  if (req.lastInWriteBatch_) {
+    writeSendingQueue_.insert(
+        it, RequestContext::createDummyEndOfBatchMarker(*this));
   }
 }
 

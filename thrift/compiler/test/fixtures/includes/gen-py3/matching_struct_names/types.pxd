@@ -5,10 +5,16 @@
 #  @generated
 #
 
+from libc.stdint cimport (
+    int8_t as cint8_t,
+    int16_t as cint16_t,
+    int32_t as cint32_t,
+    int64_t as cint64_t,
+    uint32_t as cuint32_t,
+)
 from libcpp.string cimport string
 from libcpp cimport bool as cbool, nullptr, nullptr_t
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t
 from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.vector cimport vector
 from libcpp.set cimport set as cset
@@ -17,74 +23,76 @@ from thrift.py3.exceptions cimport cTException
 cimport folly.iobuf as __iobuf
 cimport thrift.py3.exceptions
 cimport thrift.py3.types
-from thrift.py3.types cimport bstring, move
+from thrift.py3.common cimport Protocol as __Protocol
+from thrift.py3.types cimport bstring, move, field_ref as __FieldRef, optional_field_ref as __OptionalFieldRef
 from folly.optional cimport cOptional
 cimport module.types as _module_types
+cdef extern from "src/gen-py3/matching_struct_names/types.h":
+  pass
 
 
 
 
 
-cdef extern from "src/gen-cpp2/matching_struct_names_types_custom_protocol.h" namespace "cpp2":
-    # Forward Declaration
-    cdef cppclass cMyStruct "cpp2::MyStruct"
-    # Forward Declaration
-    cdef cppclass cCombo "cpp2::Combo"
-
-cdef extern from "src/gen-cpp2/matching_struct_names_types.h" namespace "cpp2":
-    cdef cppclass cMyStruct__isset "cpp2::MyStruct::__isset":
+cdef extern from "src/gen-cpp2/matching_struct_names_types_custom_protocol.h" namespace "::cpp2":
+    cdef cppclass cMyStruct__isset "::cpp2::MyStruct::__isset":
         bint field
 
-    cdef cppclass cMyStruct "cpp2::MyStruct":
+    cdef cppclass cMyStruct "::cpp2::MyStruct":
         cMyStruct() except +
         cMyStruct(const cMyStruct&) except +
         bint operator==(cMyStruct&)
+        bint operator!=(cMyStruct&)
         bint operator<(cMyStruct&)
         bint operator>(cMyStruct&)
         bint operator<=(cMyStruct&)
         bint operator>=(cMyStruct&)
+        __FieldRef[string] field_ref()
         string field
         cMyStruct__isset __isset
 
-    cdef cppclass cCombo__isset "cpp2::Combo::__isset":
+    cdef cppclass cCombo__isset "::cpp2::Combo::__isset":
         bint listOfOurMyStructLists
         bint theirMyStructList
         bint ourMyStructList
         bint listOfTheirMyStructList
 
-    cdef cppclass cCombo "cpp2::Combo":
+    cdef cppclass cCombo "::cpp2::Combo":
         cCombo() except +
         cCombo(const cCombo&) except +
         bint operator==(cCombo&)
+        bint operator!=(cCombo&)
         bint operator<(cCombo&)
         bint operator>(cCombo&)
         bint operator<=(cCombo&)
         bint operator>=(cCombo&)
+        __FieldRef[vector[vector[cMyStruct]]] listOfOurMyStructLists_ref()
         vector[vector[cMyStruct]] listOfOurMyStructLists
+        __FieldRef[vector[_module_types.cMyStruct]] theirMyStructList_ref()
         vector[_module_types.cMyStruct] theirMyStructList
+        __FieldRef[vector[cMyStruct]] ourMyStructList_ref()
         vector[cMyStruct] ourMyStructList
+        __FieldRef[vector[vector[_module_types.cMyStruct]]] listOfTheirMyStructList_ref()
         vector[vector[_module_types.cMyStruct]] listOfTheirMyStructList
         cCombo__isset __isset
 
-    cdef shared_ptr[vector[vector[cMyStruct]]] reference_shared_ptr_listOfOurMyStructLists "thrift::py3::reference_shared_ptr<std::vector<std::vector<cpp2::MyStruct>>>"(shared_ptr[cCombo]&, vector[vector[cMyStruct]]&)
-    cdef shared_ptr[vector[_module_types.cMyStruct]] reference_shared_ptr_theirMyStructList "thrift::py3::reference_shared_ptr<std::vector<cpp2::MyStruct>>"(shared_ptr[cCombo]&, vector[_module_types.cMyStruct]&)
-    cdef shared_ptr[vector[cMyStruct]] reference_shared_ptr_ourMyStructList "thrift::py3::reference_shared_ptr<std::vector<cpp2::MyStruct>>"(shared_ptr[cCombo]&, vector[cMyStruct]&)
-    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] reference_shared_ptr_listOfTheirMyStructList "thrift::py3::reference_shared_ptr<std::vector<std::vector<cpp2::MyStruct>>>"(shared_ptr[cCombo]&, vector[vector[_module_types.cMyStruct]]&)
+    cdef shared_ptr[vector[vector[cMyStruct]]] reference_shared_ptr_listOfOurMyStructLists "::thrift::py3::reference_shared_ptr<std::vector<std::vector<::cpp2::MyStruct>>>"(shared_ptr[cCombo]&, vector[vector[cMyStruct]]&)
+    cdef shared_ptr[vector[_module_types.cMyStruct]] reference_shared_ptr_theirMyStructList "::thrift::py3::reference_shared_ptr<std::vector<::cpp2::MyStruct>>"(shared_ptr[cCombo]&, vector[_module_types.cMyStruct]&)
+    cdef shared_ptr[vector[cMyStruct]] reference_shared_ptr_ourMyStructList "::thrift::py3::reference_shared_ptr<std::vector<::cpp2::MyStruct>>"(shared_ptr[cCombo]&, vector[cMyStruct]&)
+    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] reference_shared_ptr_listOfTheirMyStructList "::thrift::py3::reference_shared_ptr<std::vector<std::vector<::cpp2::MyStruct>>>"(shared_ptr[cCombo]&, vector[vector[_module_types.cMyStruct]]&)
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[cMyStruct] move(unique_ptr[cMyStruct])
-    cdef shared_ptr[cMyStruct] move_shared "std::move"(shared_ptr[cMyStruct])
-    cdef unique_ptr[cMyStruct] move_unique "std::move"(unique_ptr[cMyStruct])
-    cdef shared_ptr[cCombo] move(unique_ptr[cCombo])
-    cdef shared_ptr[cCombo] move_shared "std::move"(shared_ptr[cCombo])
-    cdef unique_ptr[cCombo] move_unique "std::move"(unique_ptr[cCombo])
+    cdef shared_ptr[cMyStruct] __fbthrift_move "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cMyStruct] __fbthrift_move_shared "std::move"(shared_ptr[cMyStruct])
+    cdef unique_ptr[cMyStruct] __fbthrift_move_unique "std::move"(unique_ptr[cMyStruct])
+    cdef shared_ptr[cCombo] __fbthrift_move "std::move"(unique_ptr[cCombo])
+    cdef shared_ptr[cCombo] __fbthrift_move_shared "std::move"(shared_ptr[cCombo])
+    cdef unique_ptr[cCombo] __fbthrift_move_unique "std::move"(unique_ptr[cCombo])
 
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const cpp2::MyStruct>"(shared_ptr[cMyStruct])
-    cdef shared_ptr[const cCombo] const_pointer_cast "std::const_pointer_cast<const cpp2::Combo>"(shared_ptr[cCombo])
+    cdef shared_ptr[const cMyStruct] const_pointer_cast "std::const_pointer_cast<const ::cpp2::MyStruct>"(shared_ptr[cMyStruct])
+    cdef shared_ptr[const cCombo] const_pointer_cast "std::const_pointer_cast<const ::cpp2::Combo>"(shared_ptr[cCombo])
 
-# Forward Definition of the cython struct
-cdef class MyStruct(thrift.py3.types.Struct)
 
 
 cdef class MyStruct(thrift.py3.types.Struct):
@@ -95,28 +103,28 @@ cdef class MyStruct(thrift.py3.types.Struct):
     @staticmethod
     cdef unique_ptr[cMyStruct] _make_instance(
         cMyStruct* base_instance,
-        object field
+        bint* __isNOTSET,
+        str field
     ) except *
 
     @staticmethod
     cdef create(shared_ptr[cMyStruct])
 
-# Forward Definition of the cython struct
-cdef class Combo(thrift.py3.types.Struct)
 
 
 cdef class Combo(thrift.py3.types.Struct):
     cdef object __hash
     cdef object __weakref__
     cdef shared_ptr[cCombo] _cpp_obj
-    cdef List__List__MyStruct __listOfOurMyStructLists
-    cdef List__module_MyStruct __theirMyStructList
-    cdef List__MyStruct __ourMyStructList
-    cdef List__List__module_MyStruct __listOfTheirMyStructList
+    cdef List__List__MyStruct __field_listOfOurMyStructLists
+    cdef List__module_MyStruct __field_theirMyStructList
+    cdef List__MyStruct __field_ourMyStructList
+    cdef List__List__module_MyStruct __field_listOfTheirMyStructList
 
     @staticmethod
     cdef unique_ptr[cCombo] _make_instance(
         cCombo* base_instance,
+        bint* __isNOTSET,
         object listOfOurMyStructLists,
         object theirMyStructList,
         object ourMyStructList,
@@ -127,36 +135,28 @@ cdef class Combo(thrift.py3.types.Struct):
     cdef create(shared_ptr[cCombo])
 
 
-cdef class List__MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[cMyStruct]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[cMyStruct]])
     @staticmethod
     cdef shared_ptr[vector[cMyStruct]] _make_instance(object items) except *
 
-cdef class List__List__MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__List__MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[vector[cMyStruct]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[vector[cMyStruct]]])
     @staticmethod
     cdef shared_ptr[vector[vector[cMyStruct]]] _make_instance(object items) except *
 
-cdef class List__module_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__module_MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[_module_types.cMyStruct]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[_module_types.cMyStruct]])
     @staticmethod
     cdef shared_ptr[vector[_module_types.cMyStruct]] _make_instance(object items) except *
 
-cdef class List__List__module_MyStruct:
-    cdef object __hash
-    cdef object __weakref__
+cdef class List__List__module_MyStruct(thrift.py3.types.List):
     cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] _cpp_obj
     @staticmethod
     cdef create(shared_ptr[vector[vector[_module_types.cMyStruct]]])
@@ -164,23 +164,23 @@ cdef class List__List__module_MyStruct:
     cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] _make_instance(object items) except *
 
 cdef extern from "<utility>" namespace "std" nogil:
-    cdef shared_ptr[vector[cMyStruct]] move "std::move"(unique_ptr[vector[cMyStruct]])
-    cdef shared_ptr[vector[cMyStruct]] move_shared "std::move"(shared_ptr[vector[cMyStruct]])
-    cdef shared_ptr[vector[vector[cMyStruct]]] move "std::move"(unique_ptr[vector[vector[cMyStruct]]])
-    cdef shared_ptr[vector[vector[cMyStruct]]] move_shared "std::move"(shared_ptr[vector[vector[cMyStruct]]])
-    cdef shared_ptr[vector[_module_types.cMyStruct]] move "std::move"(unique_ptr[vector[_module_types.cMyStruct]])
-    cdef shared_ptr[vector[_module_types.cMyStruct]] move_shared "std::move"(shared_ptr[vector[_module_types.cMyStruct]])
-    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] move "std::move"(unique_ptr[vector[vector[_module_types.cMyStruct]]])
-    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] move_shared "std::move"(shared_ptr[vector[vector[_module_types.cMyStruct]]])
+    cdef shared_ptr[vector[vector[cMyStruct]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[cMyStruct]]])
+    cdef shared_ptr[vector[vector[cMyStruct]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[cMyStruct]]])
+    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] __fbthrift_move "std::move"(unique_ptr[vector[vector[_module_types.cMyStruct]]])
+    cdef shared_ptr[vector[vector[_module_types.cMyStruct]]] __fbthrift_move_shared "std::move"(shared_ptr[vector[vector[_module_types.cMyStruct]]])
+    cdef shared_ptr[vector[cMyStruct]] __fbthrift_move "std::move"(unique_ptr[vector[cMyStruct]])
+    cdef shared_ptr[vector[cMyStruct]] __fbthrift_move_shared "std::move"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[vector[_module_types.cMyStruct]] __fbthrift_move "std::move"(unique_ptr[vector[_module_types.cMyStruct]])
+    cdef shared_ptr[vector[_module_types.cMyStruct]] __fbthrift_move_shared "std::move"(shared_ptr[vector[_module_types.cMyStruct]])
 cdef extern from "<utility>" nogil:
     pass  
-    shared_ptr[cMyStruct] reference_shared_ptr_List__MyStruct "thrift::py3::reference_shared_ptr<cpp2::MyStruct>"(...)
-    shared_ptr[vector[cMyStruct]] reference_shared_ptr_List__List__MyStruct "thrift::py3::reference_shared_ptr<std::vector<cpp2::MyStruct>>"(...)
-    shared_ptr[_module_types.cMyStruct] reference_shared_ptr_List__module_MyStruct "thrift::py3::reference_shared_ptr<cpp2::MyStruct>"(...)
-    shared_ptr[vector[_module_types.cMyStruct]] reference_shared_ptr_List__List__module_MyStruct "thrift::py3::reference_shared_ptr<std::vector<cpp2::MyStruct>>"(...)
+    shared_ptr[cMyStruct] reference_shared_ptr_List__MyStruct "::thrift::py3::reference_shared_ptr<::cpp2::MyStruct>"(...)
+    shared_ptr[vector[cMyStruct]] reference_shared_ptr_List__List__MyStruct "::thrift::py3::reference_shared_ptr<std::vector<::cpp2::MyStruct>>"(...)
+    shared_ptr[_module_types.cMyStruct] reference_shared_ptr_List__module_MyStruct "::thrift::py3::reference_shared_ptr<::cpp2::MyStruct>"(...)
+    shared_ptr[vector[_module_types.cMyStruct]] reference_shared_ptr_List__List__module_MyStruct "::thrift::py3::reference_shared_ptr<std::vector<::cpp2::MyStruct>>"(...)
 cdef extern from "<memory>" namespace "std" nogil:
-    cdef shared_ptr[const vector[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<cpp2::MyStruct>>"(shared_ptr[vector[cMyStruct]])
-    cdef shared_ptr[const vector[vector[cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<cpp2::MyStruct>>>"(shared_ptr[vector[vector[cMyStruct]]])
-    cdef shared_ptr[const vector[_module_types.cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<cpp2::MyStruct>>"(shared_ptr[vector[_module_types.cMyStruct]])
-    cdef shared_ptr[const vector[vector[_module_types.cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<cpp2::MyStruct>>>"(shared_ptr[vector[vector[_module_types.cMyStruct]]])
+    cdef shared_ptr[const vector[vector[cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<::cpp2::MyStruct>>>"(shared_ptr[vector[vector[cMyStruct]]])
+    cdef shared_ptr[const vector[vector[_module_types.cMyStruct]]] const_pointer_cast "std::const_pointer_cast<const std::vector<std::vector<::cpp2::MyStruct>>>"(shared_ptr[vector[vector[_module_types.cMyStruct]]])
+    cdef shared_ptr[const vector[cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<::cpp2::MyStruct>>"(shared_ptr[vector[cMyStruct]])
+    cdef shared_ptr[const vector[_module_types.cMyStruct]] const_pointer_cast "std::const_pointer_cast<const std::vector<::cpp2::MyStruct>>"(shared_ptr[vector[_module_types.cMyStruct]])
 

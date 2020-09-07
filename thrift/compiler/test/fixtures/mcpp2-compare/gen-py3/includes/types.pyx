@@ -4,140 +4,77 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #  @generated
 #
-
 cimport cython as __cython
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyTypeObject, Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr, make_unique
 from libcpp.string cimport string
 from libcpp cimport bool as cbool
 from libcpp.iterator cimport inserter as cinserter
+from libcpp.utility cimport move as cmove
 from cpython cimport bool as pbool
-from libc.stdint cimport int8_t, int16_t, int32_t, int64_t, uint32_t
 from cython.operator cimport dereference as deref, preincrement as inc, address as ptr_address
 import thrift.py3.types
 cimport thrift.py3.types
 cimport thrift.py3.exceptions
-from thrift.py3.types import NOTSET as __NOTSET
 from thrift.py3.types cimport (
     translate_cpp_enum_to_python,
     SetMetaClass as __SetMetaClass,
     constant_shared_ptr,
+    default_inst,
+    NOTSET as __NOTSET,
+    EnumData as __EnumData,
+    EnumFlagsData as __EnumFlagsData,
+    UnionTypeEnumData as __UnionTypeEnumData,
+    createEnumDataForUnionType as __createEnumDataForUnionType,
 )
 cimport thrift.py3.std_libcpp as std_libcpp
-from thrift.py3.serializer import Protocol as __Protocol
 cimport thrift.py3.serializer as serializer
 from thrift.py3.serializer import deserialize, serialize
 import folly.iobuf as __iobuf
 from folly.optional cimport cOptional
 
 import sys
-import itertools
-from collections import Sequence, Set, Mapping, Iterable
-import warnings
+from collections.abc import Sequence, Set, Mapping, Iterable
+import weakref as __weakref
 import builtins as _builtins
 
-cdef object __AnEnumEnumInstances = None  # Set[AnEnum]
-cdef object __AnEnumEnumMembers = {}      # Dict[str, AnEnum]
-cdef object __AnEnumEnumUniqueValues = dict()    # Dict[int, AnEnum]
+cimport includes.types_reflection as _types_reflection
+
+
+cdef __EnumData __AnEnum_enum_data  = __EnumData.create(thrift.py3.types.createEnumData[cAnEnum](), AnEnum)
+
 
 @__cython.internal
 @__cython.auto_pickle(False)
-cdef class __AnEnumMeta(type):
-    def __call__(cls, value):
-        cdef int cvalue
-        if isinstance(value, cls) and value in __AnEnumEnumInstances:
-            return value
-        if isinstance(value, int):
-            cvalue = value
-            if cvalue == 2:
-                return AnEnum.FIELDA
-            elif cvalue == 4:
-                return AnEnum.FIELDB
+cdef class __AnEnumMeta(thrift.py3.types.EnumMeta):
 
-        raise ValueError(f'{value} is not a valid AnEnum')
+    def __get_by_name(cls, str name):
+        return __AnEnum_enum_data.get_by_name(name)
 
-    def __getitem__(cls, name):
-        return __AnEnumEnumMembers[name]
+    def __get_by_value(cls, int value):
+        return __AnEnum_enum_data.get_by_value(value)
 
-    def __dir__(cls):
-        return ['__class__', '__doc__', '__members__', '__module__',
-        'FIELDA',
-        'FIELDB',
-        ]
-
-    def __iter__(cls):
-        return iter(__AnEnumEnumUniqueValues.values())
-
-    def __reversed__(cls):
-        return reversed(iter(cls))
-
-    def __contains__(cls, item):
-        if not isinstance(item, cls):
-            return False
-        return item in __AnEnumEnumInstances
+    def __get_all_names(cls):
+        return __AnEnum_enum_data.get_all_names()
 
     def __len__(cls):
-        return len(__AnEnumEnumInstances)
-
-
-cdef __AnEnum_unique_instance(int value, str name):
-    inst = __AnEnumEnumUniqueValues.get(value)
-    if inst is None:
-        inst = __AnEnumEnumUniqueValues[value] = AnEnum.__new__(AnEnum, value, name)
-    __AnEnumEnumMembers[name] = inst
-    return inst
+        return __AnEnum_enum_data.size()
 
 
 @__cython.final
+@__cython.auto_pickle(False)
 cdef class AnEnum(thrift.py3.types.CompiledEnum):
-    FIELDA = __AnEnum_unique_instance(2, "FIELDA")
-    FIELDB = __AnEnum_unique_instance(4, "FIELDB")
-    __members__ = thrift.py3.types.MappingProxyType(__AnEnumEnumMembers)
+    cdef get_by_name(self, str name):
+        return __AnEnum_enum_data.get_by_name(name)
 
-    def __cinit__(self, value, name):
-        if __AnEnumEnumInstances is not None:
-            raise TypeError('For Safty we have disabled __new__')
-        self.value = value
-        self.name = name
-        self.__hash = hash(name)
-        self.__str = f"AnEnum.{name}"
-        self.__repr = f"<{self.__str}: {value}>"
-
-    def __repr__(self):
-        return self.__repr
-
-    def __str__(self):
-        return self.__str
-
-    def __int__(self):
-        return self.value
-
-    def __eq__(self, other):
-        if not isinstance(other, AnEnum):
-            warnings.warn(f"comparison not supported between instances of { AnEnum } and {type(other)}", RuntimeWarning, stacklevel=2)
-            return False
-        return self is other
-
-    def __hash__(self):
-        return self.__hash
-
-    def __reduce__(self):
-        return AnEnum, (self.value,)
 
 
 __SetMetaClass(<PyTypeObject*> AnEnum, <PyTypeObject*> __AnEnumMeta)
-__AnEnumEnumInstances = set(__AnEnumEnumUniqueValues.values())
 
 
-cdef inline cAnEnum AnEnum_to_cpp(AnEnum value):
-    cdef int cvalue = value.value
-    if cvalue == 2:
-        return AnEnum__FIELDA
-    elif cvalue == 4:
-        return AnEnum__FIELDB
 
-cdef cAStruct _AStruct_defaults = cAStruct()
-
+@__cython.auto_pickle(False)
 cdef class AStruct(thrift.py3.types.Struct):
 
     def __init__(
@@ -147,9 +84,10 @@ cdef class AStruct(thrift.py3.types.Struct):
         if FieldA is not None:
             if not isinstance(FieldA, int):
                 raise TypeError(f'FieldA is not a { int !r}.')
-            FieldA = <int32_t> FieldA
+            FieldA = <cint32_t> FieldA
 
-        self._cpp_obj = move(AStruct._make_instance(
+        self._cpp_obj = __fbthrift_move(AStruct._make_instance(
+          NULL,
           NULL,
           FieldA,
         ))
@@ -158,29 +96,39 @@ cdef class AStruct(thrift.py3.types.Struct):
         AStruct self,
         FieldA=__NOTSET
     ):
-        changes = any((
-            FieldA is not __NOTSET,
-        ))
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[1] __isNOTSET  # so make_instance is typed
 
-        if not changes:
+        __fbthrift_changed = False
+        if FieldA is ___NOTSET:
+            __isNOTSET[0] = True
+            FieldA = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not FieldA is not __NOTSET:
+        if FieldA is not None:
             if not isinstance(FieldA, int):
                 raise TypeError(f'FieldA is not a { int !r}.')
-            FieldA = <int32_t> FieldA
+            FieldA = <cint32_t> FieldA
 
-        inst = <AStruct>AStruct.__new__(AStruct)
-        inst._cpp_obj = move(AStruct._make_instance(
+        __fbthrift_inst = <AStruct>AStruct.__new__(AStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(AStruct._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           FieldA,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cAStruct] _make_instance(
         cAStruct* base_instance,
-        object FieldA
+        bint* __isNOTSET,
+        object FieldA 
     ) except *:
         cdef unique_ptr[cAStruct] c_inst
         if base_instance:
@@ -190,19 +138,23 @@ cdef class AStruct(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if FieldA is None:
-                deref(c_inst).FieldA = _AStruct_defaults.FieldA
+            if not __isNOTSET[0] and FieldA is None:
+                deref(c_inst).FieldA_ref().assign(default_inst[cAStruct]().FieldA_ref().value())
                 deref(c_inst).__isset.FieldA = False
                 pass
-            elif FieldA is __NOTSET:
-                FieldA = None
 
         if FieldA is not None:
-            deref(c_inst).FieldA = FieldA
+            deref(c_inst).FieldA_ref().assign(FieldA)
             deref(c_inst).__isset.FieldA = True
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("AStruct", {
+          "FieldA": cpp_obj.FieldA_ref().has_value(),
+        })
 
     def __iter__(self):
         yield 'FieldA', self.FieldA
@@ -212,14 +164,14 @@ cdef class AStruct(thrift.py3.types.Struct):
 
     @staticmethod
     cdef create(shared_ptr[cAStruct] cpp_obj):
-        inst = <AStruct>AStruct.__new__(AStruct)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <AStruct>AStruct.__new__(AStruct)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def FieldA(self):
 
-        return deref(self._cpp_obj).FieldA
+        return deref(self._cpp_obj).FieldA_ref().value()
 
 
     def __hash__(AStruct self):
@@ -235,7 +187,7 @@ cdef class AStruct(thrift.py3.types.Struct):
         cdef shared_ptr[cAStruct] cpp_obj = make_shared[cAStruct](
             deref(self._cpp_obj)
         )
-        return AStruct.create(move_shared(cpp_obj))
+        return AStruct.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -249,71 +201,51 @@ cdef class AStruct(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cAStruct cself = deref((<AStruct>self)._cpp_obj)
-        cdef cAStruct cother = deref((<AStruct>other)._cpp_obj)
+        cdef cAStruct* cself = (<AStruct>self)._cpp_obj.get()
+        cdef cAStruct* cother = (<AStruct>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(AStruct self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cAStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cAStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cAStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cAStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cAStruct](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__AStruct()
 
-    cdef uint32_t _deserialize(AStruct self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(AStruct self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cAStruct](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(AStruct self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cAStruct]()
-        cdef cAStruct* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cAStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cAStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cAStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cAStruct](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cAStruct](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
         return (deserialize, (AStruct, serialize(self)))
 
 
-cdef cAStructB _AStructB_defaults = cAStructB()
-
+@__cython.auto_pickle(False)
 cdef class AStructB(thrift.py3.types.Struct):
 
     def __init__(
         AStructB self, *,
         AStruct FieldA=None
     ):
-        self._cpp_obj = move(AStructB._make_instance(
+        self._cpp_obj = __fbthrift_move(AStructB._make_instance(
+          NULL,
           NULL,
           FieldA,
         ))
@@ -322,28 +254,38 @@ cdef class AStructB(thrift.py3.types.Struct):
         AStructB self,
         FieldA=__NOTSET
     ):
-        changes = any((
-            FieldA is not __NOTSET,
-        ))
+        ___NOTSET = __NOTSET  # Cheaper for larger structs
+        cdef bint[1] __isNOTSET  # so make_instance is typed
 
-        if not changes:
+        __fbthrift_changed = False
+        if FieldA is ___NOTSET:
+            __isNOTSET[0] = True
+            FieldA = None
+        else:
+            __isNOTSET[0] = False
+            __fbthrift_changed = True
+
+
+        if not __fbthrift_changed:
             return self
 
-        if None is not FieldA is not __NOTSET:
+        if FieldA is not None:
             if not isinstance(FieldA, AStruct):
                 raise TypeError(f'FieldA is not a { AStruct !r}.')
 
-        inst = <AStructB>AStructB.__new__(AStructB)
-        inst._cpp_obj = move(AStructB._make_instance(
+        __fbthrift_inst = <AStructB>AStructB.__new__(AStructB)
+        __fbthrift_inst._cpp_obj = __fbthrift_move(AStructB._make_instance(
           self._cpp_obj.get(),
+          __isNOTSET,
           FieldA,
         ))
-        return inst
+        return __fbthrift_inst
 
     @staticmethod
     cdef unique_ptr[cAStructB] _make_instance(
         cAStructB* base_instance,
-        object FieldA
+        bint* __isNOTSET,
+        AStruct FieldA 
     ) except *:
         cdef unique_ptr[cAStructB] c_inst
         if base_instance:
@@ -353,17 +295,20 @@ cdef class AStructB(thrift.py3.types.Struct):
 
         if base_instance:
             # Convert None's to default value. (or unset)
-            if FieldA is None:
+            if not __isNOTSET[0] and FieldA is None:
                 deref(c_inst).FieldA.reset()
                 pass
-            elif FieldA is __NOTSET:
-                FieldA = None
 
         if FieldA is not None:
             deref(c_inst).FieldA = const_pointer_cast((<AStruct?>FieldA)._cpp_obj)
         # in C++ you don't have to call move(), but this doesn't translate
         # into a C++ return statement, so you do here
-        return move_unique(c_inst)
+        return __fbthrift_move_unique(c_inst)
+
+    cdef object __fbthrift_isset(self):
+        cpp_obj = deref(self._cpp_obj)
+        return thrift.py3.types._IsSet("AStructB", {
+        })
 
     def __iter__(self):
         yield 'FieldA', self.FieldA
@@ -373,18 +318,18 @@ cdef class AStructB(thrift.py3.types.Struct):
 
     @staticmethod
     cdef create(shared_ptr[cAStructB] cpp_obj):
-        inst = <AStructB>AStructB.__new__(AStructB)
-        inst._cpp_obj = move_shared(cpp_obj)
-        return inst
+        __fbthrift_inst = <AStructB>AStructB.__new__(AStructB)
+        __fbthrift_inst._cpp_obj = __fbthrift_move_shared(cpp_obj)
+        return __fbthrift_inst
 
     @property
     def FieldA(self):
 
-        if self.__FieldA is None:
+        if self.__field_FieldA is None:
             if not deref(self._cpp_obj).FieldA:
                 return None
-            self.__FieldA = AStruct.create(reference_shared_ptr_FieldA(self._cpp_obj, deref(deref(self._cpp_obj).FieldA)))
-        return self.__FieldA
+            self.__field_FieldA = AStruct.create(reference_shared_ptr_FieldA(self._cpp_obj, deref(deref(self._cpp_obj).FieldA)))
+        return self.__field_FieldA
 
 
     def __hash__(AStructB self):
@@ -400,7 +345,7 @@ cdef class AStructB(thrift.py3.types.Struct):
         cdef shared_ptr[cAStructB] cpp_obj = make_shared[cAStructB](
             deref(self._cpp_obj)
         )
-        return AStructB.create(move_shared(cpp_obj))
+        return AStructB.create(__fbthrift_move_shared(cpp_obj))
 
     def __richcmp__(self, other, op):
         cdef int cop = op
@@ -414,56 +359,36 @@ cdef class AStructB(thrift.py3.types.Struct):
             else:
                 return NotImplemented
 
-        cdef cAStructB cself = deref((<AStructB>self)._cpp_obj)
-        cdef cAStructB cother = deref((<AStructB>other)._cpp_obj)
+        cdef cAStructB* cself = (<AStructB>self)._cpp_obj.get()
+        cdef cAStructB* cother = (<AStructB>other)._cpp_obj.get()
         if cop == Py_EQ:
-            return cself == cother
+            return deref(cself) == deref(cother)
         elif cop == Py_NE:
-            return not (cself == cother)
+            return deref(cself) != deref(cother)
         elif cop == Py_LT:
-            return cself < cother
+            return deref(cself) < deref(cother)
         elif cop == Py_LE:
-            return cself <= cother
+            return deref(cself) <= deref(cother)
         elif cop == Py_GT:
-            return cself > cother
+            return deref(cself) > deref(cother)
         elif cop == Py_GE:
-            return cself >= cother
+            return deref(cself) >= deref(cother)
         else:
             return NotImplemented
 
-    cdef __iobuf.IOBuf _serialize(AStructB self, proto):
-        cdef __iobuf.cIOBufQueue queue = __iobuf.cIOBufQueue(__iobuf.cacheChainLength())
-        cdef cAStructB* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                serializer.CompactSerialize[cAStructB](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                serializer.BinarySerialize[cAStructB](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                serializer.JSONSerialize[cAStructB](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                serializer.CompactJSONSerialize[cAStructB](deref(cpp_obj), &queue, serializer.SHARE_EXTERNAL_BUFFER)
-        return __iobuf.from_unique_ptr(queue.move())
+    @staticmethod
+    def __get_reflection__():
+        return _types_reflection.get_reflection__AStructB()
 
-    cdef uint32_t _deserialize(AStructB self, const __iobuf.cIOBuf* buf, proto) except? 0:
-        cdef uint32_t needed
+    cdef __iobuf.IOBuf _serialize(AStructB self, __Protocol proto):
+        return __iobuf.from_unique_ptr(
+            serializer.cserialize[cAStructB](self._cpp_obj.get(), proto).move()
+        )
+
+    cdef cuint32_t _deserialize(AStructB self, const __iobuf.cIOBuf* buf, __Protocol proto) except? 0:
+        cdef cuint32_t needed
         self._cpp_obj = make_shared[cAStructB]()
-        cdef cAStructB* cpp_obj = self._cpp_obj.get()
-        if proto is __Protocol.COMPACT:
-            with nogil:
-                needed = serializer.CompactDeserialize[cAStructB](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.BINARY:
-            with nogil:
-                needed = serializer.BinaryDeserialize[cAStructB](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.JSON:
-            with nogil:
-                needed = serializer.JSONDeserialize[cAStructB](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
-        elif proto is __Protocol.COMPACT_JSON:
-            with nogil:
-                needed = serializer.CompactJSONDeserialize[cAStructB](buf, deref(cpp_obj), serializer.SHARE_EXTERNAL_BUFFER)
+        needed = serializer.cdeserialize[cAStructB](buf, self._cpp_obj.get(), proto)
         return needed
 
     def __reduce__(self):
